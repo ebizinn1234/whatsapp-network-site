@@ -1,0 +1,36 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- WhatsApp Icon -->
+  <g transform="translate(10, 10)">
+    <!-- Background circle -->
+    <circle cx="20" cy="20" r="18" fill="#25D366" stroke="#128C7E" stroke-width="2"/>
+    
+    <!-- Phone icon inside -->
+    <g transform="translate(12, 8)">
+      <!-- Phone body -->
+      <rect x="2" y="4" width="12" height="16" rx="2" fill="white"/>
+      <!-- Phone screen -->
+      <rect x="3" y="6" width="10" height="8" rx="1" fill="#25D366"/>
+      <!-- Phone buttons -->
+      <circle cx="8" cy="18" r="1" fill="white"/>
+    </g>
+    
+    <!-- Signal waves -->
+    <g opacity="0.6">
+      <path d="M 8 20 Q 20 8 32 20" stroke="white" stroke-width="2" fill="none"/>
+      <path d="M 6 20 Q 20 4 34 20" stroke="white" stroke-width="1.5" fill="none"/>
+    </g>
+  </g>
+  
+  <!-- Text -->
+  <g transform="translate(50, 0)">
+    <!-- Disparo -->
+    <text x="0" y="25" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#25D366">
+      Disparo
+    </text>
+    
+    <!-- Zap -->
+    <text x="0" y="45" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#128C7E">
+      Zap
+    </text>
+  </g>
+</svg>
