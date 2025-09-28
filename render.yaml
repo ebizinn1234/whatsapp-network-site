@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: whatsapp-network-manager
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server-multi-user.js
+    envVars:
+      - key: NODE_ENV
+        value: production
