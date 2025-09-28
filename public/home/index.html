@@ -570,6 +570,54 @@
             font-size: 1.1rem;
         }
 
+        /* Activity Log */
+        .activity-log {
+            max-height: 250px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .activity-log-empty {
+            color: #6c757d;
+            text-align: center;
+            font-weight: 500;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .activity-log-item {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #ffffff;
+            border-left: 3px solid #24d366;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-log-item.error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .activity-log-item.warning {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .activity-log-item.info {
+            border-left-color: #17a2b8;
+            background: #f0f9ff;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1261,9 +1309,13 @@
 
         <!-- Log de Atividades -->
         <div class="card">
-            <h2>📋 Log de Atividades</h2>
-            <div id="activityLog" style="max-height: 250px; overflow-y: auto; background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 20px; border-radius: 15px; border: 2px solid #e9ecef;">
-                <p style="color: #6c757d; text-align: center; font-weight: 600;">⏳ Aguardando atividades...</p>
+            <h2><i class="fas fa-clipboard-list" style="margin-right: 8px; color: #24d366;"></i>Log de Atividades</h2>
+            <p style="color: #6c757d; margin-bottom: 15px; font-size: 14px;">Acompanhe o progresso das suas atividades em tempo real</p>
+            <div id="activityLog" class="activity-log">
+                <p class="activity-log-empty">
+                    <i class="fas fa-clock" style="margin-right: 8px; color: #6c757d;"></i>
+                    Aguardando atividades...
+                </p>
             </div>
         </div>
     </div>
@@ -1649,8 +1701,31 @@
         function addLog(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
-            logEntry.className = `alert alert-${type}`;
-            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logEntry.className = `activity-log-item ${type}`;
+            
+            // Add appropriate icon based on type
+            let icon = '';
+            switch(type) {
+                case 'success':
+                    icon = '<i class="fas fa-check-circle" style="margin-right: 8px; color: #28a745;"></i>';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-times-circle" style="margin-right: 8px; color: #dc3545;"></i>';
+                    break;
+                case 'warning':
+                    icon = '<i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ffc107;"></i>';
+                    break;
+                default:
+                    icon = '<i class="fas fa-info-circle" style="margin-right: 8px; color: #17a2b8;"></i>';
+            }
+            
+            logEntry.innerHTML = `${icon}<strong>[${timestamp}]</strong> ${message}`;
+            
+            // Clear empty state if exists
+            const emptyState = activityLog.querySelector('.activity-log-empty');
+            if (emptyState) {
+                emptyState.remove();
+            }
             
             activityLog.insertBefore(logEntry, activityLog.firstChild);
             
@@ -1661,7 +1736,7 @@
         }
 
         // Initialize
-        addLog('🚀 WhatsApp Network Manager iniciado!', 'success');
+        addLog('WhatsApp Network Manager iniciado!', 'success');
         
         // Sistema de contas salvas
         let savedAccounts = JSON.parse(localStorage.getItem('whatsapp-accounts') || '[]');
