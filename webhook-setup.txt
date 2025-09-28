@@ -1,0 +1,52 @@
+🚀 CONFIGURAÇÃO DO WEBHOOK - Execute no servidor
+
+1. Conecte no servidor:
+   ssh root@72.60.157.115
+   Senha: &OdW,u17P4j#smqA&)o2
+
+2. Execute estes comandos um por um:
+
+# Atualizar sistema
+apt update
+
+# Instalar webhook
+apt install -y webhook
+
+# Criar configuração
+cat > /etc/webhook.conf << 'EOF'
+[
+  {
+    "id": "whatsapp-deploy",
+    "execute-command": "/opt/deploy.sh",
+    "command-working-directory": "/opt/whatsapp-network",
+    "response-message": "Deploy iniciado!"
+  }
+]
+EOF
+
+# Criar script de deploy
+cat > /opt/deploy.sh << 'EOF'
+#!/bin/bash
+echo "🚀 Iniciando deploy..."
+cd /opt/whatsapp-network
+git pull origin main
+npm install
+pm2 restart whatsapp-network
+echo "✅ Deploy concluído!"
+EOF
+
+# Dar permissão
+chmod +x /opt/deploy.sh
+
+# Iniciar webhook
+webhook -hooks /etc/webhook.conf -port 9000 -verbose &
+
+# Testar
+curl -X POST http://localhost:9000/hooks/whatsapp-deploy
+
+3. Configurar no GitHub:
+   - URL: http://72.60.157.115:9000/hooks/whatsapp-deploy
+   - Content type: application/json
+   - Events: Just the push event
+
+✅ Pronto! Webhook funcionando!
