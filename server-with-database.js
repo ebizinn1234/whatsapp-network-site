@@ -84,21 +84,22 @@ io.on('connection', (socket) => {
     });
 
     socket.on('connect-whatsapp', async (data) => {
-        const { userId, sessionId = 'default' } = data;
+        const { userId, accountId, sessionId = 'default' } = data;
+        const userIdentifier = userId || accountId || 'default';
         
         try {
-            if (!userSessions.has(userId)) {
-                userSessions.set(userId, {});
+            if (!userSessions.has(userIdentifier)) {
+                userSessions.set(userIdentifier, {});
             }
             
-            const sock = await createWhatsAppSocket(userId, sessionId);
-            userSessions.get(userId)[sessionId] = {
+            const sock = await createWhatsAppSocket(userIdentifier, sessionId);
+            userSessions.get(userIdentifier)[sessionId] = {
                 sock,
                 isConnected: false,
                 sessionId
             };
             
-            console.log(`📱 Conectando WhatsApp para usuário ${userId}`);
+            console.log(`📱 Conectando WhatsApp para usuário ${userIdentifier}`);
         } catch (error) {
             console.error('Erro ao conectar WhatsApp:', error);
             socket.emit('connection-error', { message: 'Erro ao conectar WhatsApp' });
