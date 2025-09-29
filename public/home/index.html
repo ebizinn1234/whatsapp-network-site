@@ -1254,6 +1254,12 @@
                 </div>
             </div>
             
+            <!-- Debug Visual -->
+            <div id="debugInfo" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 12px; color: #6c757d;">
+                <strong>🔍 Debug Info:</strong><br>
+                <span id="debugStatus">Aguardando...</span>
+            </div>
+            
             <div id="groupsContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f8f9fa;">
                 <p style="text-align: center; color: #666; margin: 20px 0;">
                     <i class="fas fa-info-circle" style="margin-right: 8px; color: #24d366;"></i>
@@ -1356,6 +1362,13 @@
         const selectAllBtn = document.getElementById('selectAllBtn');
         const deselectAllBtn = document.getElementById('deselectAllBtn');
         
+        // Função de debug visual
+        function updateDebugInfo(message) {
+            if (debugStatus) {
+                debugStatus.innerHTML = message;
+            }
+        }
+        
         // Debug: verificar se os elementos existem
         console.log('loadGroupsBtn:', loadGroupsBtn);
         console.log('selectAllBtn:', selectAllBtn);
@@ -1364,16 +1377,25 @@
         // Verificar se os elementos existem antes de adicionar event listeners
         if (!selectAllBtn) {
             console.error('selectAllBtn not found!');
+            updateDebugInfo('❌ selectAllBtn não encontrado!');
         }
         if (!deselectAllBtn) {
             console.error('deselectAllBtn not found!');
+            updateDebugInfo('❌ deselectAllBtn não encontrado!');
         }
         if (!loadGroupsBtn) {
             console.error('loadGroupsBtn not found!');
+            updateDebugInfo('❌ loadGroupsBtn não encontrado!');
+        }
+        
+        if (selectAllBtn && deselectAllBtn && loadGroupsBtn) {
+            updateDebugInfo('✅ Todos os botões encontrados!');
         }
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugStatus = document.getElementById('debugStatus');
         const sendMessagesBtn = document.getElementById('sendMessagesBtn');
         const selectedCount = document.getElementById('selectedCount');
         const progressContainer = document.getElementById('progressContainer');
@@ -1438,6 +1460,7 @@
         socket.on('groups-loaded', (groupsData) => {
             groups = groupsData;
             totalGroups.textContent = groups.length;
+            updateDebugInfo(`📊 ${groups.length} grupos carregados do servidor`);
             renderGroups();
             addLog(`📊 ${groups.length} grupos carregados`, 'success');
         });
@@ -1641,6 +1664,7 @@
 
         loadGroupsBtn.addEventListener('click', () => {
             console.log('Load groups button clicked');
+            updateDebugInfo('🔄 Carregando grupos...');
             socket.emit('load-groups');
             addLog('📋 Carregando grupos...', 'info');
         });
@@ -1667,49 +1691,69 @@
 
         selectAllBtn.addEventListener('click', () => {
             console.log('Select all button clicked');
+            updateDebugInfo('🔄 Clicou em Selecionar Todos...');
             const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
             console.log('Found checkboxes:', checkboxes.length);
+            updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
+            
             if (checkboxes.length === 0) {
                 console.log('No checkboxes found - groups may not be loaded yet');
+                updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
                 addLog('⚠️ Carregue os grupos primeiro!', 'warning');
                 return;
             }
+            
+            updateDebugInfo(`✅ Selecionando ${checkboxes.length} grupos...`);
             checkboxes.forEach(checkbox => {
                 checkbox.checked = true;
             });
             updateSelectedGroups();
             addLog(`✅ ${checkboxes.length} grupos selecionados`, 'success');
+            updateDebugInfo(`✅ ${checkboxes.length} grupos selecionados com sucesso!`);
         });
 
         deselectAllBtn.addEventListener('click', () => {
             console.log('Deselect all button clicked');
+            updateDebugInfo('🔄 Clicou em Desmarcar Todos...');
             const checkboxes = document.querySelectorAll('.group-checkbox');
             console.log('Found checkboxes:', checkboxes.length);
+            updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
+            
             if (checkboxes.length === 0) {
                 console.log('No checkboxes found - groups may not be loaded yet');
+                updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
                 addLog('⚠️ Carregue os grupos primeiro!', 'warning');
                 return;
             }
+            
+            updateDebugInfo(`❌ Desmarcando ${checkboxes.length} grupos...`);
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false;
             });
             updateSelectedGroups();
             addLog('❌ Todos os grupos desmarcados', 'info');
+            updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
         });
 
         // Funcionalidade de pesquisa
         groupSearch.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
+            updateDebugInfo(`🔍 Pesquisando por: "${searchTerm}"`);
             const groupItems = document.querySelectorAll('.group-item');
+            updateDebugInfo(`🔍 Encontrados ${groupItems.length} grupos para filtrar`);
             
+            let visibleCount = 0;
             groupItems.forEach(item => {
                 const groupName = item.dataset.groupName;
                 if (groupName.includes(searchTerm)) {
                     item.style.display = 'flex';
+                    visibleCount++;
                 } else {
                     item.style.display = 'none';
                 }
             });
+            
+            updateDebugInfo(`✅ ${visibleCount} grupos visíveis após filtro`);
         });
 
         sendMessagesBtn.addEventListener('click', () => {
@@ -1722,14 +1766,18 @@
 
         // Functions
         function renderGroups() {
+            updateDebugInfo(`🔄 Renderizando ${groups.length} grupos...`);
+            
             if (groups.length === 0) {
                 groupsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum grupo encontrado</p>';
                 searchContainer.style.display = 'none';
+                updateDebugInfo('❌ Nenhum grupo para renderizar');
                 return;
             }
 
             // Mostrar campo de pesquisa quando há grupos
             searchContainer.style.display = 'block';
+            updateDebugInfo(`✅ Campo de pesquisa ativado para ${groups.length} grupos`);
 
             groupsContainer.innerHTML = groups.map((group, index) => {
                 let statusIcon = '✅';
@@ -1756,6 +1804,8 @@
                     </div>
                 `;
             }).join('');
+            
+            updateDebugInfo(`✅ ${groups.length} grupos renderizados com sucesso!`);
         }
 
         function updateSelectedGroups() {
