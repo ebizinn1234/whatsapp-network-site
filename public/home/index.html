@@ -2243,7 +2243,7 @@
                 if (!token) {
                     // Se não estiver logado, abrir modal de cadastro
                     console.log('🔐 Usuário não logado, abrindo modal de cadastro');
-                    showForm('register');
+                    document.getElementById('registerModal').style.display = 'flex';
                     return;
                 }
                 
