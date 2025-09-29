@@ -83,7 +83,7 @@ io.on('connection', (socket) => {
         console.log(`👤 Usuário ${userId} entrou na sala`);
     });
 
-    socket.on('connect-whatsapp', async (data) => {
+    socket.on('connect-whatsapp', async (data = {}) => {
         const { userId, accountId, sessionId = 'default' } = data;
         const userIdentifier = userId || accountId || 'default';
         
