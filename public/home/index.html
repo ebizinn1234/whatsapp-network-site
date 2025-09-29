@@ -1529,9 +1529,10 @@
         });
 
         socket.on('groups-loaded', (groupsData) => {
+            console.log('📊 Evento groups-loaded recebido:', groupsData);
             groups = groupsData;
             totalGroups.textContent = groups.length;
-            // updateDebugInfo(`📊 ${groups.length} grupos carregados do servidor`);
+            console.log('📊 Total de grupos definido:', groups.length);
             renderGroups();
             addLog(`📊 ${groups.length} grupos carregados`, 'success');
         });
@@ -1873,12 +1874,12 @@
 
         // Functions
         function renderGroups() {
-            // updateDebugInfo(`🔄 Renderizando ${groups.length} grupos...`);
+            console.log('🔄 renderGroups chamada com', groups.length, 'grupos');
             
             if (groups.length === 0) {
+                console.log('❌ Nenhum grupo para renderizar');
                 groupsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum grupo encontrado</p>';
                 searchContainer.style.display = 'none';
-                // updateDebugInfo('❌ Nenhum grupo para renderizar');
                 return;
             }
 
@@ -1886,7 +1887,7 @@
             searchContainer.style.display = 'block';
             // updateDebugInfo(`✅ Campo de pesquisa ativado para ${groups.length} grupos`);
 
-            groupsContainer.innerHTML = groups.map((group, index) => {
+            const groupsHTML = groups.map((group, index) => {
                 let statusIcon = '';
                 let statusText = '';
                 let statusClass = 'group-available';
@@ -1911,6 +1912,10 @@
                     </div>
                 `;
             }).join('');
+            
+            groupsContainer.innerHTML = groupsHTML;
+            console.log('✅ HTML dos grupos inserido no container');
+            console.log('🔍 Checkboxes criados:', document.querySelectorAll('.group-checkbox').length);
             
             // updateDebugInfo(`✅ ${groups.length} grupos renderizados com sucesso!`);
         }
