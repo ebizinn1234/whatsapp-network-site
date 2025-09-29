@@ -1795,6 +1795,15 @@
             setTimeout(() => {
                 socket.emit('check-connection');
             }, 1000);
+            
+            // Entrar na sala do usuário se estiver logado
+            const token = localStorage.getItem('token');
+            if (token) {
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                if (userData.id) {
+                    socket.emit('join-user', { userId: userData.id });
+                }
+            }
         });
 
         socket.on('connection-status', (data) => {
