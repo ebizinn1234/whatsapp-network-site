@@ -2924,7 +2924,11 @@
                     localStorage.setItem('user', JSON.stringify(data.user));
                     showMessage('Login realizado com sucesso!', 'success');
                     closeModal('loginModal');
-                    window.location.reload();
+                    
+                    // Aguardar mais tempo para mostrar a notificação antes de recarregar
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 4000);
                 } else {
                     showMessage(data.error);
                 }
