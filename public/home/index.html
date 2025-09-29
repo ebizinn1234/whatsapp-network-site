@@ -1873,7 +1873,7 @@
             // updateDebugInfo(`✅ Campo de pesquisa ativado para ${groups.length} grupos`);
 
             groupsContainer.innerHTML = groups.map((group, index) => {
-                let statusIcon = '✅';
+                let statusIcon = '';
                 let statusText = '';
                 let statusClass = 'group-available';
                 
@@ -1925,6 +1925,7 @@
                 }
                 if (sendMessagesBtn) {
                     sendMessagesBtn.disabled = selectedGroupsList.length === 0;
+                    console.log('Send button disabled:', sendMessagesBtn.disabled, 'Selected groups:', selectedGroupsList.length);
                 }
                 
                 socket.emit('select-groups', selectedGroupsList);
@@ -2112,6 +2113,9 @@
                 sidebar.classList.remove('open');
             }
         });
+        
+        // Inicializar estado do botão
+        updateSelectedGroups();
         }); // Fechar DOMContentLoaded
     </script>
         </div>
