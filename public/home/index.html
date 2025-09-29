@@ -2802,8 +2802,15 @@
                 };
 
                 headerActions.innerHTML = `
-                    <span style="color: #24d366; font-weight: 600;">${user.name || 'Usuário'}</span>
-                    <span style="color: #666; font-size: 14px;">${formatPhone(user.phone)}</span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="color: #24d366; font-weight: 600; font-size: 14px;">${user.name || 'Usuário'}</span>
+                            <span style="color: #666; font-size: 12px;">${formatPhone(user.phone)}</span>
+                        </div>
+                    </div>
                 `;
             }
 
