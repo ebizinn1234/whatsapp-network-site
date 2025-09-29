@@ -1353,6 +1353,7 @@
                     <span class="user-status" id="sidebarUserStatus">Desconectado</span>
                 </div>
             </div>
+            <!-- Botão Sair será adicionado aqui via JavaScript quando logado -->
         </div>
     </div> <!-- FECHA a sidebar -->
 
@@ -2786,14 +2787,64 @@
             if (loginBtn) loginBtn.style.display = 'none';
             if (registerBtn) registerBtn.style.display = 'none';
             
-            // Mostrar informações do usuário
+            // Mostrar informações do usuário no header (sem botão Sair)
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             const headerActions = document.querySelector('.header-actions');
             if (headerActions) {
+                // Formatar telefone com máscara brasileira
+                const formatPhone = (phone) => {
+                    if (!phone) return 'Usuário';
+                    const cleaned = phone.replace(/\D/g, '');
+                    if (cleaned.length === 11) {
+                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                    }
+                    return phone;
+                };
+
                 headerActions.innerHTML = `
-                    <span style="color: #24d366; font-weight: 600;">${user.phone || 'Usuário'}</span>
-                    <button class="btn-logout" onclick="logout()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">Sair</button>
+                    <span style="color: #24d366; font-weight: 600;">${user.name || 'Usuário'}</span>
+                    <span style="color: #666; font-size: 14px;">${formatPhone(user.phone)}</span>
                 `;
+            }
+
+            // Atualizar informações do usuário no sidebar
+            const sidebarUserName = document.getElementById('sidebarUserName');
+            const sidebarUserStatus = document.getElementById('sidebarUserStatus');
+            const sidebarUserAvatar = document.getElementById('sidebarUserAvatar');
+            
+            if (sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
+                // Formatar telefone com máscara brasileira
+                const formatPhone = (phone) => {
+                    if (!phone) return 'Usuário';
+                    const cleaned = phone.replace(/\D/g, '');
+                    if (cleaned.length === 11) {
+                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                    }
+                    return phone;
+                };
+
+                // Atualizar informações do usuário
+                sidebarUserName.textContent = user.name || 'Usuário';
+                sidebarUserStatus.textContent = formatPhone(user.phone);
+                sidebarUserStatus.className = 'user-status connected';
+                sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
+            }
+
+            // Adicionar botão "Sair" no sidebar
+            const sidebarFooter = document.querySelector('.sidebar-footer');
+            if (sidebarFooter) {
+                const existingLogout = sidebarFooter.querySelector('.logout-item');
+                if (!existingLogout) {
+                    const logoutItem = document.createElement('div');
+                    logoutItem.className = 'logout-item';
+                    logoutItem.innerHTML = `
+                        <div class="sidebar-item" onclick="logout()" style="background: #dc3545; color: white; border-radius: 8px; margin: 10px; cursor: pointer; transition: all 0.3s ease; padding: 12px 16px;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </div>
+                    `;
+                    sidebarFooter.appendChild(logoutItem);
+                }
             }
             
             console.log('Usuário logado:', user);
