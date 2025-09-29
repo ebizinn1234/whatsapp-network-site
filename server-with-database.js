@@ -59,6 +59,12 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
             console.log('🔍 DEBUG: Enviando QR Code para sala user_' + userId);
             io.to(`user_${userId}`).emit('qr-code', qrCode);
             console.log('🔍 DEBUG: QR Code enviado com sucesso!');
+            
+            // Também enviar para a sala default como fallback
+            if (userId !== 'default') {
+                console.log('🔍 DEBUG: Enviando QR Code também para sala user_default como fallback');
+                io.to('user_default').emit('qr-code', qrCode);
+            }
         } else {
             console.log('🔍 DEBUG: Nenhum QR Code gerado');
         }

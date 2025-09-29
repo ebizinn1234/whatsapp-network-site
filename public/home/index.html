@@ -2222,7 +2222,7 @@
                 addLog(`🔄 Conectando ao WhatsApp (${selectedAccount})...`, 'info');
             } else {
                     console.log('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
-                socket.emit('connect-whatsapp');
+                socket.emit('connect-whatsapp', {});
                 addLog('🔄 Conectando ao WhatsApp...', 'info');
             }
             
