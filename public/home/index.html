@@ -1391,6 +1391,9 @@
         if (selectAllBtn && deselectAllBtn && loadGroupsBtn) {
             updateDebugInfo('✅ Todos os botões encontrados!');
         }
+        
+        // Verificação inicial de conexão
+        updateDebugInfo('🚀 Página carregada, verificando conexão...');
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
@@ -1426,11 +1429,15 @@
         // Reconectar automaticamente ao carregar a página
         socket.on('connect', () => {
             console.log('Socket conectado, verificando status WhatsApp...');
+            updateDebugInfo('🔄 Verificando status da conexão WhatsApp...');
             socket.emit('check-connection');
         });
 
         socket.on('connection-status', (data) => {
             const statusHint = document.getElementById('statusHint');
+            console.log('Status da conexão recebido:', data);
+            updateDebugInfo(`📱 Status WhatsApp: ${data.connected ? 'Conectado' : 'Desconectado'}`);
+            
             if (data.connected) {
                 statusIndicator.classList.add('connected');
                 statusText.textContent = data.message;
@@ -1440,6 +1447,7 @@
                 connectBtn.style.display = 'none';
                 disconnectBtn.style.display = 'inline-block';
                 qrContainer.classList.add('hidden');
+                updateDebugInfo('✅ WhatsApp conectado com sucesso!');
             } else {
                 statusIndicator.classList.remove('connected');
                 statusText.textContent = data.message;
@@ -1448,6 +1456,7 @@
                 connectBtn.disabled = false;
                 connectBtn.style.display = 'inline-block';
                 disconnectBtn.style.display = 'none';
+                updateDebugInfo('❌ WhatsApp desconectado - clique para conectar');
             }
         });
 
