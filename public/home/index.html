@@ -1846,8 +1846,8 @@
         // Tornar a função global
         window.closeQRModal = closeQRModal;
 
-        // Event listener para o botão X
-        document.addEventListener('DOMContentLoaded', function() {
+        // Event listener para o botão X - será adicionado quando o modal for exibido
+        function addCloseListener() {
             const qrCloseBtn = document.getElementById('qrCloseBtn');
             if (qrCloseBtn) {
                 qrCloseBtn.addEventListener('click', function() {
@@ -1855,7 +1855,7 @@
                     closeQRModal();
                 });
             }
-        });
+        }
 
         // Fechar modal ao clicar fora dele
         window.onclick = function(event) {
@@ -1964,6 +1964,11 @@
             document.getElementById('qrModal').style.display = 'block';
             addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
             console.log('🔍 DEBUG: QR Code exibido no modal!');
+            
+            // Adicionar listener do botão X quando modal é exibido
+            setTimeout(() => {
+                addCloseListener();
+            }, 100);
             
             // Restaurar botão após QR Code aparecer
             connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
@@ -3087,7 +3092,7 @@
     <!-- Modal QR Code -->
     <div id="qrModal" class="qr-modal">
         <div class="qr-modal-content">
-            <span class="qr-close" id="qrCloseBtn">&times;</span>
+            <span class="qr-close" id="qrCloseBtn" onclick="closeQRModal()">&times;</span>
             <div class="qr-modal-header">
                 <h3>Escaneie o QR Code com seu WhatsApp</h3>
             </div>
