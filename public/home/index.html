@@ -1355,8 +1355,6 @@
         const selectedGroups = document.getElementById('selectedGroups');
         const sentMessages = document.getElementById('sentMessages');
         const messageText = document.getElementById('messageText');
-        const speedMode = document.getElementById('speedMode');
-        const humanMode = document.getElementById('humanMode');
         const updateMessageBtn = document.getElementById('updateMessageBtn');
         const loadGroupsBtn = document.getElementById('loadGroupsBtn');
         
@@ -1809,20 +1807,33 @@
 
         updateMessageBtn.addEventListener('click', () => {
             const message = messageText.value;
-            const delay = parseInt(delayTime.value) * 1000;
-            const minDelayValue = parseInt(minDelay.value) * 1000;
-            const maxDelayValue = parseInt(maxDelay.value) * 1000;
-            const humanModeValue = humanMode.checked;
+            const selectedSpeed = document.querySelector('input[name="speedMode"]:checked').value;
             
-            const config = {
-                text: message,
-                delay: delay,
-                minDelay: minDelayValue,
-                maxDelay: maxDelayValue,
-                humanMode: humanModeValue,
-                randomDelay: true // Sempre ativado
-            };
+            let config;
             
+            if (selectedSpeed === 'human') {
+                // Modo Humano: 30-120 segundos
+                config = {
+                    text: message,
+                    delay: 60000, // 1 minuto base
+                    minDelay: 30000, // 30 segundos
+                    maxDelay: 120000, // 2 minutos
+                    humanMode: true,
+                    randomDelay: true
+                };
+            } else {
+                // Modo Rápido: 5-15 segundos
+                config = {
+                    text: message,
+                    delay: 10000, // 10 segundos base
+                    minDelay: 5000, // 5 segundos
+                    maxDelay: 15000, // 15 segundos
+                    humanMode: false,
+                    randomDelay: true
+                };
+            }
+            
+            console.log('📤 Enviando configuração para o servidor:', config);
             socket.emit('update-message', config);
             addLog('💬 Configuração atualizada!', 'success');
         });
