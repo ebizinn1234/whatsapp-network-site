@@ -251,13 +251,14 @@
             color: #ef4444;
         }
 
-        /* Main Content */
+        /* Main Content (desktop) */
         .main-content {
-            margin-left: 280px;
+            position: relative;
+            left: 280px;          /* desloca para a direita para não ficar sob a sidebar fixa */
+            max-width: calc(100% - 280px);
             min-height: calc(100vh - 60px);
             padding: 20px;
             background: #f8f9fa;
-            width: calc(100% - 280px);
         }
 
         .account-selector {
@@ -1044,9 +1045,9 @@
             }
 
             .main-content {
-                margin-left: 0;
+                left: 0;            /* volta pro zero no mobile */
+                max-width: 100%;
                 padding-top: 70px;
-                width: 100%;
             }
 
             .mobile-menu-btn {
