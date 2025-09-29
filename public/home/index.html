@@ -240,6 +240,19 @@
             margin: 20px 0;
         }
 
+        /* Efeitos hover para botões de ação */
+        #disconnectBtn:hover {
+            background: #c82333 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        #clearSessionBtn:hover {
+            background: #5a6268 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        }
+
         .desktop-only {
             display: block;
         }
@@ -1203,12 +1216,12 @@
                     <span style="font-size: 18px; margin-right: 8px; font-weight: bold;">+</span>
                     Conectar WhatsApp
                 </button>
-                <button class="btn btn-danger" id="disconnectBtn" style="display: none;">
-                    <span style="font-size: 18px; margin-right: 8px; font-weight: bold;">×</span>
+                <button class="btn btn-danger" id="disconnectBtn" style="display: none; background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>
                     Desconectar
                 </button>
-                <button class="btn btn-warning" id="clearSessionBtn" style="background: #ffc107; color: #000; margin-left: 10px;">
-                    <i class="fas fa-trash" style="margin-right: 8px;"></i>
+                <button class="btn btn-warning" id="clearSessionBtn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; margin-left: 10px; transition: all 0.3s ease;">
+                    <i class="fas fa-trash-alt" style="margin-right: 8px;"></i>
                     Limpar Sessão
                 </button>
             </div>
@@ -1548,20 +1561,30 @@
                 if (data.whatsappInfo) {
                     const { name, number, profilePicture } = data.whatsappInfo;
                     statusText.innerHTML = `
-                        <div style="font-weight: 600; color: #28a745; margin-bottom: 5px;">
+                        <div style="font-weight: 600; color: #28a745; margin-bottom: 8px;">
                             Conectado ao WhatsApp!
                         </div>
-                        <div style="font-size: 14px; color: #666; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="font-size: 14px; color: #666; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
                             ${profilePicture ? `<img src="${profilePicture}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">` : '<i class="fas fa-user-circle" style="color: #24d366; font-size: 20px;"></i>'}
                             <span><strong>${name || 'Usuário'}</strong></span>
                             <span style="color: #999;">•</span>
                             <span style="font-family: monospace; font-size: 12px;">${number || 'Número não disponível'}</span>
                         </div>
+                        <div style="font-size: 12px; color: #28a745; font-weight: 500;">
+                            Pronto para enviar mensagens!
+                        </div>
                     `;
-                    statusHint.textContent = 'Pronto para enviar mensagens!';
+                    statusHint.textContent = '';
                 } else {
-                    statusText.textContent = data.message;
-                    statusHint.textContent = 'Pronto para enviar mensagens!';
+                    statusText.innerHTML = `
+                        <div style="font-weight: 600; color: #28a745; margin-bottom: 8px;">
+                            Conectado ao WhatsApp!
+                        </div>
+                        <div style="font-size: 12px; color: #28a745; font-weight: 500;">
+                            Pronto para enviar mensagens!
+                        </div>
+                    `;
+                    statusHint.textContent = '';
                 }
                 
                 connectBtn.innerHTML = '<span style="font-size: 18px; margin-right: 8px; font-weight: bold;">✓</span>Conectado';
