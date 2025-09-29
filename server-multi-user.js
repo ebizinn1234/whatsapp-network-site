@@ -356,10 +356,23 @@ async function connectToWhatsApp(userIP, socket, accountId = null) {
 // Função para carregar grupos reais do WhatsApp para um usuário específico
 async function loadGroups(userIP, socket) {
     const userSession = userSessions.get(userIP);
-    if (!userSession || !userSession.isConnected || !userSession.sock) return;
+    if (!userSession || !userSession.isConnected || !userSession.sock) {
+        console.log(`❌ Usuário ${userIP} não está conectado ou sessão inválida`);
+        return;
+    }
     
     try {
         console.log(`🔍 Carregando grupos reais do WhatsApp para usuário ${userIP}...`);
+        
+        // Verificar se o socket ainda está ativo e pertence ao usuário correto
+        if (!userSession.sock.user || !userSession.sock.user.id) {
+            console.log(`❌ Sessão inválida para usuário ${userIP} - reconectando...`);
+            socket.emit('connection-status', {
+                connected: false,
+                message: 'Sessão expirada - reconecte'
+            });
+            return;
+        }
         
         // Buscar grupos reais do WhatsApp
         const chats = await userSession.sock.groupFetchAllParticipating();
@@ -371,6 +384,15 @@ async function loadGroups(userIP, socket) {
                 // Verificar se é um grupo (não comunidade)
                 const isGroup = id.endsWith('@g.us');
                 const participantCount = Object.keys(chat.participants || {}).length;
+                
+                // Verificar se o usuário atual é participante do grupo
+                const currentUserId = userSession.sock.user.id;
+                const isParticipant = chat.participants && chat.participants[currentUserId];
+                
+                if (!isParticipant) {
+                    console.log(`🔒 Grupo ${chat.subject} não pertence ao usuário ${userIP} - pulando`);
+                    continue;
+                }
                 
                 // Detectar comunidades de várias formas mais precisas
                 const isCommunity = 
@@ -570,12 +592,25 @@ io.on('connection', (socket) => {
     });
     
     socket.on('load-groups', () => {
-        if (userSession.isConnected) {
-            console.log(`🔄 Recarregando grupos para usuário ${userIP}...`);
-            loadGroups(userIP, socket);
-        } else {
-            socket.emit('groups-error', 'WhatsApp não conectado');
+        // Verificar se o usuário tem uma sessão válida
+        if (!userSession || !userSession.isConnected || !userSession.sock) {
+            console.log(`❌ Tentativa de carregar grupos sem sessão válida para ${userIP}`);
+            socket.emit('groups-error', 'Sessão inválida - reconecte o WhatsApp');
+            return;
         }
+        
+        // Verificar se o socket ainda está ativo
+        if (!userSession.sock.user || !userSession.sock.user.id) {
+            console.log(`❌ Sessão expirada para usuário ${userIP}`);
+            socket.emit('connection-status', {
+                connected: false,
+                message: 'Sessão expirada - reconecte'
+            });
+            return;
+        }
+        
+        console.log(`🔄 Recarregando grupos para usuário ${userIP} (${userSession.sock.user.id})...`);
+        loadGroups(userIP, socket);
     });
     
     socket.on('select-groups', (selected) => {
