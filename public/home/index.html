@@ -1163,6 +1163,10 @@
                     <span style="font-size: 18px; margin-right: 8px; font-weight: bold;">×</span>
                     Desconectar
                 </button>
+                <button class="btn btn-warning" id="clearSessionBtn" style="background: #ffc107; color: #000; margin-left: 10px;">
+                    <i class="fas fa-trash" style="margin-right: 8px;"></i>
+                    Limpar Sessão
+                </button>
             </div>
             <div id="qrContainer" class="qr-container hidden">
                 <h3>Escaneie o QR Code com seu WhatsApp:</h3>
@@ -1349,6 +1353,7 @@
         const statusText = document.getElementById('statusText');
         const connectBtn = document.getElementById('connectBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
+        const clearSessionBtn = document.getElementById('clearSessionBtn');
         const qrContainer = document.getElementById('qrContainer');
         const qrCode = document.getElementById('qrCode');
         const totalGroups = document.getElementById('totalGroups');
@@ -1602,6 +1607,16 @@
             addLog(`❌ Erro na conta: ${message}`, 'danger');
         });
 
+        socket.on('session-cleared', (message) => {
+            updateDebugInfo('✅ Sessão limpa com sucesso!');
+            addLog(`✅ ${message}`, 'success');
+            // Limpar interface
+            groups = [];
+            selectedGroupsList = [];
+            renderGroups();
+            updateSelectedGroups();
+        });
+
         // Event listeners
         connectBtn.addEventListener('click', () => {
             const selectedAccount = accountSelect.value;
@@ -1651,6 +1666,14 @@
         disconnectBtn.addEventListener('click', () => {
             socket.emit('disconnect-whatsapp');
             addLog('🔄 Desconectando do WhatsApp...', 'info');
+        });
+
+        clearSessionBtn.addEventListener('click', () => {
+            if (confirm('⚠️ Tem certeza que deseja limpar a sessão atual? Isso irá desconectar o WhatsApp e você precisará escanear o QR Code novamente.')) {
+                updateDebugInfo('🗑️ Limpando sessão atual...');
+                socket.emit('clear-session');
+                addLog('🗑️ Limpando sessão atual...', 'warning');
+            }
         });
 
         // Controles de envio

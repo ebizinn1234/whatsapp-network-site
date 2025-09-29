@@ -526,6 +526,48 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    socket.on('clear-session', async () => {
+        console.log(`🗑️ Limpando sessão completa para usuário ${userIP}...`);
+        
+        // Desconectar se estiver conectado
+        if (userSession.sock) {
+            try {
+                await userSession.sock.logout();
+                console.log(`✅ Logout realizado para usuário ${userIP}`);
+            } catch (error) {
+                console.log(`⚠️ Erro no logout (normal): ${error.message}`);
+            }
+        }
+        
+        // Remover sessão do mapa
+        userSessions.delete(userIP);
+        console.log(`🗑️ Sessão removida do mapa para usuário ${userIP}`);
+        
+        // Limpar pasta de autenticação
+        const fs = require('fs');
+        const path = require('path');
+        const authPath = path.join(process.cwd(), `auth_info_${userIP}`);
+        
+        try {
+            if (fs.existsSync(authPath)) {
+                fs.rmSync(authPath, { recursive: true, force: true });
+                console.log(`✅ Pasta de autenticação removida: ${authPath}`);
+            } else {
+                console.log(`📁 Pasta de autenticação não encontrada: ${authPath}`);
+            }
+        } catch (error) {
+            console.log(`⚠️ Erro ao remover pasta de autenticação: ${error.message}`);
+        }
+        
+        socket.emit('connection-status', {
+            connected: false,
+            message: 'Sessão limpa! Conecte novamente'
+        });
+        
+        socket.emit('session-cleared', 'Sessão limpa com sucesso!');
+        console.log(`🎉 Sessão completamente limpa para usuário ${userIP}!`);
+    });
     
     socket.on('load-groups', () => {
         if (userSession.isConnected) {
