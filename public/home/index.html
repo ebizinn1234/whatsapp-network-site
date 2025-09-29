@@ -2535,25 +2535,6 @@
             }
         }
 
-        function showSuccessNotification(message) {
-            const notification = document.getElementById('successNotification');
-            const span = notification.querySelector('span');
-            
-            // Atualizar mensagem
-            span.textContent = message;
-            
-            // Mostrar notificação
-            notification.style.display = 'flex';
-            notification.style.animation = 'slideInRight 0.3s ease-out';
-            
-            // Esconder após 3 segundos
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-out';
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                }, 300);
-            }, 3000);
-        }
 
         function formatPhoneNumber(number) {
             if (!number) return 'Número não disponível';
@@ -2785,11 +2766,6 @@
     </script>
         </div>
         
-        <!-- Notificação de sucesso -->
-        <div id="successNotification" class="success-notification">
-            <i class="fas fa-check-circle"></i>
-            <span>Mensagem salva com sucesso!</span>
-        </div>
         
         <!-- Modal de Login -->
         <div id="loginModal" class="modal" style="display: none;">
