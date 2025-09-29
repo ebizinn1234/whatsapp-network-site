@@ -13,168 +13,9 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
+            background: #ffffff;
             color: #333;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            left: 0;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .sidebar-header .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .sidebar-header .logo-icon {
-            width: 40px;
-            height: 40px;
-            color: #25d366;
-        }
-
-        .sidebar-header .logo-icon svg {
-            width: 32px;
-            height: 32px;
-        }
-
-        .sidebar-header .brand h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #25d366;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 20px 0;
-        }
-
-        .nav-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .nav-item {
-            margin-bottom: 5px;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #6b7280;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-
-        .nav-link:hover {
-            background: #f3f4f6;
-            color: #25d366;
-            border-left-color: #25d366;
-        }
-
-        .nav-link.active {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            color: #25d366;
-            border-left-color: #25d366;
-            font-weight: 600;
-        }
-
-        .nav-link svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #25d366, #128c7e);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-
-        .user-avatar svg {
-            width: 24px;
-            height: 24px;
-        }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9rem;
-        }
-
-        .user-status {
-            font-size: 0.8rem;
-            color: #25d366;
-            font-weight: 500;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            min-height: 100vh;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: #24d366;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(36, 211, 102, 0.3);
         }
 
         .container {
@@ -183,6 +24,67 @@
             padding: 20px;
         }
 
+        .header {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            color: #25d366;
+        }
+
+        .logo-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .brand h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #25d366;
+            margin: 0;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+        }
 
         .tutorial-content {
             background: white;
@@ -340,82 +242,6 @@
         }
 
         /* Responsive Design */
-        /* Mobile Header */
-        .mobile-header {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1001;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .mobile-header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 20px;
-        }
-
-        .mobile-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mobile-logo .logo-icon {
-            width: 32px;
-            height: 32px;
-            color: #24d366;
-        }
-
-        .mobile-logo h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin: 0;
-        }
-
-        @media (max-width: 768px) {
-            .mobile-header {
-                display: block;
-            }
-
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding-top: 70px;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-                background: #24d366;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px;
-                cursor: pointer;
-                box-shadow: 0 2px 8px rgba(36, 211, 102, 0.3);
-            }
-        }
-
-        @media (min-width: 769px) {
-            .mobile-menu-btn {
-                display: none;
-            }
-        }
-
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -451,6 +277,32 @@
         }
 
         @media (max-width: 480px) {
+            .header {
+                padding: 15px;
+            }
+
+            .logo-section {
+                gap: 10px;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            .logo-icon svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            .brand h1 {
+                font-size: 1.3rem;
+            }
+
+            .back-btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
 
             .tutorial-content {
                 padding: 15px;
@@ -485,137 +337,142 @@
     </style>
 </head>
 <body>
-    <!-- Header Mobile -->
-    <div class="mobile-header">
-        <div class="mobile-header-content">
-            <div class="mobile-logo">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                </svg>
-                <h1>DisparoZap</h1>
-            </div>
-            <button class="mobile-menu-btn" onclick="toggleSidebar()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <!-- Menu Lateral -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-section">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                        </svg>
+                    </div>
+                    <div class="brand">
+                        <h1>DisparoZap</h1>
+                    </div>
+                </div>
+                
+                <a href="/" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
                     </svg>
-                </div>
-                <div class="brand">
-                    <h1>DisparoZap</h1>
-                </div>
+                    Voltar ao Site
+                </a>
             </div>
         </div>
-        
-        <nav class="sidebar-nav">
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a href="/home/" class="nav-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                        </svg>
-                        <span>Início</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/tutorial/" class="nav-link active">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v4z"/>
-                        </svg>
-                        <span>Tutorial</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                        <span>Recursos</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                        <span>Suporte</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                </div>
-                <div class="user-details">
-                    <span class="user-name">Usuário</span>
-                    <span class="user-status">Online</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Conteúdo Principal -->
-    <div class="main-content">
-        <div class="container">
 
         <div class="tutorial-content">
             <div class="tutorial-title">
-                <h1>Como Usar o DisparoZap</h1>
-                <p>Guia rápido e direto</p>
+                <h1>Tutorial Completo</h1>
+                <p>Aprenda a usar o DisparoZap de forma eficiente e segura</p>
             </div>
 
             <div class="step-section">
                 <div class="step-header">
                     <div class="step-number">1</div>
-                    <h2 class="step-title">Conecte WhatsApp</h2>
+                    <h2 class="step-title">Conecte seu WhatsApp</h2>
                 </div>
+                
                 <div class="step-content">
-                    <p>Clique em "Conectar WhatsApp" → Escolha uma conta → Escaneie o QR Code</p>
+                    <p>Para começar, você precisa conectar sua conta WhatsApp ao DisparoZap:</p>
+                    
+                    <div class="step-image">
+                        <p><strong>Passo 1:</strong> Clique em "Conectar WhatsApp"</p>
+                        <p><strong>Passo 2:</strong> Escolha uma conta ou crie uma nova</p>
+                        <p><strong>Passo 3:</strong> Escaneie o QR Code com seu celular</p>
+                        <p><strong>Passo 4:</strong> Aguarde a conexão ser estabelecida</p>
+                    </div>
+
+                    <div class="tips-box">
+                        <h3>💡 Dicas Importantes:</h3>
+                        <ul>
+                            <li>✅ Mantenha o WhatsApp Web aberto no seu celular</li>
+                            <li>✅ Certifique-se de que há conexão com a internet</li>
+                            <li>✅ Não feche a aba do navegador durante a conexão</li>
+                            <li>✅ Se der erro, tente desconectar e conectar novamente</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
             <div class="step-section">
                 <div class="step-header">
                     <div class="step-number">2</div>
-                    <h2 class="step-title">Selecione Grupos</h2>
+                    <h2 class="step-title">Selecione os Grupos</h2>
                 </div>
+                
                 <div class="step-content">
-                    <p>Clique em "Carregar Grupos" → Marque os grupos desejados → Use "Selecionar Todos" se necessário</p>
+                    <p>Após conectar, você verá uma lista de todos os seus grupos WhatsApp:</p>
+                    
+                    <div class="step-image">
+                        <p><strong>Passo 1:</strong> Clique em "Carregar Grupos"</p>
+                        <p><strong>Passo 2:</strong> Revise a lista de grupos disponíveis</p>
+                        <p><strong>Passo 3:</strong> Marque os grupos que receberão a mensagem</p>
+                        <p><strong>Passo 4:</strong> Use "Selecionar Todos" para marcar todos de uma vez</p>
+                    </div>
+
+                    <div class="tips-box">
+                        <h3>💡 Dicas Importantes:</h3>
+                        <ul>
+                            <li>✅ Apenas grupos abertos aparecem na lista</li>
+                            <li>✅ Grupos privados são automaticamente filtrados</li>
+                            <li>✅ Você pode desmarcar grupos específicos</li>
+                            <li>✅ Verifique se tem permissão para enviar nos grupos</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
             <div class="step-section">
                 <div class="step-header">
                     <div class="step-number">3</div>
-                    <h2 class="step-title">Digite sua Mensagem</h2>
+                    <h2 class="step-title">Configure sua Mensagem</h2>
                 </div>
+                
                 <div class="step-content">
-                    <p>Escreva o texto no campo → Clique em "Atualizar Mensagem"</p>
+                    <p>Escreva a mensagem que será enviada para todos os grupos selecionados:</p>
+                    
+                    <div class="step-image">
+                        <p><strong>Passo 1:</strong> Digite sua mensagem no campo de texto</p>
+                        <p><strong>Passo 2:</strong> Revise o conteúdo antes de enviar</p>
+                        <p><strong>Passo 3:</strong> Use "Atualizar Mensagem" para salvar</p>
+                        <p><strong>Passo 4:</strong> A mensagem será enviada para todos os grupos</p>
+                    </div>
+
+                    <div class="warning-box">
+                        <h3>⚠️ Atenção:</h3>
+                        <p>• Evite mensagens muito repetitivas ou spam</p>
+                        <p>• Respeite as regras de cada grupo</p>
+                        <p>• Não envie conteúdo inadequado</p>
+                        <p>• Teste primeiro com poucos grupos</p>
+                    </div>
                 </div>
             </div>
 
             <div class="step-section">
                 <div class="step-header">
                     <div class="step-number">4</div>
-                    <h2 class="step-title">Configure Velocidade</h2>
+                    <h2 class="step-title">Configure a Velocidade</h2>
                 </div>
+                
                 <div class="step-content">
-                    <p>Escolha: Lento (5-10s), Normal (3-5s), Rápido (1-3s) ou Personalizado</p>
+                    <p>Escolha a velocidade de envio para evitar bloqueios:</p>
+                    
+                    <div class="step-image">
+                        <p><strong>Lento:</strong> 5-10 segundos entre mensagens (mais seguro)</p>
+                        <p><strong>Normal:</strong> 3-5 segundos entre mensagens (equilibrado)</p>
+                        <p><strong>Rápido:</strong> 1-3 segundos entre mensagens (mais arriscado)</p>
+                        <p><strong>Personalizado:</strong> Defina seus próprios valores</p>
+                    </div>
+
+                    <div class="tips-box">
+                        <h3>💡 Dicas de Velocidade:</h3>
+                        <ul>
+                            <li>✅ Use "Lento" para evitar bloqueios</li>
+                            <li>✅ "Normal" é recomendado para a maioria</li>
+                            <li>✅ "Rápido" apenas se necessário</li>
+                            <li>✅ Personalizado para controle total</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -624,41 +481,62 @@
                     <div class="step-number">5</div>
                     <h2 class="step-title">Envie e Acompanhe</h2>
                 </div>
+                
                 <div class="step-content">
-                    <p>Clique em "Enviar Mensagens" → Acompanhe o progresso → Use Pausar/Continuar se necessário</p>
+                    <p>Inicie o envio e acompanhe o progresso em tempo real:</p>
+                    
+                    <div class="step-image">
+                        <p><strong>Passo 1:</strong> Clique em "Enviar Mensagens"</p>
+                        <p><strong>Passo 2:</strong> Acompanhe o progresso na barra</p>
+                        <p><strong>Passo 3:</strong> Use "Pausar" se necessário</p>
+                        <p><strong>Passo 4:</strong> Veja as estatísticas em tempo real</p>
+                    </div>
+
+                    <div class="tips-box">
+                        <h3>💡 Controles Disponíveis:</h3>
+                        <ul>
+                            <li>✅ Pausar/Continuar o envio</li>
+                            <li>✅ Cancelar o envio</li>
+                            <li>✅ Ver progresso detalhado</li>
+                            <li>✅ Acompanhar estatísticas</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <div class="tips-box">
-                <h3>💡 Dicas Importantes:</h3>
-                <ul>
-                    <li>✅ Teste primeiro com poucos grupos</li>
-                    <li>✅ Use velocidade "Lento" para evitar bloqueios</li>
-                    <li>✅ Respeite as regras do WhatsApp</li>
-                    <li>✅ Evite spam e conteúdo repetitivo</li>
-                </ul>
+            <div class="step-section">
+                <div class="step-header">
+                    <div class="step-number">6</div>
+                    <h2 class="step-title">Boas Práticas</h2>
+                </div>
+                
+                <div class="step-content">
+                    <p>Para usar o DisparoZap de forma segura e eficiente:</p>
+                    
+                    <div class="tips-box">
+                        <h3>✅ Faça:</h3>
+                        <ul>
+                            <li>• Teste sempre com poucos grupos primeiro</li>
+                            <li>• Use velocidades mais lentas</li>
+                            <li>• Respeite as regras dos grupos</li>
+                            <li>• Envie conteúdo relevante</li>
+                            <li>• Monitore o progresso</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-box">
+                        <h3>❌ Evite:</h3>
+                        <ul>
+                            <li>• Enviar spam ou conteúdo repetitivo</li>
+                            <li>• Usar velocidades muito altas</li>
+                            <li>• Enviar para muitos grupos de uma vez</li>
+                            <li>• Ignorar as regras do WhatsApp</li>
+                            <li>• Enviar conteúdo inadequado</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <script>
-        // Função para toggle do menu mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
-
-        // Fechar menu ao clicar fora (mobile)
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuBtn = document.querySelector('.mobile-menu-btn');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(event.target) && 
-                !menuBtn.contains(event.target)) {
-                sidebar.classList.remove('open');
-            }
-        });
-    </script>
 </body>
 </html>

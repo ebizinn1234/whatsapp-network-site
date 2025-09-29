@@ -1275,6 +1275,10 @@
             </p>
             
             <div id="sendingContainer" style="text-align: center;">
+                <button class="btn btn-primary" id="saveSelectionBtn" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; margin-right: 10px;">
+                    <i class="fas fa-save" style="margin-right: 8px;"></i>
+                    Salvar Seleção
+                </button>
                 <button class="btn btn-success" id="sendMessagesBtn" disabled style="background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: not-allowed; opacity: 0.6;">
                     <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>
                     Enviar Mensagens (<span id="selectedCount">0</span> grupos)
@@ -1454,6 +1458,7 @@
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
         const sendMessagesBtn = document.getElementById('sendMessagesBtn');
+        const saveSelectionBtn = document.getElementById('saveSelectionBtn');
         const selectedCount = document.getElementById('selectedCount');
         const progressContainer = document.getElementById('progressContainer');
         const progressFill = document.getElementById('progressFill');
@@ -1849,6 +1854,15 @@
             // updateDebugInfo(`✅ ${visibleCount} grupos visíveis após filtro`);
         });
 
+        // Event listener para botão Salvar Seleção
+        if (saveSelectionBtn) {
+            saveSelectionBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('🔵 Botão Salvar Seleção clicado!');
+                saveSelection();
+            });
+        }
+
         sendMessagesBtn.addEventListener('click', () => {
             if (selectedGroupsList.length === 0) {
                 addLog('❌ Selecione pelo menos um grupo!', 'danger');
@@ -1886,7 +1900,7 @@
                 return `
                     <div class="group-item ${statusClass}" data-group-name="${group.name.toLowerCase()}">
                         <input type="checkbox" class="group-checkbox" data-index="${index}" 
-                               onchange="updateSelectedGroups()" 
+                               onchange="updateSelectedGroups(); console.log('Checkbox changed:', this.checked, 'Index:', this.dataset.index);" 
                                ${!group.canSendMessages ? 'disabled' : ''}>
                         <div class="group-info">
                             <div class="group-name">${group.name}</div>
@@ -1902,40 +1916,68 @@
         }
 
         function updateSelectedGroups() {
-            console.log('updateSelectedGroups called');
+            console.log('🔄 updateSelectedGroups called');
             const checkboxes = document.querySelectorAll('.group-checkbox:checked');
-            console.log('Checked checkboxes:', checkboxes.length);
+            console.log('✅ Checked checkboxes:', checkboxes.length);
             
             try {
-                selectedGroupsList = Array.from(checkboxes).map(checkbox => {
+                // Limpar lista anterior
+                selectedGroupsList = [];
+                
+                // Processar apenas checkboxes marcados
+                checkboxes.forEach(checkbox => {
                     const index = parseInt(checkbox.dataset.index);
-                    console.log('Processing checkbox with index:', index, 'Group:', groups[index]);
-                    return groups[index];
+                    if (groups[index]) {
+                        selectedGroupsList.push(groups[index]);
+                        console.log('✅ Adicionando grupo:', groups[index].name);
+                    }
                 });
                 
-                console.log('Selected groups:', selectedGroupsList.length);
-                console.log('selectedGroups element:', selectedGroups);
-                console.log('selectedCount element:', selectedCount);
+                console.log('📊 Total de grupos selecionados:', selectedGroupsList.length);
+                console.log('📋 Grupos selecionados:', selectedGroupsList.map(g => g.name));
                 
+                // Atualizar estatísticas em tempo real
                 if (selectedGroups) {
                     selectedGroups.textContent = selectedGroupsList.length;
+                    console.log('📈 Estatística "Selecionados" atualizada para:', selectedGroupsList.length);
                 }
                 if (selectedCount) {
                     selectedCount.textContent = selectedGroupsList.length;
+                    console.log('📈 Contador do botão atualizado para:', selectedGroupsList.length);
                 }
+                
+                // Atualizar botão Enviar Mensagens
                 if (sendMessagesBtn) {
                     sendMessagesBtn.disabled = selectedGroupsList.length === 0;
                     sendMessagesBtn.style.cursor = selectedGroupsList.length === 0 ? 'not-allowed' : 'pointer';
                     sendMessagesBtn.style.opacity = selectedGroupsList.length === 0 ? '0.6' : '1';
-                    console.log('Send button disabled:', sendMessagesBtn.disabled, 'Selected groups:', selectedGroupsList.length);
+                    console.log('🔘 Botão Enviar Mensagens - disabled:', sendMessagesBtn.disabled, 'grupos:', selectedGroupsList.length);
                 }
                 
-                socket.emit('select-groups', selectedGroupsList);
-                console.log('updateSelectedGroups completed successfully');
+                // Atualizar botão Salvar Seleção
+                if (saveSelectionBtn) {
+                    saveSelectionBtn.disabled = selectedGroupsList.length === 0;
+                    saveSelectionBtn.style.cursor = selectedGroupsList.length === 0 ? 'not-allowed' : 'pointer';
+                    saveSelectionBtn.style.opacity = selectedGroupsList.length === 0 ? '0.6' : '1';
+                    console.log('🔘 Botão Salvar Seleção - disabled:', saveSelectionBtn.disabled, 'grupos:', selectedGroupsList.length);
+                }
+                
+                console.log('✅ updateSelectedGroups completed successfully');
             } catch (error) {
-                console.error('Error in updateSelectedGroups:', error);
+                console.error('❌ Error in updateSelectedGroups:', error);
                 addLog('❌ Erro ao atualizar seleção de grupos', 'danger');
             }
+        }
+        
+        function saveSelection() {
+            if (selectedGroupsList.length === 0) {
+                addLog('❌ Selecione pelo menos um grupo antes de salvar!', 'danger');
+                return;
+            }
+            
+            // Enviar seleção para o servidor
+            socket.emit('select-groups', selectedGroupsList);
+            addLog(`✅ Seleção salva: ${selectedGroupsList.length} grupos selecionados`, 'success');
         }
 
         function addLog(message, type = 'info') {

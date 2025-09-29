@@ -16,3 +16,4 @@ pm2 start whatsapp-network
 
 echo "✅ Todas as sessões foram limpas!"
 echo "🔄 Reinicie o PM2 se necessário: pm2 restart whatsapp-network"
+
