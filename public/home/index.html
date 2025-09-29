@@ -2396,6 +2396,12 @@
 
         // Conectar WhatsApp
         function connectToWhatsApp() {
+            // Verificar se o usuário está logado
+            if (!localStorage.getItem('token')) {
+                alert('Você precisa estar logado para conectar o WhatsApp. Clique em "Cadastrar" para criar uma conta.');
+                return;
+            }
+            
             let selectedAccount = currentAccount;
             
             // Se há múltiplas contas, verificar se uma foi selecionada
@@ -2480,6 +2486,18 @@
             });
         }
         updateSelectedGroups();
+        
+        // Funções para modais
+        window.showForm = function(formType) {
+            if (formType === 'login') {
+                // Redirecionar para página de login
+                window.location.href = '/';
+            } else if (formType === 'register') {
+                // Redirecionar para página de cadastro
+                window.location.href = '/';
+            }
+        };
+        
         }); // Fechar DOMContentLoaded
     </script>
         </div>
