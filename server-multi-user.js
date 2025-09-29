@@ -173,7 +173,11 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
         // Delay inteligente entre mensagens (exceto na última)
         if (i < progress.total - 1) {
             const smartDelay = calculateHumanDelay(userSession, i);
-            console.log(`⏱️ Delay inteligente: ${Math.floor(smartDelay/1000)}s para próxima mensagem`);
+            const delaySeconds = Math.floor(smartDelay / 1000);
+            console.log(`⏱️ Delay inteligente: ${delaySeconds}s para próxima mensagem`);
+            
+            // Enviar informação de delay para o cliente
+            socket.emit('next-delay', delaySeconds);
             
             // Verificar se ainda está enviando durante o delay
             const delayStart = Date.now();
