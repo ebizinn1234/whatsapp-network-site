@@ -1756,7 +1756,8 @@
             addLog('💬 Configuração atualizada!', 'success');
         });
 
-        selectAllBtn.addEventListener('click', () => {
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => {
             console.log('Select all button clicked');
             updateDebugInfo('🔄 Clicou em Selecionar Todos...');
             const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
@@ -1777,9 +1778,11 @@
             updateSelectedGroups();
             addLog(`✅ ${checkboxes.length} grupos selecionados`, 'success');
             updateDebugInfo(`✅ ${checkboxes.length} grupos selecionados com sucesso!`);
-        });
+            });
+        }
 
-        deselectAllBtn.addEventListener('click', () => {
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', () => {
             console.log('Deselect all button clicked');
             updateDebugInfo('🔄 Clicou em Desmarcar Todos...');
             const checkboxes = document.querySelectorAll('.group-checkbox');
@@ -1800,7 +1803,8 @@
             updateSelectedGroups();
             addLog('❌ Todos os grupos desmarcados', 'info');
             updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
-        });
+            });
+        }
 
         // Funcionalidade de pesquisa
         groupSearch.addEventListener('input', (e) => {
