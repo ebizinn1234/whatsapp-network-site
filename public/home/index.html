@@ -1701,6 +1701,14 @@
                 progressGroup.textContent = data.group;
             }
             
+            // Atualizar estatísticas se disponíveis
+            if (data.successCount !== undefined && data.errorCount !== undefined) {
+                const statsText = `${data.progress}/${data.total} (${data.successCount} sucessos, ${data.errorCount} erros)`;
+                if (progressCounter) {
+                    progressCounter.textContent = statsText;
+                }
+            }
+            
             if (data.success) {
                 addLog(`✅ Enviado para: ${data.group}`, 'success');
             } else if (data.skipped) {

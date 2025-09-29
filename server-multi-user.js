@@ -116,8 +116,8 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
                 error: 'Grupo inválido',
                 progress: i + 1,
                 total: progress.total,
-                success: progress.success,
-                errors: progress.errors + 1
+                successCount: progress.success,
+                errorCount: progress.errors + 1
             });
             continue;
         }
@@ -131,6 +131,8 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
                 error: 'Grupo restrito - não é possível enviar mensagens',
                 progress: i + 1,
                 total: progress.total,
+                successCount: progress.success,
+                errorCount: progress.errors,
                 skipped: true
             });
             continue;
@@ -154,7 +156,9 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
                 group: group.name,
                 success: true,
                 progress: i + 1,
-                total: progress.total
+                total: progress.total,
+                successCount: progress.success,
+                errorCount: progress.errors
             });
             
         } catch (error) {
@@ -166,7 +170,9 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
                 success: false,
                 error: error.message,
                 progress: i + 1,
-                total: progress.total
+                total: progress.total,
+                successCount: progress.success,
+                errorCount: progress.errors
             });
         }
         
