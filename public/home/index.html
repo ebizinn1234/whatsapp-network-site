@@ -1390,6 +1390,12 @@
         // Função para atualizar configurações de velocidade
 
         // Socket events
+        // Reconectar automaticamente ao carregar a página
+        socket.on('connect', () => {
+            console.log('Socket conectado, verificando status WhatsApp...');
+            socket.emit('check-connection');
+        });
+
         socket.on('connection-status', (data) => {
             const statusHint = document.getElementById('statusHint');
             if (data.connected) {
@@ -1730,12 +1736,15 @@
         }
 
         function updateSelectedGroups() {
+            console.log('updateSelectedGroups called');
             const checkboxes = document.querySelectorAll('.group-checkbox:checked');
+            console.log('Checked checkboxes:', checkboxes.length);
             selectedGroupsList = Array.from(checkboxes).map(checkbox => {
                 const index = parseInt(checkbox.dataset.index);
                 return groups[index];
             });
             
+            console.log('Selected groups:', selectedGroupsList.length);
             selectedGroups.textContent = selectedGroupsList.length;
             selectedCount.textContent = selectedGroupsList.length;
             sendMessagesBtn.disabled = selectedGroupsList.length === 0;

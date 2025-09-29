@@ -615,6 +615,21 @@ io.on('connection', (socket) => {
         socket.emit('sending-cancelled', 'Envio cancelado');
     });
     
+    socket.on('check-connection', () => {
+        const userSession = userSessions.get(userIP);
+        if (userSession && userSession.isConnected) {
+            socket.emit('connection-status', {
+                connected: true,
+                message: 'WhatsApp conectado'
+            });
+        } else {
+            socket.emit('connection-status', {
+                connected: false,
+                message: 'Seu WhatsApp está desconectado'
+            });
+        }
+    });
+    
     socket.on('disconnect', () => {
         console.log(`👤 Cliente desconectado: ${socket.id} (IP: ${userIP})`);
         // Não remover a sessão imediatamente, pode reconectar
