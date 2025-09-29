@@ -1882,6 +1882,21 @@
             qrContainer.classList.remove('hidden');
             addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
             console.log('🔍 DEBUG: QR Code exibido na tela!');
+            
+            // Restaurar botão após QR Code aparecer
+            connectBtn.innerHTML = '<i class="fas fa-whatsapp"></i> Conectar WhatsApp';
+            connectBtn.disabled = false;
+            connectBtn.style.opacity = '1';
+        });
+
+        socket.on('connection-error', (data) => {
+            console.log('❌ Erro de conexão:', data);
+            addLog(`❌ Erro: ${data.message}`, 'error');
+            
+            // Restaurar botão em caso de erro
+            connectBtn.innerHTML = '<i class="fas fa-whatsapp"></i> Conectar WhatsApp';
+            connectBtn.disabled = false;
+            connectBtn.style.opacity = '1';
         });
 
         socket.on('groups-loaded', (groupsData) => {
@@ -2092,7 +2107,12 @@
                 console.log('🔍 Socket status:', socket.connected);
                 console.log('🔍 Socket ID:', socket.id);
                 
-            const selectedAccount = accountSelect.value;
+                // Adicionar animação de loading
+                connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
+                connectBtn.disabled = true;
+                connectBtn.style.opacity = '0.7';
+                
+                const selectedAccount = accountSelect.value;
                 console.log('🔍 Selected account:', selectedAccount);
                 
             if (selectedAccount) {
