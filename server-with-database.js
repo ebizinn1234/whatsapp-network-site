@@ -54,6 +54,13 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         
         if (qr) {
             console.log('🔍 DEBUG: QR Code gerado para userId:', userId);
+            
+            // Verificar se o usuário está logado antes de enviar QR Code
+            if (userId === 'default') {
+                console.log('⚠️ Tentativa de gerar QR Code para usuário não logado - ignorando');
+                return;
+            }
+            
             const qrCode = await qrcode.toDataURL(qr);
             console.log('🔍 DEBUG: Enviando QR Code para sala user_' + userId);
             io.to(`user_${userId}`).emit('qr-code', qrCode);

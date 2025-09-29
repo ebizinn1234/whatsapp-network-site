@@ -1960,6 +1960,14 @@
         socket.on('qr-code', (qrDataURL) => {
             console.log('🔍 DEBUG: QR Code recebido no frontend!');
             console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
+            
+            // Verificar se o usuário está logado antes de exibir QR Code
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('⚠️ QR Code recebido mas usuário não está logado - ignorando');
+                return;
+            }
+            
             qrCode.src = qrDataURL;
             document.getElementById('qrModal').style.display = 'block';
             addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
