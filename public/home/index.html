@@ -2973,7 +2973,11 @@
                     localStorage.setItem('user', JSON.stringify(data.user));
                     showMessage('Cadastro realizado com sucesso!', 'success');
                     closeModal('registerModal');
-                    window.location.reload();
+                    
+                    // Aguardar mais tempo para mostrar a notificação antes de recarregar
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 4000);
                 } else {
                     showMessage(data.error);
                 }
