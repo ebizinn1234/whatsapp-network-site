@@ -493,17 +493,27 @@
         .qr-container {
             text-align: center;
             margin: 25px 0;
-            padding: 20px;
+            padding: 15px;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 15px;
             border: 2px dashed #25d366;
+            display: inline-block;
         }
 
         .qr-code {
-            max-width: 280px;
+            max-width: 250px;
+            width: 250px;
+            height: 250px;
             border-radius: 15px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             border: 3px solid white;
+        }
+
+        .qr-instructions {
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
         }
 
         .groups-container {
@@ -1453,6 +1463,10 @@
             <div id="qrContainer" class="qr-container hidden">
                 <h3>Escaneie o QR Code com seu WhatsApp:</h3>
                 <img id="qrCode" class="qr-code" alt="QR Code">
+                <div class="qr-instructions">
+                    <p>📱 Escaneie o QR Code para conectar</p>
+                    <p>🚀 Comece a enviar mensagens em massa</p>
+                </div>
             </div>
         </div>
         
