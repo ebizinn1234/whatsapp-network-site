@@ -115,8 +115,8 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
 io.on('connection', (socket) => {
     console.log(`👤 Cliente conectado: ${socket.id}`);
     
-    socket.on('join-user', async (data) => {
-        const { userId } = data;
+    socket.on('join-user', async (data = {}) => {
+        const { userId } = data || {};
         socket.join(`user_${userId}`);
         console.log(`👤 Usuário ${userId} entrou na sala`);
     });
@@ -160,8 +160,8 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('load-groups', async (data) => {
-        const { userId, sessionId = 'default' } = data;
+    socket.on('load-groups', async (data = {}) => {
+        const { userId, sessionId = 'default' } = data || {};
         
         try {
             const userSession = userSessions.get(userId);
@@ -190,8 +190,8 @@ io.on('connection', (socket) => {
     });
 
     // Rota para listar sessões salvas do usuário
-    socket.on('get-saved-sessions', async (data) => {
-        const { userId } = data;
+    socket.on('get-saved-sessions', async (data = {}) => {
+        const { userId } = data || {};
         try {
             const [sessions] = await db.execute(
                 'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC',
