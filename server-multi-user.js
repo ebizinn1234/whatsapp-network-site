@@ -31,6 +31,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Importar rotas de autenticação
+import authRoutes from './routes/auth.js';
+app.use('/api/auth', authRoutes);
+
 // Sistema multi-usuário
 const userSessions = new Map(); // IP -> { sock, isConnected, groups, selectedGroups, messageConfig }
 
