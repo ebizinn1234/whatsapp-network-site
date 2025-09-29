@@ -1201,6 +1201,54 @@
             align-items: center;
         }
 
+        /* Notificação de sucesso */
+        .success-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(40, 167, 69, 0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 350px;
+        }
+
+        .success-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .success-notification i {
+            font-size: 18px;
+            color: white;
+        }
+
+        .success-notification .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .success-notification .close-btn:hover {
+            opacity: 1;
+        }
+
         .modal-content {
             background: white;
             border-radius: 12px;
@@ -2694,10 +2742,48 @@
         // Função para mostrar mensagens
         function showMessage(message, type = 'error') {
             if (type === 'success') {
-                alert('✅ ' + message);
+                showSuccessNotification(message);
             } else {
                 alert('❌ ' + message);
             }
+        }
+
+        // Função para mostrar notificação de sucesso
+        function showSuccessNotification(message) {
+            // Remover notificação existente se houver
+            const existingNotification = document.querySelector('.success-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Criar nova notificação
+            const notification = document.createElement('div');
+            notification.className = 'success-notification';
+            notification.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            // Adicionar ao body
+            document.body.appendChild(notification);
+
+            // Mostrar com animação
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            // Auto-remover após 4 segundos
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 400);
+                }
+            }, 4000);
         }
 
         // Função para loading
