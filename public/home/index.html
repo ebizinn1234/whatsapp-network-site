@@ -1839,13 +1839,29 @@
 
         // Função para fechar modal QR Code
         function closeQRModal() {
+            console.log('🔍 Fechando modal QR Code');
             document.getElementById('qrModal').style.display = 'none';
         }
+
+        // Tornar a função global
+        window.closeQRModal = closeQRModal;
+
+        // Event listener para o botão X
+        document.addEventListener('DOMContentLoaded', function() {
+            const qrCloseBtn = document.getElementById('qrCloseBtn');
+            if (qrCloseBtn) {
+                qrCloseBtn.addEventListener('click', function() {
+                    console.log('🔍 Botão X clicado');
+                    closeQRModal();
+                });
+            }
+        });
 
         // Fechar modal ao clicar fora dele
         window.onclick = function(event) {
             const modal = document.getElementById('qrModal');
             if (event.target === modal) {
+                console.log('🔍 Fechando modal ao clicar fora');
                 modal.style.display = 'none';
             }
         }
@@ -3071,7 +3087,7 @@
     <!-- Modal QR Code -->
     <div id="qrModal" class="qr-modal">
         <div class="qr-modal-content">
-            <span class="qr-close" onclick="closeQRModal()">&times;</span>
+            <span class="qr-close" id="qrCloseBtn">&times;</span>
             <div class="qr-modal-header">
                 <h3>Escaneie o QR Code com seu WhatsApp</h3>
             </div>
