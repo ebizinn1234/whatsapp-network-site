@@ -2922,13 +2922,15 @@
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    showMessage('Login realizado com sucesso!', 'success');
                     closeModal('loginModal');
                     
-                    // Aguardar mais tempo para mostrar a notificação antes de recarregar
+                    // Fazer login imediatamente e depois mostrar notificação
+                    window.location.reload();
+                    
+                    // Mostrar notificação após reload
                     setTimeout(() => {
-                        window.location.reload();
-                    }, 4000);
+                        showMessage('Login realizado com sucesso!', 'success');
+                    }, 500);
                 } else {
                     showMessage(data.error);
                 }
@@ -2975,13 +2977,15 @@
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    showMessage('Cadastro realizado com sucesso!', 'success');
                     closeModal('registerModal');
                     
-                    // Aguardar mais tempo para mostrar a notificação antes de recarregar
+                    // Fazer login imediatamente e depois mostrar notificação
+                    window.location.reload();
+                    
+                    // Mostrar notificação após reload
                     setTimeout(() => {
-                        window.location.reload();
-                    }, 4000);
+                        showMessage('Cadastro realizado com sucesso!', 'success');
+                    }, 500);
                 } else {
                     showMessage(data.error);
                 }
@@ -3077,7 +3081,14 @@
         window.logout = function() {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.reload();
+            
+            // Mostrar notificação de logout
+            showMessage('Logout realizado com sucesso!', 'success');
+            
+            // Recarregar após um pequeno delay para mostrar a notificação
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
         };
     </script>
 
