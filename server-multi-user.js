@@ -39,25 +39,44 @@ function calculateHumanDelay(userSession, messageCount) {
     const config = userSession.messageConfig;
     
     // Delay base
-    let baseDelay = config.delay || 60000; // 1 minuto padrão
+    let baseDelay = config.delay || 120000; // 2 minutos padrão
     
     // Delay mínimo e máximo
-    const minDelay = config.minDelay || 30000;  // 30 segundos
-    const maxDelay = config.maxDelay || 180000; // 3 minutos
+    const minDelay = config.minDelay || 60000;  // 1 minuto
+    const maxDelay = config.maxDelay || 300000; // 5 minutos
     
-    // Se modo humano ativado, adicionar aleatoriedade
+    // Se modo humano ativado, adicionar aleatoriedade SUPER HUMANA
     if (config.humanMode) {
-        // Delay aleatório entre min e max
-        const randomFactor = Math.random() * 0.5 + 0.75; // 0.75 a 1.25
+        // Delay aleatório entre min e max (mais variável)
+        const randomFactor = Math.random() * 0.8 + 0.6; // 0.6 a 1.4 (mais variável)
         baseDelay = Math.floor(baseDelay * randomFactor);
         
         // Aumentar delay conforme mais mensagens enviadas (comportamento humano)
-        const fatigueFactor = Math.min(messageCount * 0.1, 0.5); // Máximo 50% de aumento
+        const fatigueFactor = Math.min(messageCount * 0.15, 0.8); // Máximo 80% de aumento
         baseDelay = Math.floor(baseDelay * (1 + fatigueFactor));
         
-        // Pausas ocasionais mais longas (como humanos fazem)
-        if (Math.random() < 0.1) { // 10% de chance
-            baseDelay += Math.floor(Math.random() * 60000); // +0 a 1 minuto extra
+        // Pausas ocasionais MUITO longas (como humanos fazem)
+        if (Math.random() < 0.15) { // 15% de chance (mais frequente)
+            baseDelay += Math.floor(Math.random() * 180000); // +0 a 3 minutos extra
+        }
+        
+        // Pausas MEGA longas ocasionais (simulando pausa para almoço, etc)
+        if (Math.random() < 0.05) { // 5% de chance
+            baseDelay += Math.floor(Math.random() * 300000); // +0 a 5 minutos extra
+        }
+        
+        // Simular horário de trabalho (menos atividade em horários específicos)
+        const now = new Date();
+        const hour = now.getHours();
+        
+        // Menos atividade entre 12h-14h (almoço) e 18h-20h (jantar)
+        if ((hour >= 12 && hour <= 14) || (hour >= 18 && hour <= 20)) {
+            baseDelay = Math.floor(baseDelay * 1.5); // 50% mais lento
+        }
+        
+        // Menos atividade à noite (22h-6h)
+        if (hour >= 22 || hour <= 6) {
+            baseDelay = Math.floor(baseDelay * 2); // 100% mais lento
         }
     }
     

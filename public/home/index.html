@@ -1197,8 +1197,8 @@
                         <div style="margin-left: 10px;">
                             <div style="font-weight: 600; margin-bottom: 5px;">Modo Humano</div>
                             <div style="font-size: 12px; color: #666; line-height: 1.4;">
-                                Envia mensagens com intervalos aleatórios entre 30-120 segundos, simulando comportamento humano natural. 
-                                <strong>Recomendado para evitar banimento.</strong>
+                                Envia mensagens com intervalos aleatórios entre 1-5 minutos, simulando comportamento humano natural com pausas ocasionais. 
+                                <strong>Máxima segurança contra banimento.</strong>
                             </div>
                         </div>
                     </label>
@@ -1812,12 +1812,12 @@
             let config;
             
             if (selectedSpeed === 'human') {
-                // Modo Humano: 30-120 segundos
+                // Modo Humano SUPER SEGURO: 60-300 segundos (1-5 minutos)
                 config = {
                     text: message,
-                    delay: 60000, // 1 minuto base
-                    minDelay: 30000, // 30 segundos
-                    maxDelay: 120000, // 2 minutos
+                    delay: 120000, // 2 minutos base
+                    minDelay: 60000, // 1 minuto mínimo
+                    maxDelay: 300000, // 5 minutos máximo
                     humanMode: true,
                     randomDelay: true
                 };
