@@ -53,8 +53,13 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
+            console.log('🔍 DEBUG: QR Code gerado para userId:', userId);
             const qrCode = await qrcode.toDataURL(qr);
+            console.log('🔍 DEBUG: Enviando QR Code para sala user_' + userId);
             io.to(`user_${userId}`).emit('qr-code', qrCode);
+            console.log('🔍 DEBUG: QR Code enviado com sucesso!');
+        } else {
+            console.log('🔍 DEBUG: Nenhum QR Code gerado');
         }
         
         if (connection === 'close') {
@@ -84,8 +89,10 @@ io.on('connection', (socket) => {
     });
 
     socket.on('connect-whatsapp', async (data = {}) => {
+        console.log('🔍 DEBUG: connect-whatsapp recebido com data:', data);
         const { userId, accountId, sessionId = 'default' } = data;
         const userIdentifier = userId || accountId || 'default';
+        console.log('🔍 DEBUG: userIdentifier =', userIdentifier);
         
         try {
             if (!userSessions.has(userIdentifier)) {

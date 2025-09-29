@@ -1872,9 +1872,12 @@
         });
 
         socket.on('qr-code', (qrDataURL) => {
+            console.log('🔍 DEBUG: QR Code recebido no frontend!');
+            console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
             qrCode.src = qrDataURL;
             qrContainer.classList.remove('hidden');
             addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
+            console.log('🔍 DEBUG: QR Code exibido na tela!');
         });
 
         socket.on('groups-loaded', (groupsData) => {
@@ -2089,11 +2092,11 @@
                 console.log('🔍 Selected account:', selectedAccount);
                 
             if (selectedAccount) {
-                    console.log('📤 Emitindo connect-whatsapp com accountId:', selectedAccount);
+                    console.log('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
                 socket.emit('connect-whatsapp', { accountId: selectedAccount });
                 addLog(`🔄 Conectando ao WhatsApp (${selectedAccount})...`, 'info');
             } else {
-                    console.log('📤 Emitindo connect-whatsapp sem accountId');
+                    console.log('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
                 socket.emit('connect-whatsapp');
                 addLog('🔄 Conectando ao WhatsApp...', 'info');
             }
