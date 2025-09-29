@@ -1364,8 +1364,70 @@
         const humanMode = document.getElementById('humanMode');
         const updateMessageBtn = document.getElementById('updateMessageBtn');
         const loadGroupsBtn = document.getElementById('loadGroupsBtn');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        
+        // Aguardar um pouco para garantir que os elementos estejam carregados
+        setTimeout(() => {
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const deselectAllBtn = document.getElementById('deselectAllBtn');
+            
+            console.log('Delayed - selectAllBtn:', selectAllBtn);
+            console.log('Delayed - deselectAllBtn:', deselectAllBtn);
+            
+            if (selectAllBtn && deselectAllBtn) {
+                console.log('✅ Botões encontrados com delay!');
+                updateDebugInfo('✅ Botões encontrados com delay!');
+                
+                // Adicionar event listeners aqui
+                selectAllBtn.addEventListener('click', () => {
+                    console.log('Select all button clicked');
+                    updateDebugInfo('🔄 Clicou em Selecionar Todos...');
+                    const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
+                    console.log('Found checkboxes:', checkboxes.length);
+                    updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
+                    
+                    if (checkboxes.length === 0) {
+                        console.log('No checkboxes found - groups may not be loaded yet');
+                        updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
+                        addLog('⚠️ Carregue os grupos primeiro!', 'warning');
+                        return;
+                    }
+                    
+                    updateDebugInfo(`✅ Selecionando ${checkboxes.length} grupos...`);
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    updateSelectedGroups();
+                    addLog(`✅ ${checkboxes.length} grupos selecionados`, 'success');
+                    updateDebugInfo(`✅ ${checkboxes.length} grupos selecionados com sucesso!`);
+                });
+
+                deselectAllBtn.addEventListener('click', () => {
+                    console.log('Deselect all button clicked');
+                    updateDebugInfo('🔄 Clicou em Desmarcar Todos...');
+                    const checkboxes = document.querySelectorAll('.group-checkbox');
+                    console.log('Found checkboxes:', checkboxes.length);
+                    updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
+                    
+                    if (checkboxes.length === 0) {
+                        console.log('No checkboxes found - groups may not be loaded yet');
+                        updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
+                        addLog('⚠️ Carregue os grupos primeiro!', 'warning');
+                        return;
+                    }
+                    
+                    updateDebugInfo(`❌ Desmarcando ${checkboxes.length} grupos...`);
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    updateSelectedGroups();
+                    addLog('❌ Todos os grupos desmarcados', 'info');
+                    updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
+                });
+            } else {
+                console.error('❌ Botões ainda não encontrados com delay!');
+                updateDebugInfo('❌ Botões ainda não encontrados com delay!');
+            }
+        }, 2000);
         
         // Declarar variáveis de debug primeiro
         const debugStatus = document.getElementById('debugStatus');
@@ -1379,33 +1441,11 @@
         
         // Debug: verificar se os elementos existem
         console.log('loadGroupsBtn:', loadGroupsBtn);
-        console.log('selectAllBtn:', selectAllBtn);
-        console.log('deselectAllBtn:', deselectAllBtn);
         
-        // Aguardar um pouco para garantir que todos os elementos estejam carregados
-        setTimeout(() => {
-            const selectAllBtnDelayed = document.getElementById('selectAllBtn');
-            const deselectAllBtnDelayed = document.getElementById('deselectAllBtn');
-            console.log('Delayed check - selectAllBtn:', selectAllBtnDelayed);
-            console.log('Delayed check - deselectAllBtn:', deselectAllBtnDelayed);
-        }, 1000);
-        
-        // Verificar se os elementos existem antes de adicionar event listeners
-        if (!selectAllBtn) {
-            console.error('selectAllBtn not found!');
-            updateDebugInfo('❌ selectAllBtn não encontrado!');
-        }
-        if (!deselectAllBtn) {
-            console.error('deselectAllBtn not found!');
-            updateDebugInfo('❌ deselectAllBtn não encontrado!');
-        }
+        // Verificar se loadGroupsBtn existe
         if (!loadGroupsBtn) {
             console.error('loadGroupsBtn not found!');
             updateDebugInfo('❌ loadGroupsBtn não encontrado!');
-        }
-        
-        if (selectAllBtn && deselectAllBtn && loadGroupsBtn) {
-            updateDebugInfo('✅ Todos os botões encontrados!');
         }
         
         // Verificação inicial de conexão
@@ -1764,55 +1804,7 @@
             addLog('💬 Configuração atualizada!', 'success');
         });
 
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', () => {
-            console.log('Select all button clicked');
-            updateDebugInfo('🔄 Clicou em Selecionar Todos...');
-            const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
-            console.log('Found checkboxes:', checkboxes.length);
-            updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
-            
-            if (checkboxes.length === 0) {
-                console.log('No checkboxes found - groups may not be loaded yet');
-                updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
-                addLog('⚠️ Carregue os grupos primeiro!', 'warning');
-                return;
-            }
-            
-            updateDebugInfo(`✅ Selecionando ${checkboxes.length} grupos...`);
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true;
-            });
-            updateSelectedGroups();
-            addLog(`✅ ${checkboxes.length} grupos selecionados`, 'success');
-            updateDebugInfo(`✅ ${checkboxes.length} grupos selecionados com sucesso!`);
-            });
-        }
-
-        if (deselectAllBtn) {
-            deselectAllBtn.addEventListener('click', () => {
-            console.log('Deselect all button clicked');
-            updateDebugInfo('🔄 Clicou em Desmarcar Todos...');
-            const checkboxes = document.querySelectorAll('.group-checkbox');
-            console.log('Found checkboxes:', checkboxes.length);
-            updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
-            
-            if (checkboxes.length === 0) {
-                console.log('No checkboxes found - groups may not be loaded yet');
-                updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
-                addLog('⚠️ Carregue os grupos primeiro!', 'warning');
-                return;
-            }
-            
-            updateDebugInfo(`❌ Desmarcando ${checkboxes.length} grupos...`);
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            updateSelectedGroups();
-            addLog('❌ Todos os grupos desmarcados', 'info');
-            updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
-            });
-        }
+        // Event listeners movidos para dentro do setTimeout acima
 
         // Funcionalidade de pesquisa
         groupSearch.addEventListener('input', (e) => {
