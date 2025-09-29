@@ -1925,6 +1925,8 @@
                 }
                 if (sendMessagesBtn) {
                     sendMessagesBtn.disabled = selectedGroupsList.length === 0;
+                    sendMessagesBtn.style.cursor = selectedGroupsList.length === 0 ? 'not-allowed' : 'pointer';
+                    sendMessagesBtn.style.opacity = selectedGroupsList.length === 0 ? '0.6' : '1';
                     console.log('Send button disabled:', sendMessagesBtn.disabled, 'Selected groups:', selectedGroupsList.length);
                 }
                 
@@ -2115,6 +2117,14 @@
         });
         
         // Inicializar estado do botão
+        console.log('Inicializando botão Enviar Mensagens...');
+        console.log('sendMessagesBtn encontrado:', !!sendMessagesBtn);
+        if (sendMessagesBtn) {
+            console.log('Estado inicial do botão:', {
+                disabled: sendMessagesBtn.disabled,
+                selectedGroups: selectedGroupsList.length
+            });
+        }
         updateSelectedGroups();
         }); // Fechar DOMContentLoaded
     </script>
