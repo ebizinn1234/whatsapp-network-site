@@ -1358,6 +1358,9 @@
                     <button class="btn btn-danger" id="cancelBtn" style="display: none;">
                         ⏹️ Cancelar
                     </button>
+                    <button class="btn btn-success" id="newSendBtn" style="display: none;">
+                        🆕 Novo Envio
+                    </button>
                 </div>
                 
                 <div id="progressContainer" class="progress-container hidden">
@@ -1505,6 +1508,7 @@
         const pauseBtn = document.getElementById('pauseBtn');
         const resumeBtn = document.getElementById('resumeBtn');
         const cancelBtn = document.getElementById('cancelBtn');
+        const newSendBtn = document.getElementById('newSendBtn');
         const accountSelect = document.getElementById('accountSelect');
         const refreshAccountsBtn = document.getElementById('refreshAccountsBtn');
         const newAccountBtn = document.getElementById('newAccountBtn');
@@ -1617,6 +1621,7 @@
             pauseBtn.style.display = 'inline-block';
             resumeBtn.style.display = 'none';
             cancelBtn.style.display = 'inline-block';
+            newSendBtn.style.display = 'inline-block';
         }
 
         function hideControls() {
@@ -1624,6 +1629,7 @@
             pauseBtn.style.display = 'none';
             resumeBtn.style.display = 'none';
             cancelBtn.style.display = 'none';
+            newSendBtn.style.display = 'none';
         }
 
         // Eventos de controle de envio
@@ -1649,6 +1655,12 @@
             progressContainer.classList.add('hidden');
             sendMessagesBtn.disabled = false;
             addLog(`⏹️ ${message}`, 'warning');
+        });
+
+        socket.on('new-sending-ready', (message) => {
+            addLog(`🆕 ${message}`, 'success');
+            hideControls();
+            progressContainer.classList.add('hidden');
         });
 
         socket.on('connection-lost', (message) => {
@@ -1840,6 +1852,11 @@
         cancelBtn.addEventListener('click', () => {
             socket.emit('cancel-sending');
             hideControls();
+        });
+
+        newSendBtn.addEventListener('click', () => {
+            socket.emit('new-sending');
+            addLog('🆕 Iniciando novo envio - progresso resetado', 'info');
         });
 
         loadGroupsBtn.addEventListener('click', () => {

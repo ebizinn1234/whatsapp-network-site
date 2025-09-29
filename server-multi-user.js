@@ -730,6 +730,16 @@ io.on('connection', (socket) => {
         socket.emit('sending-cancelled', 'Envio cancelado');
     });
     
+    socket.on('new-sending', () => {
+        const userSession = userSessions.get(userIP);
+        if (userSession) {
+            // Resetar progresso para começar do zero
+            userSession.sendingProgress = null;
+            console.log(`🆕 Progresso resetado para novo envio (usuário ${userIP})`);
+            socket.emit('new-sending-ready', 'Pronto para novo envio');
+        }
+    });
+    
     socket.on('check-connection', () => {
         console.log(`🔍 Verificando conexão para usuário ${userIP}`);
         const userSession = userSessions.get(userIP);
