@@ -1367,6 +1367,9 @@
         const selectAllBtn = document.getElementById('selectAllBtn');
         const deselectAllBtn = document.getElementById('deselectAllBtn');
         
+        // Declarar variáveis de debug primeiro
+        const debugStatus = document.getElementById('debugStatus');
+        
         // Função de debug visual
         function updateDebugInfo(message) {
             if (debugStatus) {
@@ -1411,7 +1414,6 @@
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
         const debugInfo = document.getElementById('debugInfo');
-        const debugStatus = document.getElementById('debugStatus');
         const sendMessagesBtn = document.getElementById('sendMessagesBtn');
         const selectedCount = document.getElementById('selectedCount');
         const progressContainer = document.getElementById('progressContainer');
