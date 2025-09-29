@@ -343,11 +343,6 @@
             box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
         }
 
-        #clearSessionBtn:hover {
-            background: #5a6268 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
-        }
 
         /* Efeitos hover para botões de controle */
         #pauseBtn:hover {
@@ -1406,10 +1401,6 @@
                     <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>
                     Desconectar
                 </button>
-                <button class="btn btn-warning" id="clearSessionBtn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; margin-left: 10px; transition: all 0.3s ease;">
-                    <i class="fas fa-trash-alt" style="margin-right: 8px;"></i>
-                    Limpar Sessão
-                </button>
             </div>
             <div id="qrContainer" class="qr-container hidden">
                 <h3>Escaneie o QR Code com seu WhatsApp:</h3>
@@ -1612,7 +1603,6 @@
         const statusText = document.getElementById('statusText');
         const connectBtn = document.getElementById('connectBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
-        const clearSessionBtn = document.getElementById('clearSessionBtn');
         const sidebarUserName = document.getElementById('sidebarUserName');
         const sidebarUserStatus = document.getElementById('sidebarUserStatus');
         const sidebarUserAvatar = document.getElementById('sidebarUserAvatar');
@@ -2018,10 +2008,6 @@
             console.error('❌ connectBtn não encontrado!');
             // updateDebugInfo('❌ connectBtn não encontrado!');
         }
-        if (!clearSessionBtn) {
-            console.error('❌ clearSessionBtn não encontrado!');
-            // updateDebugInfo('❌ clearSessionBtn não encontrado!');
-        }
 
         // Event listeners
         if (connectBtn) {
@@ -2029,7 +2015,15 @@
             connectBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('🔴 Botão Conectar WhatsApp clicado!');
-                // updateDebugInfo('🔴 Botão Conectar WhatsApp clicado!');
+                
+                // Verificar se o usuário está logado
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    // Se não estiver logado, abrir modal de cadastro
+                    console.log('🔐 Usuário não logado, abrindo modal de cadastro');
+                    showForm('register');
+                    return;
+                }
                 
                 console.log('🔍 Socket status:', socket.connected);
                 console.log('🔍 Socket ID:', socket.id);
@@ -2111,19 +2105,6 @@
             console.log('⚠️ disconnectBtn não encontrado (opcional)');
         }
 
-        if (clearSessionBtn) {
-            clearSessionBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('🔴 Botão Limpar Sessão clicado!');
-                // updateDebugInfo('🔴 Botão Limpar Sessão clicado!');
-                
-                if (confirm('⚠️ Tem certeza que deseja limpar a sessão atual? Isso irá desconectar o WhatsApp e você precisará escanear o QR Code novamente.')) {
-                    // updateDebugInfo('🗑️ Limpando sessão atual...');
-                    socket.emit('clear-session');
-                    addLog('🗑️ Limpando sessão atual...', 'warning');
-                }
-            });
-        }
 
         // Controles de envio
         pauseBtn.addEventListener('click', () => {
