@@ -2922,15 +2922,9 @@
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('showLoginNotification', 'true');
                     closeModal('loginModal');
-                    
-                    // Fazer login imediatamente e depois mostrar notificação
                     window.location.reload();
-                    
-                    // Mostrar notificação após reload
-                    setTimeout(() => {
-                        showMessage('Login realizado com sucesso!', 'success');
-                    }, 500);
                 } else {
                     showMessage(data.error);
                 }
@@ -2977,15 +2971,9 @@
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('showRegisterNotification', 'true');
                     closeModal('registerModal');
-                    
-                    // Fazer login imediatamente e depois mostrar notificação
                     window.location.reload();
-                    
-                    // Mostrar notificação após reload
-                    setTimeout(() => {
-                        showMessage('Cadastro realizado com sucesso!', 'success');
-                    }, 500);
                 } else {
                     showMessage(data.error);
                 }
@@ -2994,6 +2982,21 @@
                 showMessage('Erro de conexão. Tente novamente.');
             }
         });
+
+        // Verificar se deve mostrar notificações de login/cadastro
+        if (localStorage.getItem('showLoginNotification')) {
+            localStorage.removeItem('showLoginNotification');
+            setTimeout(() => {
+                showMessage('Login realizado com sucesso!', 'success');
+            }, 500);
+        }
+        
+        if (localStorage.getItem('showRegisterNotification')) {
+            localStorage.removeItem('showRegisterNotification');
+            setTimeout(() => {
+                showMessage('Cadastro realizado com sucesso!', 'success');
+            }, 500);
+        }
 
         // Verificar se já está logado
         if (localStorage.getItem('token')) {
