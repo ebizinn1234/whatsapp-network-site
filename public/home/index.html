@@ -1949,6 +1949,14 @@
                 disconnectBtn.style.display = 'inline-block';
                 qrContainer.classList.add('hidden');
                 
+                // Fechar modal de QR Code automaticamente quando conectar
+                const qrModal = document.getElementById('qrModal');
+                if (qrModal && qrModal.style.display === 'block') {
+                    console.log('🔍 DEBUG: Fechando modal QR Code automaticamente');
+                    qrModal.style.display = 'none';
+                    addLog('✅ WhatsApp conectado com sucesso!', 'success');
+                }
+                
                 // Atualizar sidebar
                 updateSidebarStatus(true, data.whatsappInfo);
                 // updateDebugInfo('✅ WhatsApp conectado com sucesso!');
