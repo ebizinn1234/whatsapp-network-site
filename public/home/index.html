@@ -1732,38 +1732,54 @@
             console.log('⚠️ refreshAccountsBtn não encontrado (opcional)');
         }
         
-        newAccountBtn.addEventListener('click', () => {
-            newAccountModal.classList.remove('hidden');
-            newAccountModal.style.display = 'flex';
-        });
+        if (newAccountBtn) {
+            newAccountBtn.addEventListener('click', () => {
+                newAccountModal.classList.remove('hidden');
+                newAccountModal.style.display = 'flex';
+            });
+        } else {
+            console.log('⚠️ newAccountBtn não encontrado (opcional)');
+        }
         
-        createAccountBtn.addEventListener('click', () => {
-            const accountId = newAccountId.value.trim();
-            const accountName = newAccountName.value.trim();
-            
-            if (accountId) {
-                socket.emit('create-account', { 
-                    accountId: accountId, 
-                    accountName: accountName || `Conta ${accountId}` 
-                });
+        if (createAccountBtn) {
+            createAccountBtn.addEventListener('click', () => {
+                const accountId = newAccountId.value.trim();
+                const accountName = newAccountName.value.trim();
+                
+                if (accountId) {
+                    socket.emit('create-account', { 
+                        accountId: accountId, 
+                        accountName: accountName || `Conta ${accountId}` 
+                    });
+                    newAccountModal.classList.add('hidden');
+                    newAccountModal.style.display = 'none';
+                    newAccountId.value = '';
+                    newAccountName.value = '';
+                }
+            });
+        } else {
+            console.log('⚠️ createAccountBtn não encontrado (opcional)');
+        }
+        
+        if (cancelAccountBtn) {
+            cancelAccountBtn.addEventListener('click', () => {
                 newAccountModal.classList.add('hidden');
                 newAccountModal.style.display = 'none';
                 newAccountId.value = '';
                 newAccountName.value = '';
-            }
-        });
-        
-        cancelAccountBtn.addEventListener('click', () => {
-            newAccountModal.classList.add('hidden');
-            newAccountModal.style.display = 'none';
-            newAccountId.value = '';
-            newAccountName.value = '';
-        });
+            });
+        } else {
+            console.log('⚠️ cancelAccountBtn não encontrado (opcional)');
+        }
 
-        disconnectBtn.addEventListener('click', () => {
-            socket.emit('disconnect-whatsapp');
-            addLog('🔄 Desconectando do WhatsApp...', 'info');
-        });
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => {
+                socket.emit('disconnect-whatsapp');
+                addLog('🔄 Desconectando do WhatsApp...', 'info');
+            });
+        } else {
+            console.log('⚠️ disconnectBtn não encontrado (opcional)');
+        }
 
         if (clearSessionBtn) {
             clearSessionBtn.addEventListener('click', (e) => {
