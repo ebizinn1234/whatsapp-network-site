@@ -1334,6 +1334,7 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
         // Socket.io connection
         const socket = io();
         
@@ -1354,6 +1355,11 @@
         const loadGroupsBtn = document.getElementById('loadGroupsBtn');
         const selectAllBtn = document.getElementById('selectAllBtn');
         const deselectAllBtn = document.getElementById('deselectAllBtn');
+        
+        // Debug: verificar se os elementos existem
+        console.log('loadGroupsBtn:', loadGroupsBtn);
+        console.log('selectAllBtn:', selectAllBtn);
+        console.log('deselectAllBtn:', deselectAllBtn);
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
@@ -1617,6 +1623,7 @@
         });
 
         loadGroupsBtn.addEventListener('click', () => {
+            console.log('Load groups button clicked');
             socket.emit('load-groups');
             addLog('📋 Carregando grupos...', 'info');
         });
@@ -1642,7 +1649,9 @@
         });
 
         selectAllBtn.addEventListener('click', () => {
+            console.log('Select all button clicked');
             const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
+            console.log('Found checkboxes:', checkboxes.length);
             checkboxes.forEach(checkbox => {
                 checkbox.checked = true;
             });
@@ -1650,7 +1659,9 @@
         });
 
         deselectAllBtn.addEventListener('click', () => {
+            console.log('Deselect all button clicked');
             const checkboxes = document.querySelectorAll('.group-checkbox');
+            console.log('Found checkboxes:', checkboxes.length);
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false;
             });
@@ -1898,6 +1909,7 @@
                 sidebar.classList.remove('open');
             }
         });
+        }); // Fechar DOMContentLoaded
     </script>
         </div>
     </div>
