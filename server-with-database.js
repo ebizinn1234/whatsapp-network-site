@@ -143,8 +143,26 @@ io.on('connection', (socket) => {
                 
                 if (savedSessions.length > 0) {
                     console.log('💾 Sessão salva encontrada para usuário:', userIdentifier);
-                    // Aqui você pode implementar lógica para usar sessão salva
-                    // Por enquanto, vamos continuar com o fluxo normal
+                    console.log('🔄 Tentando reconectar com sessão salva...');
+                    
+                    // Tentar usar sessão salva
+                    const savedSession = savedSessions[0];
+                    const sessionId = savedSession.session_id;
+                    
+                    // Verificar se a sessão ainda existe na memória
+                    if (userSessions.has(userIdentifier) && userSessions.get(userIdentifier)[sessionId]) {
+                        console.log('✅ Sessão encontrada na memória, reconectando...');
+                        const existingSession = userSessions.get(userIdentifier)[sessionId];
+                        
+                        // Verificar se ainda está conectado
+                        if (existingSession.sock && existingSession.isConnected) {
+                            console.log('✅ WhatsApp já conectado com sessão salva!');
+                            socket.emit('connection-status', { connected: true });
+                            return;
+                        }
+                    }
+                    
+                    console.log('🔄 Criando nova conexão com sessão salva...');
                 }
             }
             

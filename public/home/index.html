@@ -2011,6 +2011,28 @@
             connectBtn.style.opacity = '1';
         });
 
+        // Evento para receber sessões salvas
+        socket.on('saved-sessions', (sessions) => {
+            console.log('🔍 DEBUG: Sessões salvas recebidas:', sessions);
+            
+            if (sessions && sessions.length > 0) {
+                console.log('✅ Sessões WhatsApp encontradas! Conectando automaticamente...');
+                addLog('🔄 Conectando com sessão salva...', 'info');
+                
+                // Usar a primeira sessão ativa
+                const activeSession = sessions[0];
+                console.log('🔍 DEBUG: Usando sessão:', activeSession);
+                
+                // Conectar automaticamente
+                socket.emit('connect-whatsapp', { 
+                    userId: activeSession.user_id,
+                    sessionId: activeSession.session_id 
+                });
+            } else {
+                console.log('ℹ️ Nenhuma sessão salva encontrada. Usuário precisa escanear QR Code.');
+            }
+        });
+
         socket.on('groups-loaded', (groupsData) => {
             console.log('📊 Evento groups-loaded recebido:', groupsData);
             groups = groupsData;
@@ -3025,6 +3047,13 @@
             // Usuário já está logado - esconder botões de login/cadastro
             const loginBtn = document.querySelector('.btn-login');
             const registerBtn = document.querySelector('.btn-register');
+            
+            // Verificar se há sessões salvas do WhatsApp
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.id) {
+                console.log('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
+                socket.emit('get-saved-sessions', { userId: userData.id });
+            }
             
             if (loginBtn) loginBtn.style.display = 'none';
             if (registerBtn) registerBtn.style.display = 'none';
