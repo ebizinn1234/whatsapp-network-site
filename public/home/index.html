@@ -2492,7 +2492,8 @@
         function connectToWhatsApp() {
             // Verificar se o usuário está logado
             if (!localStorage.getItem('token')) {
-                alert('Você precisa estar logado para conectar o WhatsApp. Clique em "Cadastrar" para criar uma conta.');
+                // Abrir modal de login em vez de alert
+                document.getElementById('loginModal').style.display = 'flex';
                 return;
             }
             
