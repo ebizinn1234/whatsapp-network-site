@@ -1007,9 +1007,8 @@
         .mobile-header-content {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             padding: 10px 15px;
-            margin-left: 100px; /* Muito mais espaço para o menu hambúrguer */
         }
 
         .mobile-logo {
@@ -1063,41 +1062,10 @@
                 box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
             }
             
-            /* Menu hambúrguer para mobile */
-            .mobile-menu-toggle {
-                display: block !important;
-                position: fixed;
-                top: 15px;
-                left: 15px;
-                z-index: 9999;
-                background: rgba(36, 211, 102, 0.8);
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 8px;
-                cursor: pointer;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                transition: all 0.3s ease;
-                width: 36px;
-                height: 36px;
-            }
-            
-            .mobile-menu-toggle:hover {
-                background: #1ea952;
-                transform: scale(1.05);
-            }
-            
-            .mobile-menu-toggle i {
-                font-size: 14px;
-            }
         }
 
         @media (min-width: 769px) {
             .mobile-menu-btn {
-                display: none;
-            }
-            
-            .mobile-menu-toggle {
                 display: none;
             }
         }
@@ -1320,10 +1288,6 @@
     </style>
 </head>
 <body>
-    <!-- Menu hambúrguer para mobile -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
 
     <!-- Header fixo -->
     <div class="main-header">
@@ -2625,12 +2589,10 @@
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
             const menuBtn = document.querySelector('.mobile-menu-btn');
-            const mobileToggle = document.querySelector('.mobile-menu-toggle');
             
             if (window.innerWidth <= 768 && 
                 !sidebar.contains(event.target) && 
-                !menuBtn?.contains(event.target) &&
-                !mobileToggle?.contains(event.target)) {
+                !menuBtn?.contains(event.target)) {
                 sidebar.classList.remove('open');
             }
         });
