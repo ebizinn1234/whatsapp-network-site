@@ -1009,6 +1009,7 @@
             align-items: center;
             justify-content: flex-end;
             padding: 15px 20px;
+            margin-left: 60px; /* Espaço para o menu hambúrguer */
         }
 
         .mobile-logo {
@@ -1018,14 +1019,14 @@
         }
 
         .mobile-logo .logo-icon {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             color: #24d366;
         }
 
         .mobile-logo h1 {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 500;
             color: #2c3e50;
             margin: 0;
         }
@@ -2617,10 +2618,12 @@
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
             const menuBtn = document.querySelector('.mobile-menu-btn');
+            const mobileToggle = document.querySelector('.mobile-menu-toggle');
             
             if (window.innerWidth <= 768 && 
                 !sidebar.contains(event.target) && 
-                !menuBtn.contains(event.target)) {
+                !menuBtn?.contains(event.target) &&
+                !mobileToggle?.contains(event.target)) {
                 sidebar.classList.remove('open');
             }
         });
