@@ -327,7 +327,7 @@ async function connectToWhatsApp(userIP, socket, accountId = null) {
                 groups: [],
                 selectedGroups: [],
                 messageConfig: {
-                    text: "🌐Lista de Grupos de Network\n\n👉https://networkzap.site",
+                    text: "",
                     delay: 60000,
                     minDelay: 30000,
                     maxDelay: 180000,
@@ -524,7 +524,7 @@ io.on('connection', (socket) => {
             groups: [],
             selectedGroups: [],
             messageConfig: {
-                text: "🌐Lista de Grupos de Network\n\n👉https://networkzap.site",
+                text: "",
                 delay: 60000,
                 minDelay: 30000,
                 maxDelay: 180000,
@@ -709,6 +709,12 @@ io.on('connection', (socket) => {
         
         if (userSession.selectedGroups.length === 0) {
             socket.emit('send-error', 'Nenhum grupo selecionado');
+            return;
+        }
+        
+        if (!userSession.messageConfig || !userSession.messageConfig.text || userSession.messageConfig.text.trim() === '') {
+            console.log(`❌ Nenhuma mensagem configurada pelo usuário ${userIP}`);
+            socket.emit('send-error', 'Configure uma mensagem antes de enviar');
             return;
         }
         
