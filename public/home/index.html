@@ -1796,13 +1796,17 @@
                 socket.emit('check-connection');
             }, 1000);
             
-            // Entrar na sala do usuário se estiver logado
+            // Entrar na sala do usuário se estiver logado, senão entrar na sala default
             const token = localStorage.getItem('token');
             if (token) {
                 const userData = JSON.parse(localStorage.getItem('userData') || '{}');
                 if (userData.id) {
                     socket.emit('join-user', { userId: userData.id });
+                } else {
+                    socket.emit('join-user', { userId: 'default' });
                 }
+            } else {
+                socket.emit('join-user', { userId: 'default' });
             }
         });
 
