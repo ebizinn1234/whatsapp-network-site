@@ -33,6 +33,12 @@
             }
         }
 
+        @media (min-width: 769px) {
+            .desktop-only {
+                display: block;
+            }
+        }
+
         .auth-container {
             background: white;
             border-radius: 20px;
@@ -336,7 +342,7 @@
                 <div class="form-group">
                     <label for="registerPassword">Senha</label>
                     <input type="password" id="registerPassword" placeholder="Digite uma senha forte" required>
-                </div>
+        </div>
 
                 <div class="form-group">
                     <label for="confirmPassword">Confirmar Senha</label>
@@ -353,12 +359,12 @@
                         <option value="Qual sua cor favorita?">Qual sua cor favorita?</option>
                         <option value="Qual o nome da sua escola?">Qual o nome da sua escola?</option>
                     </select>
-                </div>
+        </div>
 
                 <div class="form-group">
                     <label for="recoveryAnswer">Resposta</label>
                     <input type="text" id="recoveryAnswer" placeholder="Digite sua resposta" required>
-                </div>
+        </div>
 
                 <button type="submit" class="btn btn-primary" id="registerBtn">
                     <span id="registerBtnText">Criar Conta</span>
@@ -385,12 +391,12 @@
                 <div class="form-group">
                     <label for="recoveryAnswerInput">Resposta</label>
                     <input type="text" id="recoveryAnswerInput" placeholder="Digite sua resposta" required>
-                </div>
+            </div>
 
                 <div class="form-group">
                     <label for="newPassword">Nova Senha</label>
                     <input type="password" id="newPassword" placeholder="Digite uma nova senha" required>
-                </div>
+        </div>
 
                 <button type="submit" class="btn btn-primary" id="recoveryBtn">
                     <span id="recoveryBtnText">Redefinir Senha</span>
