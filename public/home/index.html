@@ -1900,7 +1900,7 @@
                 return `
                     <div class="group-item ${statusClass}" data-group-name="${group.name.toLowerCase()}">
                         <input type="checkbox" class="group-checkbox" data-index="${index}" 
-                               onchange="updateSelectedGroups(); console.log('Checkbox changed:', this.checked, 'Index:', this.dataset.index);" 
+                               onchange="console.log('🔄 Checkbox changed:', this.checked, 'Index:', this.dataset.index, 'Group:', '${group.name}'); updateSelectedGroups();" 
                                ${!group.canSendMessages ? 'disabled' : ''}>
                         <div class="group-info">
                             <div class="group-name">${group.name}</div>
@@ -1919,6 +1919,7 @@
             console.log('🔄 updateSelectedGroups called');
             const checkboxes = document.querySelectorAll('.group-checkbox:checked');
             console.log('✅ Checked checkboxes:', checkboxes.length);
+            console.log('🔍 Total de checkboxes na página:', document.querySelectorAll('.group-checkbox').length);
             
             try {
                 // Limpar lista anterior
@@ -1927,9 +1928,12 @@
                 // Processar apenas checkboxes marcados
                 checkboxes.forEach(checkbox => {
                     const index = parseInt(checkbox.dataset.index);
+                    console.log('🔍 Processando checkbox index:', index, 'checked:', checkbox.checked);
                     if (groups[index]) {
                         selectedGroupsList.push(groups[index]);
                         console.log('✅ Adicionando grupo:', groups[index].name);
+                    } else {
+                        console.log('❌ Grupo não encontrado no índice:', index);
                     }
                 });
                 
@@ -1940,10 +1944,16 @@
                 if (selectedGroups) {
                     selectedGroups.textContent = selectedGroupsList.length;
                     console.log('📈 Estatística "Selecionados" atualizada para:', selectedGroupsList.length);
+                } else {
+                    console.log('❌ Elemento selectedGroups não encontrado');
                 }
+                
                 if (selectedCount) {
                     selectedCount.textContent = selectedGroupsList.length;
                     console.log('📈 Contador do botão atualizado para:', selectedGroupsList.length);
+                    console.log('🔍 Valor atual do selectedCount:', selectedCount.textContent);
+                } else {
+                    console.log('❌ Elemento selectedCount não encontrado');
                 }
                 
                 // Atualizar botão Enviar Mensagens
@@ -1952,6 +1962,8 @@
                     sendMessagesBtn.style.cursor = selectedGroupsList.length === 0 ? 'not-allowed' : 'pointer';
                     sendMessagesBtn.style.opacity = selectedGroupsList.length === 0 ? '0.6' : '1';
                     console.log('🔘 Botão Enviar Mensagens - disabled:', sendMessagesBtn.disabled, 'grupos:', selectedGroupsList.length);
+                } else {
+                    console.log('❌ Elemento sendMessagesBtn não encontrado');
                 }
                 
                 // Atualizar botão Salvar Seleção
@@ -1960,6 +1972,8 @@
                     saveSelectionBtn.style.cursor = selectedGroupsList.length === 0 ? 'not-allowed' : 'pointer';
                     saveSelectionBtn.style.opacity = selectedGroupsList.length === 0 ? '0.6' : '1';
                     console.log('🔘 Botão Salvar Seleção - disabled:', saveSelectionBtn.disabled, 'grupos:', selectedGroupsList.length);
+                } else {
+                    console.log('❌ Elemento saveSelectionBtn não encontrado');
                 }
                 
                 console.log('✅ updateSelectedGroups completed successfully');
