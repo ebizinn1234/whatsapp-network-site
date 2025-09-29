@@ -1856,7 +1856,16 @@
                 addLog('❌ Selecione pelo menos um grupo!', 'danger');
                 return;
             }
-            socket.emit('send-messages');
+            
+            // Enviar grupos selecionados para o servidor ANTES de enviar mensagens
+            console.log('📤 Enviando grupos selecionados para o servidor:', selectedGroupsList.length);
+            socket.emit('select-groups', selectedGroupsList);
+            
+            // Aguardar um pouco para garantir que o servidor recebeu os grupos
+            setTimeout(() => {
+                console.log('🚀 Iniciando envio de mensagens...');
+                socket.emit('send-messages');
+            }, 100);
         });
 
         // Functions
