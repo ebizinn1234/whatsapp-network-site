@@ -1060,10 +1060,40 @@
                 cursor: pointer;
                 box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
             }
+            
+            /* Menu hambúrguer para mobile */
+            .mobile-menu-toggle {
+                display: block;
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                z-index: 1001;
+                background: #24d366;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                transition: all 0.3s ease;
+            }
+            
+            .mobile-menu-toggle:hover {
+                background: #1ea952;
+                transform: scale(1.05);
+            }
+            
+            .mobile-menu-toggle i {
+                font-size: 18px;
+            }
         }
 
         @media (min-width: 769px) {
             .mobile-menu-btn {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
                 display: none;
             }
         }
@@ -1286,6 +1316,11 @@
     </style>
 </head>
 <body>
+    <!-- Menu hambúrguer para mobile -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <!-- Header fixo -->
     <div class="main-header">
         <div class="header-content">
