@@ -1399,6 +1399,14 @@
         
         // Verificação inicial de conexão
         updateDebugInfo('🚀 Página carregada, verificando conexão...');
+        
+        // Forçar verificação de conexão após carregar a página
+        setTimeout(() => {
+            if (socket.connected) {
+                updateDebugInfo('🔄 Forçando verificação de conexão...');
+                socket.emit('check-connection');
+            }
+        }, 2000);
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
@@ -1435,7 +1443,10 @@
         socket.on('connect', () => {
             console.log('Socket conectado, verificando status WhatsApp...');
             updateDebugInfo('🔄 Verificando status da conexão WhatsApp...');
-            socket.emit('check-connection');
+            // Aguardar um pouco antes de verificar a conexão
+            setTimeout(() => {
+                socket.emit('check-connection');
+            }, 1000);
         });
 
         socket.on('connection-status', (data) => {

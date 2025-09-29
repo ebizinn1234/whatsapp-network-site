@@ -661,22 +661,31 @@ io.on('connection', (socket) => {
         console.log(`🔍 Verificando conexão para usuário ${userIP}`);
         const userSession = userSessions.get(userIP);
         
-        if (userSession && userSession.isConnected && userSession.sock && userSession.sock.user) {
-            console.log(`✅ Usuário ${userIP} está conectado ao WhatsApp`);
-            socket.emit('connection-status', {
-                connected: true,
-                message: 'WhatsApp conectado'
-            });
-        } else {
-            console.log(`❌ Usuário ${userIP} não está conectado ao WhatsApp`);
-            if (userSession) {
-                console.log(`📊 Status da sessão: isConnected=${userSession.isConnected}, sock=${!!userSession.sock}, user=${!!userSession.sock?.user}`);
+        // Verificar se existe sessão e se está realmente conectada
+        if (userSession && userSession.isConnected && userSession.sock) {
+            try {
+                // Verificar se o socket ainda está ativo
+                if (userSession.sock.user && userSession.sock.user.id) {
+                    console.log(`✅ Usuário ${userIP} está conectado ao WhatsApp`);
+                    socket.emit('connection-status', {
+                        connected: true,
+                        message: 'WhatsApp conectado'
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.log(`⚠️ Erro ao verificar conexão: ${error.message}`);
             }
-            socket.emit('connection-status', {
-                connected: false,
-                message: 'Seu WhatsApp está desconectado'
-            });
         }
+        
+        console.log(`❌ Usuário ${userIP} não está conectado ao WhatsApp`);
+        if (userSession) {
+            console.log(`📊 Status da sessão: isConnected=${userSession.isConnected}, sock=${!!userSession.sock}, user=${!!userSession.sock?.user}`);
+        }
+        socket.emit('connection-status', {
+            connected: false,
+            message: 'Seu WhatsApp está desconectado'
+        });
     });
     
     socket.on('disconnect', () => {
