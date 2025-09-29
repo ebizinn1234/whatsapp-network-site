@@ -1901,7 +1901,7 @@
                 return `
                     <div class="group-item ${statusClass}" data-group-name="${group.name.toLowerCase()}">
                         <input type="checkbox" class="group-checkbox" data-index="${index}" 
-                               onchange="console.log('🔄 Checkbox changed:', this.checked, 'Index:', this.dataset.index, 'Group:', '${group.name}'); updateSelectedGroups();" 
+                               onchange="console.log('🔄 Checkbox changed:', this.checked, 'Index:', this.dataset.index, 'Group:', '${group.name}'); window.updateSelectedGroups();" 
                                ${!group.canSendMessages ? 'disabled' : ''}>
                         <div class="group-info">
                             <div class="group-name">${group.name}</div>
@@ -1920,7 +1920,7 @@
             // updateDebugInfo(`✅ ${groups.length} grupos renderizados com sucesso!`);
         }
 
-        function updateSelectedGroups() {
+        window.updateSelectedGroups = function() {
             console.log('🔄 updateSelectedGroups called');
             const checkboxes = document.querySelectorAll('.group-checkbox:checked');
             console.log('✅ Checked checkboxes:', checkboxes.length);
