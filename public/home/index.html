@@ -629,6 +629,50 @@
             margin: 25px 0;
         }
 
+        /* Notificação de sucesso */
+        .success-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .success-notification i {
+            font-size: 18px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
         .stat-card {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             padding: 25px;
@@ -1836,6 +1880,7 @@
             console.log('📤 Enviando configuração para o servidor:', config);
             socket.emit('update-message', config);
             addLog('💬 Configuração atualizada!', 'success');
+            showSuccessNotification('Mensagem salva com sucesso!');
         });
 
         // Event listeners movidos para dentro do setTimeout acima
@@ -2024,6 +2069,26 @@
             }
         }
 
+        function showSuccessNotification(message) {
+            const notification = document.getElementById('successNotification');
+            const span = notification.querySelector('span');
+            
+            // Atualizar mensagem
+            span.textContent = message;
+            
+            // Mostrar notificação
+            notification.style.display = 'flex';
+            notification.style.animation = 'slideInRight 0.3s ease-out';
+            
+            // Esconder após 3 segundos
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+
         // Initialize
         addLog('WhatsApp Network Manager iniciado!', 'success');
         
@@ -2177,6 +2242,12 @@
         updateSelectedGroups();
         }); // Fechar DOMContentLoaded
     </script>
+        </div>
+        
+        <!-- Notificação de sucesso -->
+        <div id="successNotification" class="success-notification">
+            <i class="fas fa-check-circle"></i>
+            <span>Mensagem salva com sucesso!</span>
         </div>
     </div>
 </body>
