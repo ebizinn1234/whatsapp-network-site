@@ -1275,10 +1275,6 @@
             </p>
             
             <div id="sendingContainer" style="text-align: center;">
-                <button class="btn btn-primary" id="saveSelectionBtn" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; margin-right: 10px;">
-                    <i class="fas fa-save" style="margin-right: 8px;"></i>
-                    Salvar Seleção
-                </button>
                 <button class="btn btn-success" id="sendMessagesBtn" disabled style="background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: not-allowed; opacity: 0.6;">
                     <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>
                     Enviar Mensagens (<span id="selectedCount">0</span> grupos)
@@ -1458,7 +1454,6 @@
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
         const sendMessagesBtn = document.getElementById('sendMessagesBtn');
-        const saveSelectionBtn = document.getElementById('saveSelectionBtn');
         const selectedCount = document.getElementById('selectedCount');
         const progressContainer = document.getElementById('progressContainer');
         const progressFill = document.getElementById('progressFill');
@@ -1855,14 +1850,6 @@
             // updateDebugInfo(`✅ ${visibleCount} grupos visíveis após filtro`);
         });
 
-        // Event listener para botão Salvar Seleção
-        if (saveSelectionBtn) {
-            saveSelectionBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('🔵 Botão Salvar Seleção clicado!');
-                saveSelection();
-            });
-        }
 
         sendMessagesBtn.addEventListener('click', () => {
             if (selectedGroupsList.length === 0) {
@@ -1971,15 +1958,6 @@
                     console.log('❌ Elemento sendMessagesBtn não encontrado');
                 }
                 
-                // Atualizar botão Salvar Seleção
-                if (saveSelectionBtn) {
-                    saveSelectionBtn.disabled = selectedGroupsList.length === 0;
-                    saveSelectionBtn.style.cursor = selectedGroupsList.length === 0 ? 'not-allowed' : 'pointer';
-                    saveSelectionBtn.style.opacity = selectedGroupsList.length === 0 ? '0.6' : '1';
-                    console.log('🔘 Botão Salvar Seleção - disabled:', saveSelectionBtn.disabled, 'grupos:', selectedGroupsList.length);
-                } else {
-                    console.log('❌ Elemento saveSelectionBtn não encontrado');
-                }
                 
                 console.log('✅ updateSelectedGroups completed successfully');
             } catch (error) {
@@ -1988,16 +1966,6 @@
             }
         }
         
-        function saveSelection() {
-            if (selectedGroupsList.length === 0) {
-                addLog('❌ Selecione pelo menos um grupo antes de salvar!', 'danger');
-                return;
-            }
-            
-            // Enviar seleção para o servidor
-            socket.emit('select-groups', selectedGroupsList);
-            addLog(`✅ Seleção salva: ${selectedGroupsList.length} grupos selecionados`, 'success');
-        }
 
         function addLog(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
