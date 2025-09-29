@@ -1,1 +1,497 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DisparoZap</title><script>window.location.href="/home/";</script></head><body><h1>Redirecionando...</h1></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DisparoZap - WhatsApp Network Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #24d366 0%, #128c7e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #24d366 0%, #128c7e 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .auth-header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .auth-content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #24d366;
+            box-shadow: 0 0 0 3px rgba(36, 211, 102, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #24d366 0%, #128c7e 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(36, 211, 102, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .auth-switch a {
+            color: #24d366;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .phone-mask {
+            position: relative;
+        }
+
+        .phone-mask::before {
+            content: '+55';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        .phone-mask input {
+            padding-left: 50px;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .auth-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1><i class="fab fa-whatsapp"></i> DisparoZap</h1>
+            <p>Envio de mensagens em massa para WhatsApp</p>
+        </div>
+
+        <div class="auth-content">
+            <!-- Mensagens -->
+            <div id="messageContainer"></div>
+
+            <!-- Formulário de Login -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginPhone">Telefone</label>
+                    <div class="phone-mask">
+                        <input type="tel" id="loginPhone" placeholder="(11) 99999-9999" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Senha</label>
+                    <input type="password" id="loginPassword" placeholder="Digite sua senha" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span id="loginBtnText">Entrar</span>
+                    <div id="loginLoading" class="loading hidden"></div>
+                </button>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="registerForm" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="registerPhone">Telefone</label>
+                    <div class="phone-mask">
+                        <input type="tel" id="registerPhone" placeholder="(11) 99999-9999" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPassword">Senha</label>
+                    <input type="password" id="registerPassword" placeholder="Digite uma senha forte" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Senha</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirme sua senha" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="recoveryQuestion">Pergunta de Recuperação</label>
+                    <select id="recoveryQuestion" required>
+                        <option value="">Selecione uma pergunta</option>
+                        <option value="Qual o nome da sua mãe?">Qual o nome da sua mãe?</option>
+                        <option value="Qual sua cidade natal?">Qual sua cidade natal?</option>
+                        <option value="Qual o nome do seu primeiro pet?">Qual o nome do seu primeiro pet?</option>
+                        <option value="Qual sua cor favorita?">Qual sua cor favorita?</option>
+                        <option value="Qual o nome da sua escola?">Qual o nome da sua escola?</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="recoveryAnswer">Resposta</label>
+                    <input type="text" id="recoveryAnswer" placeholder="Digite sua resposta" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span id="registerBtnText">Criar Conta</span>
+                    <div id="registerLoading" class="loading hidden"></div>
+                </button>
+            </form>
+
+            <!-- Formulário de Recuperação -->
+            <form id="recoveryForm" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="recoveryPhone">Telefone</label>
+                    <div class="phone-mask">
+                        <input type="tel" id="recoveryPhone" placeholder="(11) 99999-9999" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="recoveryQuestionSelect">Pergunta de Recuperação</label>
+                    <select id="recoveryQuestionSelect" required>
+                        <option value="">Selecione uma pergunta</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="recoveryAnswerInput">Resposta</label>
+                    <input type="text" id="recoveryAnswerInput" placeholder="Digite sua resposta" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="newPassword">Nova Senha</label>
+                    <input type="password" id="newPassword" placeholder="Digite uma nova senha" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="recoveryBtn">
+                    <span id="recoveryBtnText">Redefinir Senha</span>
+                    <div id="recoveryLoading" class="loading hidden"></div>
+                </button>
+            </form>
+
+            <!-- Links de navegação -->
+            <div class="auth-switch">
+                <a href="#" id="showRegister">Não tem conta? Cadastre-se</a>
+                <br>
+                <a href="#" id="showRecovery">Esqueceu a senha?</a>
+                <br>
+                <a href="#" id="showLogin" class="hidden">Voltar ao login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Máscara de telefone
+        function formatPhone(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            }
+            input.value = value;
+        }
+
+        // Aplicar máscara nos campos de telefone
+        document.querySelectorAll('input[type="tel"]').forEach(input => {
+            input.addEventListener('input', () => formatPhone(input));
+        });
+
+        // Elementos do DOM
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const recoveryForm = document.getElementById('recoveryForm');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Botões de navegação
+        document.getElementById('showRegister').addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm('register');
+        });
+
+        document.getElementById('showRecovery').addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm('recovery');
+        });
+
+        document.getElementById('showLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm('login');
+        });
+
+        function showForm(formType) {
+            // Esconder todos os formulários
+            loginForm.classList.add('hidden');
+            registerForm.classList.add('hidden');
+            recoveryForm.classList.add('hidden');
+
+            // Mostrar formulário selecionado
+            if (formType === 'login') {
+                loginForm.classList.remove('hidden');
+                document.getElementById('showLogin').classList.add('hidden');
+                document.getElementById('showRegister').classList.remove('hidden');
+                document.getElementById('showRecovery').classList.remove('hidden');
+            } else if (formType === 'register') {
+                registerForm.classList.remove('hidden');
+                document.getElementById('showLogin').classList.remove('hidden');
+                document.getElementById('showRegister').classList.add('hidden');
+                document.getElementById('showRecovery').classList.remove('hidden');
+            } else if (formType === 'recovery') {
+                recoveryForm.classList.remove('hidden');
+                document.getElementById('showLogin').classList.remove('hidden');
+                document.getElementById('showRegister').classList.remove('hidden');
+                document.getElementById('showRecovery').classList.add('hidden');
+            }
+
+            clearMessages();
+        }
+
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+            messageContainer.innerHTML = '';
+            messageContainer.appendChild(messageDiv);
+        }
+
+        function clearMessages() {
+            messageContainer.innerHTML = '';
+        }
+
+        function setLoading(buttonId, loadingId, textId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const loading = document.getElementById(loadingId);
+            const text = document.getElementById(textId);
+
+            if (isLoading) {
+                button.disabled = true;
+                loading.classList.remove('hidden');
+                text.classList.add('hidden');
+            } else {
+                button.disabled = false;
+                loading.classList.remove('hidden');
+                text.classList.remove('hidden');
+            }
+        }
+
+        // Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('loginPhone').value.replace(/\D/g, '');
+            const password = document.getElementById('loginPassword').value;
+
+            setLoading('loginBtn', 'loginLoading', 'loginBtnText', true);
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/home/';
+                } else {
+                    showMessage(data.error);
+                }
+            } catch (error) {
+                showMessage('Erro de conexão. Tente novamente.');
+            } finally {
+                setLoading('loginBtn', 'loginLoading', 'loginBtnText', false);
+            }
+        });
+
+        // Cadastro
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('registerPhone').value.replace(/\D/g, '');
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const recoveryQuestion = document.getElementById('recoveryQuestion').value;
+            const recoveryAnswer = document.getElementById('recoveryAnswer').value;
+
+            if (password !== confirmPassword) {
+                showMessage('As senhas não coincidem');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('A senha deve ter pelo menos 6 caracteres');
+                return;
+            }
+
+            setLoading('registerBtn', 'registerLoading', 'registerBtnText', true);
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone,
+                        password,
+                        recoveryQuestion,
+                        recoveryAnswer
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/home/';
+                } else {
+                    showMessage(data.error);
+                }
+            } catch (error) {
+                showMessage('Erro de conexão. Tente novamente.');
+            } finally {
+                setLoading('registerBtn', 'registerLoading', 'registerBtnText', false);
+            }
+        });
+
+        // Verificar se já está logado
+        if (localStorage.getItem('token')) {
+            window.location.href = '/home/';
+        }
+    </script>
+</body>
+</html>
