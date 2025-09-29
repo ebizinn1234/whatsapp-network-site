@@ -736,8 +736,35 @@
 
         // Verificar se já está logado
         if (localStorage.getItem('token')) {
-            window.location.href = '/home/';
+            // Usuário já está logado - esconder botões de login/cadastro
+            const loginBtn = document.querySelector('.btn-login');
+            const registerBtn = document.querySelector('.btn-register');
+            
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (registerBtn) registerBtn.style.display = 'none';
+            
+            // Mostrar informações do usuário
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                headerActions.innerHTML = `
+                    <span style="color: #24d366; font-weight: 600;">${user.phone || 'Usuário'}</span>
+                    <button class="btn-logout" onclick="logout()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">Sair</button>
+                `;
+            }
+            
+            // Redirecionar para home após 2 segundos
+            setTimeout(() => {
+                window.location.href = '/home/';
+            }, 2000);
         }
+
+        // Função de logout
+        window.logout = function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.reload();
+        };
     </script>
 </body>
 </html>
