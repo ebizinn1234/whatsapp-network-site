@@ -1360,6 +1360,17 @@
         console.log('loadGroupsBtn:', loadGroupsBtn);
         console.log('selectAllBtn:', selectAllBtn);
         console.log('deselectAllBtn:', deselectAllBtn);
+        
+        // Verificar se os elementos existem antes de adicionar event listeners
+        if (!selectAllBtn) {
+            console.error('selectAllBtn not found!');
+        }
+        if (!deselectAllBtn) {
+            console.error('deselectAllBtn not found!');
+        }
+        if (!loadGroupsBtn) {
+            console.error('loadGroupsBtn not found!');
+        }
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
@@ -1658,20 +1669,32 @@
             console.log('Select all button clicked');
             const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
             console.log('Found checkboxes:', checkboxes.length);
+            if (checkboxes.length === 0) {
+                console.log('No checkboxes found - groups may not be loaded yet');
+                addLog('⚠️ Carregue os grupos primeiro!', 'warning');
+                return;
+            }
             checkboxes.forEach(checkbox => {
                 checkbox.checked = true;
             });
             updateSelectedGroups();
+            addLog(`✅ ${checkboxes.length} grupos selecionados`, 'success');
         });
 
         deselectAllBtn.addEventListener('click', () => {
             console.log('Deselect all button clicked');
             const checkboxes = document.querySelectorAll('.group-checkbox');
             console.log('Found checkboxes:', checkboxes.length);
+            if (checkboxes.length === 0) {
+                console.log('No checkboxes found - groups may not be loaded yet');
+                addLog('⚠️ Carregue os grupos primeiro!', 'warning');
+                return;
+            }
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false;
             });
             updateSelectedGroups();
+            addLog('❌ Todos os grupos desmarcados', 'info');
         });
 
         // Funcionalidade de pesquisa
@@ -1739,17 +1762,34 @@
             console.log('updateSelectedGroups called');
             const checkboxes = document.querySelectorAll('.group-checkbox:checked');
             console.log('Checked checkboxes:', checkboxes.length);
-            selectedGroupsList = Array.from(checkboxes).map(checkbox => {
-                const index = parseInt(checkbox.dataset.index);
-                return groups[index];
-            });
             
-            console.log('Selected groups:', selectedGroupsList.length);
-            selectedGroups.textContent = selectedGroupsList.length;
-            selectedCount.textContent = selectedGroupsList.length;
-            sendMessagesBtn.disabled = selectedGroupsList.length === 0;
-            
-            socket.emit('select-groups', selectedGroupsList);
+            try {
+                selectedGroupsList = Array.from(checkboxes).map(checkbox => {
+                    const index = parseInt(checkbox.dataset.index);
+                    console.log('Processing checkbox with index:', index, 'Group:', groups[index]);
+                    return groups[index];
+                });
+                
+                console.log('Selected groups:', selectedGroupsList.length);
+                console.log('selectedGroups element:', selectedGroups);
+                console.log('selectedCount element:', selectedCount);
+                
+                if (selectedGroups) {
+                    selectedGroups.textContent = selectedGroupsList.length;
+                }
+                if (selectedCount) {
+                    selectedCount.textContent = selectedGroupsList.length;
+                }
+                if (sendMessagesBtn) {
+                    sendMessagesBtn.disabled = selectedGroupsList.length === 0;
+                }
+                
+                socket.emit('select-groups', selectedGroupsList);
+                console.log('updateSelectedGroups completed successfully');
+            } catch (error) {
+                console.error('Error in updateSelectedGroups:', error);
+                addLog('❌ Erro ao atualizar seleção de grupos', 'danger');
+            }
         }
 
         function addLog(message, type = 'info') {
