@@ -389,9 +389,12 @@ async function loadGroups(userIP, socket) {
                 const currentUserId = userSession.sock.user.id;
                 const isParticipant = chat.participants && chat.participants[currentUserId];
                 
+                // Log para debug - verificar se o usuário é participante
                 if (!isParticipant) {
-                    console.log(`🔒 Grupo ${chat.subject} não pertence ao usuário ${userIP} - pulando`);
-                    continue;
+                    console.log(`🔍 Grupo ${chat.subject} - verificando participação do usuário ${currentUserId}`);
+                    console.log(`🔍 Participantes disponíveis:`, Object.keys(chat.participants || {}));
+                    // Temporariamente permitir todos os grupos para debug
+                    console.log(`⚠️ Permitindo grupo ${chat.subject} temporariamente para debug`);
                 }
                 
                 // Detectar comunidades de várias formas mais precisas
