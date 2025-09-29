@@ -1864,7 +1864,7 @@
                     </div>
                 `;
                 statusHint.textContent = 'Clique no botão abaixo para conectar';
-                connectBtn.innerHTML = '<span style="font-size: 18px; margin-right: 8px; font-weight: bold;">+</span>Conectar WhatsApp';
+                connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
                 connectBtn.disabled = false;
                 connectBtn.style.display = 'inline-block';
                 disconnectBtn.style.display = 'none';
@@ -1884,7 +1884,7 @@
             console.log('🔍 DEBUG: QR Code exibido na tela!');
             
             // Restaurar botão após QR Code aparecer
-            connectBtn.innerHTML = '<i class="fas fa-whatsapp"></i> Conectar WhatsApp';
+            connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
             connectBtn.disabled = false;
             connectBtn.style.opacity = '1';
         });
@@ -1894,7 +1894,7 @@
             addLog(`❌ Erro: ${data.message}`, 'error');
             
             // Restaurar botão em caso de erro
-            connectBtn.innerHTML = '<i class="fas fa-whatsapp"></i> Conectar WhatsApp';
+            connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
             connectBtn.disabled = false;
             connectBtn.style.opacity = '1';
         });
