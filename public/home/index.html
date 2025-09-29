@@ -1009,7 +1009,7 @@
             align-items: center;
             justify-content: flex-end;
             padding: 15px 20px;
-            margin-left: 60px; /* Espaço para o menu hambúrguer */
+            margin-left: 80px; /* Mais espaço para o menu hambúrguer */
         }
 
         .mobile-logo {
@@ -1039,6 +1039,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
+                z-index: 10000;
             }
 
             .sidebar.open {
@@ -2610,8 +2611,14 @@
 
         // Função para toggle do menu mobile
         function toggleSidebar() {
+            console.log('toggleSidebar chamada');
             const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+                console.log('Sidebar toggle executado, classes:', sidebar.className);
+            } else {
+                console.error('Sidebar não encontrada');
+            }
         }
 
         // Fechar menu ao clicar fora (mobile)
