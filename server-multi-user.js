@@ -368,7 +368,27 @@ async function connectToWhatsApp(userIP, socket, accountId = null) {
                     userSession.isConnected = true;
                     userSession.sock = sock; // Garantir que o sock está salvo
                 }
-                socket.emit('connection-status', { connected: true, message: 'Conectado ao WhatsApp!' });
+                
+                // Obter informações do usuário conectado
+                let whatsappInfo = null;
+                try {
+                    if (sock.user) {
+                        whatsappInfo = {
+                            name: sock.user.name || 'Usuário',
+                            number: sock.user.id?.split(':')[0] || 'Número não disponível',
+                            profilePicture: null // Baileys não fornece foto de perfil diretamente
+                        };
+                        console.log(`📱 Usuário conectado: ${whatsappInfo.name} (${whatsappInfo.number})`);
+                    }
+                } catch (error) {
+                    console.log('⚠️ Erro ao obter informações do usuário:', error.message);
+                }
+                
+                socket.emit('connection-status', { 
+                    connected: true, 
+                    message: 'Conectado ao WhatsApp!',
+                    whatsappInfo: whatsappInfo
+                });
                 
                 // Buscar grupos após conectar
                 setTimeout(() => loadGroups(userIP, socket), 2000);
@@ -750,9 +770,25 @@ io.on('connection', (socket) => {
                 // Verificar se o socket ainda está ativo
                 if (userSession.sock.user && userSession.sock.user.id) {
                     console.log(`✅ Usuário ${userIP} está conectado ao WhatsApp`);
+                    
+                    // Obter informações do usuário conectado
+                    let whatsappInfo = null;
+                    try {
+                        if (userSession.sock.user) {
+                            whatsappInfo = {
+                                name: userSession.sock.user.name || 'Usuário',
+                                number: userSession.sock.user.id?.split(':')[0] || 'Número não disponível',
+                                profilePicture: null
+                            };
+                        }
+                    } catch (error) {
+                        console.log('⚠️ Erro ao obter informações do usuário:', error.message);
+                    }
+                    
                     socket.emit('connection-status', {
                         connected: true,
-                        message: 'WhatsApp conectado'
+                        message: 'WhatsApp conectado',
+                        whatsappInfo: whatsappInfo
                     });
                     return;
                 }

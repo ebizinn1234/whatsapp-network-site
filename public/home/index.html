@@ -1543,8 +1543,27 @@
             
             if (data.connected) {
                 statusIndicator.classList.add('connected');
-                statusText.textContent = data.message;
-                statusHint.textContent = 'Pronto para enviar mensagens!';
+                
+                // Mostrar informações do WhatsApp conectado
+                if (data.whatsappInfo) {
+                    const { name, number, profilePicture } = data.whatsappInfo;
+                    statusText.innerHTML = `
+                        <div style="font-weight: 600; color: #28a745; margin-bottom: 5px;">
+                            Conectado ao WhatsApp!
+                        </div>
+                        <div style="font-size: 14px; color: #666; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            ${profilePicture ? `<img src="${profilePicture}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">` : '<i class="fas fa-user-circle" style="color: #24d366; font-size: 20px;"></i>'}
+                            <span><strong>${name || 'Usuário'}</strong></span>
+                            <span style="color: #999;">•</span>
+                            <span style="font-family: monospace; font-size: 12px;">${number || 'Número não disponível'}</span>
+                        </div>
+                    `;
+                    statusHint.textContent = 'Pronto para enviar mensagens!';
+                } else {
+                    statusText.textContent = data.message;
+                    statusHint.textContent = 'Pronto para enviar mensagens!';
+                }
+                
                 connectBtn.innerHTML = '<span style="font-size: 18px; margin-right: 8px; font-weight: bold;">✓</span>Conectado';
                 connectBtn.disabled = true;
                 connectBtn.style.display = 'none';
