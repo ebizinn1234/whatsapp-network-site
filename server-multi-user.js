@@ -108,12 +108,12 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
         progress.current = i;
         
         // Verificar se o grupo ainda está selecionado (não foi desmarcado)
-        if (!group || !group.selected) {
-            console.log(`⏭️ Pulando grupo desmarcado: ${group?.name || 'desconhecido'} (usuário ${userIP})`);
+        if (!group) {
+            console.log(`⏭️ Pulando grupo inválido: ${group?.name || 'desconhecido'} (usuário ${userIP})`);
             socket.emit('message-sent', {
                 group: group?.name || 'desconhecido',
                 success: false,
-                error: 'Grupo desmarcado',
+                error: 'Grupo inválido',
                 progress: i + 1,
                 total: progress.total,
                 success: progress.success,
@@ -671,8 +671,8 @@ io.on('connection', (socket) => {
     });
     
     socket.on('select-groups', (selected) => {
-        // Filtrar apenas grupos realmente selecionados (não desmarcados)
-        userSession.selectedGroups = (selected || []).filter(group => group && group.selected !== false);
+        // Armazenar todos os grupos selecionados (sem filtrar por selected)
+        userSession.selectedGroups = selected || [];
         console.log(`📋 ${userSession.selectedGroups.length} grupos selecionados pelo usuário ${userIP}`);
         console.log(`   - Grupos: ${userSession.selectedGroups.map(g => g.name).join(', ')}`);
         socket.emit('groups-selected', userSession.selectedGroups.length);
