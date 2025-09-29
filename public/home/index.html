@@ -1628,8 +1628,23 @@
             updateSelectedGroups();
         });
 
+        // Verificar se os elementos existem
+        if (!connectBtn) {
+            console.error('❌ connectBtn não encontrado!');
+            updateDebugInfo('❌ connectBtn não encontrado!');
+        }
+        if (!clearSessionBtn) {
+            console.error('❌ clearSessionBtn não encontrado!');
+            updateDebugInfo('❌ clearSessionBtn não encontrado!');
+        }
+        
         // Event listeners
-        connectBtn.addEventListener('click', () => {
+        if (connectBtn) {
+            connectBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔴 Botão Conectar WhatsApp clicado!');
+            updateDebugInfo('🔴 Botão Conectar WhatsApp clicado!');
+            
             const selectedAccount = accountSelect.value;
             if (selectedAccount) {
                 socket.emit('connect-whatsapp', { accountId: selectedAccount });
@@ -1679,13 +1694,19 @@
             addLog('🔄 Desconectando do WhatsApp...', 'info');
         });
 
-        clearSessionBtn.addEventListener('click', () => {
+        if (clearSessionBtn) {
+            clearSessionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔴 Botão Limpar Sessão clicado!');
+            updateDebugInfo('🔴 Botão Limpar Sessão clicado!');
+            
             if (confirm('⚠️ Tem certeza que deseja limpar a sessão atual? Isso irá desconectar o WhatsApp e você precisará escanear o QR Code novamente.')) {
                 updateDebugInfo('🗑️ Limpando sessão atual...');
                 socket.emit('clear-session');
                 addLog('🗑️ Limpando sessão atual...', 'warning');
             }
-        });
+            });
+        }
 
         // Controles de envio
         pauseBtn.addEventListener('click', () => {
