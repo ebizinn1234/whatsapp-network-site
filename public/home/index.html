@@ -2655,5 +2655,132 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Máscara de telefone
+        function formatPhone(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            }
+            input.value = value;
+        }
+
+        // Aplicar máscara nos campos de telefone
+        document.querySelectorAll('input[type="tel"]').forEach(input => {
+            input.addEventListener('input', () => formatPhone(input));
+        });
+
+        // Funções para modais
+        window.showForm = function(formType) {
+            if (formType === 'login') {
+                document.getElementById('loginModal').style.display = 'flex';
+            } else if (formType === 'register') {
+                document.getElementById('registerModal').style.display = 'flex';
+            }
+        };
+        
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        // Função para mostrar mensagens
+        function showMessage(message, type = 'error') {
+            alert(message);
+        }
+
+        // Função para loading
+        function setLoading(buttonId, loadingId, textId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = isLoading;
+            }
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('loginPhone').value.replace(/\D/g, '');
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.reload();
+                } else {
+                    showMessage(data.error);
+                }
+            } catch (error) {
+                showMessage('Erro de conexão. Tente novamente.');
+            }
+        });
+
+        // Cadastro
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('registerPhone').value.replace(/\D/g, '');
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showMessage('As senhas não coincidem');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('A senha deve ter pelo menos 6 caracteres');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone,
+                        password,
+                        recoveryQuestion: 'Qual o nome da sua mãe?',
+                        recoveryAnswer: 'admin'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.reload();
+                } else {
+                    showMessage(data.error);
+                }
+            } catch (error) {
+                showMessage('Erro de conexão. Tente novamente.');
+            }
+        });
+
+        // Verificar se já está logado
+        if (localStorage.getItem('token')) {
+            // Usuário já está logado
+            console.log('Usuário logado');
+        } else {
+            // Usuário não está logado
+            console.log('Usuário não logado');
+        }
+    </script>
 </body>
 </html>
