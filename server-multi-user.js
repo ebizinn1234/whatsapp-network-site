@@ -139,7 +139,7 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
         // Tentar enviar (sem retry)
         try {
             // Verificar conexão antes de enviar
-            if (!userSession.isConnected || !userSession.sock) {
+            if (!userSession.isConnected || !userSession.sock || !userSession.sock.user) {
                 console.log(`❌ Conexão perdida durante envio para ${group.name} (usuário ${userIP})`);
                 socket.emit('connection-lost', 'Conexão WhatsApp perdida');
                 progress.isSending = false;
@@ -179,15 +179,23 @@ async function sendMessagesWithRetry(userIP, socket, userSession) {
             // Enviar informação de delay para o cliente
             socket.emit('next-delay', delaySeconds);
             
-            // Verificar se ainda está enviando durante o delay
-            const delayStart = Date.now();
-            while (Date.now() - delayStart < smartDelay) {
-                if (!progress.isSending) {
-                    console.log(`⏹️ Envio cancelado durante delay (usuário ${userIP})`);
-                    return;
-                }
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Verificar a cada segundo
+        // Verificar se ainda está enviando durante o delay
+        const delayStart = Date.now();
+        while (Date.now() - delayStart < smartDelay) {
+            if (!progress.isSending) {
+                console.log(`⏹️ Envio cancelado durante delay (usuário ${userIP})`);
+                return;
             }
+            
+            // Verificar se a sessão ainda está ativa durante o delay
+            if (!userSession.sock || !userSession.sock.user) {
+                console.log(`❌ Sessão perdida durante delay (usuário ${userIP})`);
+                socket.emit('send-error', 'Sessão WhatsApp perdida. Reconecte e tente novamente.');
+                return;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Verificar a cada segundo
+        }
         }
         
         // Log de progresso a cada 5 mensagens
@@ -362,6 +370,13 @@ async function connectToWhatsApp(userIP, socket, accountId = null) {
                     const userSession = userSessions.get(userIP);
                     if (userSession) {
                         userSession.isConnected = false;
+                        
+                        // Parar envio se estiver em andamento
+                        if (userSession.sendingProgress && userSession.sendingProgress.isSending) {
+                            console.log(`⏹️ Parando envio devido à perda de conexão (usuário ${userIP})`);
+                            userSession.sendingProgress.isSending = false;
+                            socket.emit('send-error', 'Conexão WhatsApp perdida. Reconecte e tente novamente.');
+                        }
                     }
                     socket.emit('connection-status', { connected: false, message: 'Desconectado do WhatsApp' });
                 }
