@@ -1581,7 +1581,12 @@
                 qrContainer.classList.add('hidden');
                 // updateDebugInfo('✅ WhatsApp conectado com sucesso!');
             } else {
-                statusText.textContent = data.message;
+                statusText.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-times-circle" style="color: #dc3545; font-size: 16px;"></i>
+                        <span>${data.message}</span>
+                    </div>
+                `;
                 statusHint.textContent = 'Clique no botão abaixo para conectar';
                 connectBtn.innerHTML = '<span style="font-size: 18px; margin-right: 8px; font-weight: bold;">+</span>Conectar WhatsApp';
                 connectBtn.disabled = false;
