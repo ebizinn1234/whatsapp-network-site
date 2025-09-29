@@ -265,6 +265,31 @@
             box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
         }
 
+        /* Efeitos hover para botões de controle */
+        #pauseBtn:hover {
+            background: #d97706 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        #resumeBtn:hover {
+            background: #2563eb !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        #cancelBtn:hover {
+            background: #dc2626 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        #newSendBtn:hover {
+            background: #059669 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
         .desktop-only {
             display: block;
         }
@@ -1363,17 +1388,21 @@
 
                 
                 <div id="controlButtons" class="hidden" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                    <button class="btn btn-warning" id="pauseBtn" style="display: none;">
-                        ⏸️ Pausar
+                    <button class="btn btn-warning" id="pauseBtn" style="display: none; background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                        <i class="fas fa-pause" style="margin-right: 8px;"></i>
+                        Pausar
                     </button>
-                    <button class="btn btn-info" id="resumeBtn" style="display: none;">
-                        ▶️ Retomar
+                    <button class="btn btn-info" id="resumeBtn" style="display: none; background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                        <i class="fas fa-play" style="margin-right: 8px;"></i>
+                        Retomar
                     </button>
-                    <button class="btn btn-danger" id="cancelBtn" style="display: none;">
-                        ⏹️ Cancelar
+                    <button class="btn btn-danger" id="cancelBtn" style="display: none; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                        <i class="fas fa-stop" style="margin-right: 8px;"></i>
+                        Cancelar
                     </button>
-                    <button class="btn btn-success" id="newSendBtn" style="display: none;">
-                        🆕 Novo Envio
+                    <button class="btn btn-success" id="newSendBtn" style="display: none; background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                        <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
+                        Novo Envio
                     </button>
                 </div>
                 
@@ -1381,7 +1410,11 @@
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <div class="progress-text" id="progressText">Preparando envio...</div>
+                    <div class="progress-text" id="progressText">
+                        <i class="fas fa-clock" style="margin-right: 6px; color: #6b7280;"></i>
+                        <span id="progressCounter">0/0</span>
+                        <span id="progressGroup">- Aguardando...</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1519,6 +1552,8 @@
         const progressContainer = document.getElementById('progressContainer');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
+        const progressCounter = document.getElementById('progressCounter');
+        const progressGroup = document.getElementById('progressGroup');
         const activityLog = document.getElementById('activityLog');
         const controlButtons = document.getElementById('controlButtons');
         const pauseBtn = document.getElementById('pauseBtn');
@@ -1645,7 +1680,14 @@
         socket.on('message-sent', (data) => {
             const progress = (data.progress / data.total) * 100;
             progressFill.style.width = `${progress}%`;
-            progressText.textContent = `${data.progress}/${data.total} - ${data.group}`;
+            
+            // Atualizar contador e grupo atual
+            if (progressCounter) {
+                progressCounter.textContent = `${data.progress}/${data.total}`;
+            }
+            if (progressGroup) {
+                progressGroup.textContent = `- ${data.group}`;
+            }
             
             if (data.success) {
                 addLog(`✅ Enviado para: ${data.group}`, 'success');
