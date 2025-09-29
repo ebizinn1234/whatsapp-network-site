@@ -2240,12 +2240,24 @@
                 
                 // Verificar se o usuário está logado
                 const token = localStorage.getItem('token');
+                console.log('🔍 DEBUG: Token encontrado:', !!token);
+                console.log('🔍 DEBUG: Token value:', token);
+                
                 if (!token) {
                     // Se não estiver logado, abrir modal de cadastro
                     console.log('🔐 Usuário não logado, abrindo modal de cadastro');
-                    document.getElementById('registerModal').style.display = 'flex';
+                    const registerModal = document.getElementById('registerModal');
+                    console.log('🔍 DEBUG: Modal encontrado:', !!registerModal);
+                    if (registerModal) {
+                        registerModal.style.display = 'flex';
+                        console.log('✅ Modal de cadastro aberto');
+                    } else {
+                        console.error('❌ Modal de cadastro não encontrado!');
+                    }
                     return;
                 }
+                
+                console.log('✅ Usuário logado, prosseguindo com conexão WhatsApp');
                 
                 console.log('🔍 Socket status:', socket.connected);
                 console.log('🔍 Socket ID:', socket.id);
