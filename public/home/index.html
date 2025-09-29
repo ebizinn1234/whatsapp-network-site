@@ -1258,11 +1258,6 @@
                 </div>
             </div>
             
-            <!-- Debug Visual -->
-            <div id="debugInfo" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 12px; color: #6c757d;">
-                <strong>🔍 Debug Info:</strong><br>
-                <span id="debugStatus">Aguardando...</span>
-            </div>
             
             <div id="groupsContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f8f9fa;">
                 <p style="text-align: center; color: #666; margin: 20px 0;">
@@ -1375,59 +1370,57 @@
             
             if (selectAllBtn && deselectAllBtn) {
                 console.log('✅ Botões encontrados!');
-                updateDebugInfo('✅ Botões encontrados!');
                 
                 // Adicionar event listeners
                 selectAllBtn.addEventListener('click', () => {
                     console.log('Select all button clicked');
-                    updateDebugInfo('🔄 Clicou em Selecionar Todos...');
                     const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
                     console.log('Found checkboxes:', checkboxes.length);
-                    updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
+                    // updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
                     
                     if (checkboxes.length === 0) {
                         console.log('No checkboxes found - groups may not be loaded yet');
-                        updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
+                        // updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
                         addLog('⚠️ Carregue os grupos primeiro!', 'warning');
                         return;
                     }
                     
-                    updateDebugInfo(`✅ Selecionando ${checkboxes.length} grupos...`);
+                    // updateDebugInfo(`✅ Selecionando ${checkboxes.length} grupos...`);
                     checkboxes.forEach(checkbox => {
                         checkbox.checked = true;
                     });
                     updateSelectedGroups();
                     addLog(`✅ ${checkboxes.length} grupos selecionados`, 'success');
-                    updateDebugInfo(`✅ ${checkboxes.length} grupos selecionados com sucesso!`);
+                    // updateDebugInfo(`✅ ${checkboxes.length} grupos selecionados com sucesso!`);
                 });
 
                 deselectAllBtn.addEventListener('click', () => {
                     console.log('Deselect all button clicked');
-                    updateDebugInfo('🔄 Clicou em Desmarcar Todos...');
+                    // updateDebugInfo('🔄 Clicou em Desmarcar Todos...');
                     const checkboxes = document.querySelectorAll('.group-checkbox');
                     console.log('Found checkboxes:', checkboxes.length);
-                    updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
+                    // updateDebugInfo(`🔍 Encontrados ${checkboxes.length} checkboxes`);
                     
                     if (checkboxes.length === 0) {
                         console.log('No checkboxes found - groups may not be loaded yet');
-                        updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
+                        // updateDebugInfo('❌ Nenhum checkbox encontrado - carregue os grupos primeiro!');
                         addLog('⚠️ Carregue os grupos primeiro!', 'warning');
                         return;
                     }
                     
-                    updateDebugInfo(`❌ Desmarcando ${checkboxes.length} grupos...`);
+                    // updateDebugInfo(`❌ Desmarcando ${checkboxes.length} grupos...`);
                     checkboxes.forEach(checkbox => {
                         checkbox.checked = false;
                     });
                     updateSelectedGroups();
                     addLog('❌ Todos os grupos desmarcados', 'info');
-                    updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
+                    // updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
                 });
                 
                 return true; // Sucesso
             } else {
                 console.error('❌ Botões não encontrados!');
-                updateDebugInfo('❌ Botões não encontrados!');
+                // updateDebugInfo('❌ Botões não encontrados!');
                 return false; // Falha
             }
         }
@@ -1437,12 +1430,6 @@
         // Declarar variáveis de debug primeiro
         const debugStatus = document.getElementById('debugStatus');
         
-        // Função de debug visual
-        function updateDebugInfo(message) {
-            if (debugStatus) {
-                debugStatus.innerHTML = message;
-            }
-        }
         
         // Debug: verificar se os elementos existem
         console.log('loadGroupsBtn:', loadGroupsBtn);
@@ -1450,23 +1437,22 @@
         // Verificar se loadGroupsBtn existe
         if (!loadGroupsBtn) {
             console.error('loadGroupsBtn not found!');
-            updateDebugInfo('❌ loadGroupsBtn não encontrado!');
+            // updateDebugInfo('❌ loadGroupsBtn não encontrado!');
         }
         
         // Verificação inicial de conexão
-        updateDebugInfo('🚀 Página carregada, verificando conexão...');
+        // updateDebugInfo('🚀 Página carregada, verificando conexão...');
         
         // Forçar verificação de conexão após carregar a página
         setTimeout(() => {
             if (socket.connected) {
-                updateDebugInfo('🔄 Forçando verificação de conexão...');
+                // updateDebugInfo('🔄 Forçando verificação de conexão...');
                 socket.emit('check-connection');
             }
         }, 2000);
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
-        const debugInfo = document.getElementById('debugInfo');
         const sendMessagesBtn = document.getElementById('sendMessagesBtn');
         const selectedCount = document.getElementById('selectedCount');
         const progressContainer = document.getElementById('progressContainer');
@@ -1497,7 +1483,7 @@
         // Reconectar automaticamente ao carregar a página
         socket.on('connect', () => {
             console.log('Socket conectado, verificando status WhatsApp...');
-            updateDebugInfo('🔄 Verificando status da conexão WhatsApp...');
+            // updateDebugInfo('🔄 Verificando status da conexão WhatsApp...');
             // Aguardar um pouco antes de verificar a conexão
             setTimeout(() => {
                 socket.emit('check-connection');
@@ -1507,7 +1493,7 @@
         socket.on('connection-status', (data) => {
             const statusHint = document.getElementById('statusHint');
             console.log('Status da conexão recebido:', data);
-            updateDebugInfo(`📱 Status WhatsApp: ${data.connected ? 'Conectado' : 'Desconectado'}`);
+            // updateDebugInfo(`📱 Status WhatsApp: ${data.connected ? 'Conectado' : 'Desconectado'}`);
             
             if (data.connected) {
                 statusIndicator.classList.add('connected');
@@ -1518,7 +1504,7 @@
                 connectBtn.style.display = 'none';
                 disconnectBtn.style.display = 'inline-block';
                 qrContainer.classList.add('hidden');
-                updateDebugInfo('✅ WhatsApp conectado com sucesso!');
+                // updateDebugInfo('✅ WhatsApp conectado com sucesso!');
             } else {
                 statusIndicator.classList.remove('connected');
                 statusText.textContent = data.message;
@@ -1527,7 +1513,7 @@
                 connectBtn.disabled = false;
                 connectBtn.style.display = 'inline-block';
                 disconnectBtn.style.display = 'none';
-                updateDebugInfo('❌ WhatsApp desconectado - clique para conectar');
+                // updateDebugInfo('❌ WhatsApp desconectado - clique para conectar');
             }
         });
 
@@ -1540,7 +1526,7 @@
         socket.on('groups-loaded', (groupsData) => {
             groups = groupsData;
             totalGroups.textContent = groups.length;
-            updateDebugInfo(`📊 ${groups.length} grupos carregados do servidor`);
+            // updateDebugInfo(`📊 ${groups.length} grupos carregados do servidor`);
             renderGroups();
             addLog(`📊 ${groups.length} grupos carregados`, 'success');
         });
@@ -1674,7 +1660,7 @@
         });
 
         socket.on('session-cleared', (message) => {
-            updateDebugInfo('✅ Sessão limpa com sucesso!');
+            // updateDebugInfo('✅ Sessão limpa com sucesso!');
             addLog(`✅ ${message}`, 'success');
             // Limpar interface
             groups = [];
@@ -1686,11 +1672,11 @@
         // Verificar se os elementos existem
         if (!connectBtn) {
             console.error('❌ connectBtn não encontrado!');
-            updateDebugInfo('❌ connectBtn não encontrado!');
+            // updateDebugInfo('❌ connectBtn não encontrado!');
         }
         if (!clearSessionBtn) {
             console.error('❌ clearSessionBtn não encontrado!');
-            updateDebugInfo('❌ clearSessionBtn não encontrado!');
+            // updateDebugInfo('❌ clearSessionBtn não encontrado!');
         }
         
         // Event listeners
@@ -1699,7 +1685,7 @@
             connectBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('🔴 Botão Conectar WhatsApp clicado!');
-                updateDebugInfo('🔴 Botão Conectar WhatsApp clicado!');
+                // updateDebugInfo('🔴 Botão Conectar WhatsApp clicado!');
                 
                 console.log('🔍 Socket status:', socket.connected);
                 console.log('🔍 Socket ID:', socket.id);
@@ -1719,7 +1705,7 @@
             });
         } else {
             console.error('❌ connectBtn não encontrado!');
-            updateDebugInfo('❌ connectBtn não encontrado!');
+            // updateDebugInfo('❌ connectBtn não encontrado!');
         }
         
         // Gerenciamento de contas
@@ -1785,10 +1771,10 @@
             clearSessionBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('🔴 Botão Limpar Sessão clicado!');
-                updateDebugInfo('🔴 Botão Limpar Sessão clicado!');
+                // updateDebugInfo('🔴 Botão Limpar Sessão clicado!');
                 
                 if (confirm('⚠️ Tem certeza que deseja limpar a sessão atual? Isso irá desconectar o WhatsApp e você precisará escanear o QR Code novamente.')) {
-                    updateDebugInfo('🗑️ Limpando sessão atual...');
+                    // updateDebugInfo('🗑️ Limpando sessão atual...');
                     socket.emit('clear-session');
                     addLog('🗑️ Limpando sessão atual...', 'warning');
                 }
@@ -1815,7 +1801,7 @@
 
         loadGroupsBtn.addEventListener('click', () => {
             console.log('Load groups button clicked');
-            updateDebugInfo('🔄 Carregando grupos...');
+            // updateDebugInfo('🔄 Carregando grupos...');
             socket.emit('load-groups');
             addLog('📋 Carregando grupos...', 'info');
         });
@@ -1845,9 +1831,9 @@
         // Funcionalidade de pesquisa
         groupSearch.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            updateDebugInfo(`🔍 Pesquisando por: "${searchTerm}"`);
+            // updateDebugInfo(`🔍 Pesquisando por: "${searchTerm}"`);
             const groupItems = document.querySelectorAll('.group-item');
-            updateDebugInfo(`🔍 Encontrados ${groupItems.length} grupos para filtrar`);
+            // updateDebugInfo(`🔍 Encontrados ${groupItems.length} grupos para filtrar`);
             
             let visibleCount = 0;
             groupItems.forEach(item => {
@@ -1860,7 +1846,7 @@
                 }
             });
             
-            updateDebugInfo(`✅ ${visibleCount} grupos visíveis após filtro`);
+            // updateDebugInfo(`✅ ${visibleCount} grupos visíveis após filtro`);
         });
 
         sendMessagesBtn.addEventListener('click', () => {
@@ -1873,22 +1859,22 @@
 
         // Functions
         function renderGroups() {
-            updateDebugInfo(`🔄 Renderizando ${groups.length} grupos...`);
+            // updateDebugInfo(`🔄 Renderizando ${groups.length} grupos...`);
             
             if (groups.length === 0) {
                 groupsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum grupo encontrado</p>';
                 searchContainer.style.display = 'none';
-                updateDebugInfo('❌ Nenhum grupo para renderizar');
+                // updateDebugInfo('❌ Nenhum grupo para renderizar');
                 return;
             }
 
             // Mostrar campo de pesquisa quando há grupos
             searchContainer.style.display = 'block';
-            updateDebugInfo(`✅ Campo de pesquisa ativado para ${groups.length} grupos`);
+            // updateDebugInfo(`✅ Campo de pesquisa ativado para ${groups.length} grupos`);
 
             groupsContainer.innerHTML = groups.map((group, index) => {
                 let statusIcon = '✅';
-                let statusText = 'Grupo aberto';
+                let statusText = '';
                 let statusClass = 'group-available';
                 
                 if (!group.canSendMessages) {
@@ -1912,7 +1898,7 @@
                 `;
             }).join('');
             
-            updateDebugInfo(`✅ ${groups.length} grupos renderizados com sucesso!`);
+            // updateDebugInfo(`✅ ${groups.length} grupos renderizados com sucesso!`);
         }
 
         function updateSelectedGroups() {
