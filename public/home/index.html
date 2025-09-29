@@ -2693,7 +2693,11 @@
 
         // Função para mostrar mensagens
         function showMessage(message, type = 'error') {
-            alert(message);
+            if (type === 'success') {
+                alert('✅ ' + message);
+            } else {
+                alert('❌ ' + message);
+            }
         }
 
         // Função para loading
@@ -2725,11 +2729,14 @@
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('Login realizado com sucesso!', 'success');
+                    closeModal('loginModal');
                     window.location.reload();
                 } else {
                     showMessage(data.error);
                 }
             } catch (error) {
+                console.error('Erro no login:', error);
                 showMessage('Erro de conexão. Tente novamente.');
             }
         });
@@ -2771,11 +2778,14 @@
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('Cadastro realizado com sucesso!', 'success');
+                    closeModal('registerModal');
                     window.location.reload();
                 } else {
                     showMessage(data.error);
                 }
             } catch (error) {
+                console.error('Erro no cadastro:', error);
                 showMessage('Erro de conexão. Tente novamente.');
             }
         });
