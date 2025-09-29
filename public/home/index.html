@@ -1704,20 +1704,31 @@
         
         // Event listeners
         if (connectBtn) {
+            console.log('✅ connectBtn encontrado, adicionando event listener');
             connectBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('🔴 Botão Conectar WhatsApp clicado!');
                 updateDebugInfo('🔴 Botão Conectar WhatsApp clicado!');
                 
+                console.log('🔍 Socket status:', socket.connected);
+                console.log('🔍 Socket ID:', socket.id);
+                
                 const selectedAccount = accountSelect.value;
+                console.log('🔍 Selected account:', selectedAccount);
+                
                 if (selectedAccount) {
+                    console.log('📤 Emitindo connect-whatsapp com accountId:', selectedAccount);
                     socket.emit('connect-whatsapp', { accountId: selectedAccount });
                     addLog(`🔄 Conectando ao WhatsApp (${selectedAccount})...`, 'info');
                 } else {
+                    console.log('📤 Emitindo connect-whatsapp sem accountId');
                     socket.emit('connect-whatsapp');
                     addLog('🔄 Conectando ao WhatsApp...', 'info');
                 }
             });
+        } else {
+            console.error('❌ connectBtn não encontrado!');
+            updateDebugInfo('❌ connectBtn não encontrado!');
         }
         
         // Gerenciamento de contas
