@@ -490,15 +490,42 @@
             box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
         }
 
-        .qr-container {
+        /* Modal QR Code */
+        .qr-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .qr-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
-            margin: 25px auto;
-            padding: 15px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border: 2px dashed #25d366;
-            display: block;
-            max-width: 300px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .qr-modal-header {
+            margin-bottom: 20px;
+        }
+
+        .qr-modal-header h3 {
+            color: #25d366;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
         }
 
         .qr-code {
@@ -508,13 +535,32 @@
             border-radius: 15px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             border: 3px solid white;
+            margin: 0 auto;
         }
 
         .qr-instructions {
-            margin-top: 15px;
+            margin-top: 20px;
             color: #666;
             font-size: 14px;
-            line-height: 1.4;
+            line-height: 1.6;
+        }
+
+        .qr-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .qr-close:hover {
+            color: #dc3545;
+        }
+
+        .qr-container {
+            display: none;
         }
 
         .groups-container {
@@ -1461,12 +1507,18 @@
                     Desconectar
                 </button>
             </div>
-            <div id="qrContainer" class="qr-container hidden">
-                <h3>Escaneie o QR Code com seu WhatsApp:</h3>
-                <img id="qrCode" class="qr-code" alt="QR Code">
-                <div class="qr-instructions">
-                    <p><i class="fas fa-mobile-alt" style="margin-right: 8px; color: #25d366;"></i>Escaneie o QR Code para conectar</p>
-                    <p><i class="fas fa-rocket" style="margin-right: 8px; color: #25d366;"></i>Comece a enviar mensagens em massa</p>
+            <!-- Modal QR Code -->
+            <div id="qrModal" class="qr-modal">
+                <div class="qr-modal-content">
+                    <span class="qr-close" onclick="closeQRModal()">&times;</span>
+                    <div class="qr-modal-header">
+                        <h3>Escaneie o QR Code com seu WhatsApp</h3>
+                    </div>
+                    <img id="qrCode" class="qr-code" alt="QR Code">
+                    <div class="qr-instructions">
+                        <p><i class="fas fa-mobile-alt" style="margin-right: 8px; color: #25d366;"></i>Escaneie o QR Code para conectar</p>
+                        <p><i class="fas fa-rocket" style="margin-right: 8px; color: #25d366;"></i>Comece a enviar mensagens em massa</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1799,6 +1851,19 @@
         let isSending = false;
         let availableAccounts = [];
 
+        // Função para fechar modal QR Code
+        function closeQRModal() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora dele
+        window.onclick = function(event) {
+            const modal = document.getElementById('qrModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         // Função para atualizar configurações de velocidade
 
         // Socket events
@@ -1894,9 +1959,9 @@
             console.log('🔍 DEBUG: QR Code recebido no frontend!');
             console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
             qrCode.src = qrDataURL;
-            qrContainer.classList.remove('hidden');
+            document.getElementById('qrModal').style.display = 'block';
             addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
-            console.log('🔍 DEBUG: QR Code exibido na tela!');
+            console.log('🔍 DEBUG: QR Code exibido no modal!');
             
             // Restaurar botão após QR Code aparecer
             connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
