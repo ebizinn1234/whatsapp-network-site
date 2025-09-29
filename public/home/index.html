@@ -1881,13 +1881,16 @@
             // Entrar na sala do usuário se estiver logado, senão entrar na sala default
             const token = localStorage.getItem('token');
             if (token) {
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 if (userData.id) {
+                    console.log('🔍 DEBUG: Entrando na sala do usuário:', userData.id);
                     socket.emit('join-user', { userId: userData.id });
                 } else {
+                    console.log('🔍 DEBUG: userData.id não encontrado, entrando na sala default');
                     socket.emit('join-user', { userId: 'default' });
                 }
             } else {
+                console.log('🔍 DEBUG: Token não encontrado, entrando na sala default');
                 socket.emit('join-user', { userId: 'default' });
             }
         });
@@ -1960,14 +1963,17 @@
         socket.on('qr-code', (qrDataURL) => {
             console.log('🔍 DEBUG: QR Code recebido no frontend!');
             console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
+            console.log('🔍 DEBUG: qrDataURL preview:', qrDataURL ? qrDataURL.substring(0, 50) + '...' : 'undefined');
             
             // Verificar se o usuário está logado antes de exibir QR Code
             const token = localStorage.getItem('token');
+            console.log('🔍 DEBUG: Token encontrado:', !!token);
             if (!token) {
                 console.log('⚠️ QR Code recebido mas usuário não está logado - ignorando');
                 return;
             }
             
+            console.log('🔍 DEBUG: Exibindo QR Code no modal...');
             qrCode.src = qrDataURL;
             document.getElementById('qrModal').style.display = 'block';
             addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
@@ -2219,6 +2225,9 @@
                 socket.emit('connect-whatsapp');
                 addLog('🔄 Conectando ao WhatsApp...', 'info');
             }
+            
+            // Adicionar log para debug
+            console.log('🔍 DEBUG: Aguardando QR Code...');
         });
         } else {
             console.error('❌ connectBtn não encontrado!');
