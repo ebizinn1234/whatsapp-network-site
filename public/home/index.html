@@ -1723,10 +1723,14 @@
         }
         
         // Gerenciamento de contas
-        refreshAccountsBtn.addEventListener('click', () => {
-            socket.emit('get-accounts');
-            addLog('🔄 Atualizando lista de contas...', 'info');
-        });
+        if (refreshAccountsBtn) {
+            refreshAccountsBtn.addEventListener('click', () => {
+                socket.emit('get-accounts');
+                addLog('🔄 Atualizando lista de contas...', 'info');
+            });
+        } else {
+            console.log('⚠️ refreshAccountsBtn não encontrado (opcional)');
+        }
         
         newAccountBtn.addEventListener('click', () => {
             newAccountModal.classList.remove('hidden');
