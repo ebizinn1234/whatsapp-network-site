@@ -1382,6 +1382,14 @@
         console.log('selectAllBtn:', selectAllBtn);
         console.log('deselectAllBtn:', deselectAllBtn);
         
+        // Aguardar um pouco para garantir que todos os elementos estejam carregados
+        setTimeout(() => {
+            const selectAllBtnDelayed = document.getElementById('selectAllBtn');
+            const deselectAllBtnDelayed = document.getElementById('deselectAllBtn');
+            console.log('Delayed check - selectAllBtn:', selectAllBtnDelayed);
+            console.log('Delayed check - deselectAllBtn:', deselectAllBtnDelayed);
+        }, 1000);
+        
         // Verificar se os elementos existem antes de adicionar event listeners
         if (!selectAllBtn) {
             console.error('selectAllBtn not found!');
