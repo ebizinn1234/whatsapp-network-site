@@ -1964,6 +1964,8 @@
             console.log('🔍 DEBUG: QR Code recebido no frontend!');
             console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
             console.log('🔍 DEBUG: qrDataURL preview:', qrDataURL ? qrDataURL.substring(0, 50) + '...' : 'undefined');
+            console.log('🔍 DEBUG: Modal element:', document.getElementById('qrModal'));
+            console.log('🔍 DEBUG: QR Code image element:', document.getElementById('qrCode'));
             
             // Verificar se o usuário está logado antes de exibir QR Code
             const token = localStorage.getItem('token');
@@ -1974,20 +1976,29 @@
             }
             
             console.log('🔍 DEBUG: Exibindo QR Code no modal...');
-            qrCode.src = qrDataURL;
-            document.getElementById('qrModal').style.display = 'block';
-            addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
-            console.log('🔍 DEBUG: QR Code exibido no modal!');
+            const qrCodeElement = document.getElementById('qrCode');
+            const qrModalElement = document.getElementById('qrModal');
             
-            // Adicionar listener do botão X quando modal é exibido
-            setTimeout(() => {
-                addCloseListener();
-            }, 100);
-            
-            // Restaurar botão após QR Code aparecer
-            connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
-            connectBtn.disabled = false;
-            connectBtn.style.opacity = '1';
+            if (qrCodeElement && qrModalElement) {
+                qrCodeElement.src = qrDataURL;
+                qrModalElement.style.display = 'block';
+                addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
+                console.log('🔍 DEBUG: QR Code exibido no modal!');
+                
+                // Adicionar listener do botão X quando modal é exibido
+                setTimeout(() => {
+                    addCloseListener();
+                }, 100);
+                
+                // Restaurar botão após QR Code aparecer
+                connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
+                connectBtn.disabled = false;
+                connectBtn.style.opacity = '1';
+            } else {
+                console.error('❌ Elementos do modal não encontrados!');
+                console.error('❌ qrCodeElement:', qrCodeElement);
+                console.error('❌ qrModalElement:', qrModalElement);
+            }
         });
 
         socket.on('connection-error', (data) => {
@@ -2222,6 +2233,8 @@
                 addLog(`🔄 Conectando ao WhatsApp (${selectedAccount})...`, 'info');
             } else {
                     console.log('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
+                // Entrar na sala default para receber QR Code
+                socket.emit('join-user', { userId: 'default' });
                 socket.emit('connect-whatsapp', {});
                 addLog('🔄 Conectando ao WhatsApp...', 'info');
             }
