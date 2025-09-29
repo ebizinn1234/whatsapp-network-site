@@ -2036,19 +2036,26 @@
             
             if (sessions && sessions.length > 0) {
                 console.log('✅ Sessões WhatsApp encontradas! Conectando automaticamente...');
-                addLog('🔄 Conectando com sessão salva...', 'info');
+                addLog('🔄 Reconectando com sessão salva...', 'info');
                 
                 // Usar a primeira sessão ativa
                 const activeSession = sessions[0];
                 console.log('🔍 DEBUG: Usando sessão:', activeSession);
                 
-                // Conectar automaticamente
+                // Conectar automaticamente com sessão salva
                 socket.emit('connect-whatsapp', { 
                     userId: activeSession.user_id,
                     sessionId: activeSession.session_id 
                 });
+                
+                // Aguardar um pouco e verificar se conectou
+                setTimeout(() => {
+                    console.log('🔍 DEBUG: Verificando status da reconexão...');
+                    socket.emit('check-connection');
+                }, 3000);
             } else {
                 console.log('ℹ️ Nenhuma sessão salva encontrada. Usuário precisa escanear QR Code.');
+                addLog('ℹ️ Nenhuma sessão salva encontrada', 'info');
             }
         });
 
@@ -3084,6 +3091,12 @@
             if (userData.id && typeof socket !== 'undefined') {
                 console.log('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
                 socket.emit('get-saved-sessions', { userId: userData.id });
+                
+                // Aguardar um pouco e tentar reconectar automaticamente
+                setTimeout(() => {
+                    console.log('🔄 Tentando reconectar automaticamente...');
+                    socket.emit('connect-whatsapp', { userId: userData.id });
+                }, 2000);
             }
             
             if (loginBtn) loginBtn.style.display = 'none';
