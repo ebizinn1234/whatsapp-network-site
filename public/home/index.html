@@ -1245,6 +1245,15 @@
                 </button>
             </div>
             
+            <!-- Campo de pesquisa (inicialmente oculto) -->
+            <div id="searchContainer" style="display: none; margin-bottom: 15px;">
+                <div style="position: relative;">
+                    <input type="text" id="groupSearch" placeholder="Pesquisar grupos..." 
+                           style="width: 100%; padding: 12px 40px 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.3s ease;">
+                    <i class="fas fa-search" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                </div>
+            </div>
+            
             <div id="groupsContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f8f9fa;">
                 <p style="text-align: center; color: #666; margin: 20px 0;">
                     <i class="fas fa-info-circle" style="margin-right: 8px; color: #24d366;"></i>
@@ -1346,6 +1355,8 @@
         const selectAllBtn = document.getElementById('selectAllBtn');
         const deselectAllBtn = document.getElementById('deselectAllBtn');
         const groupsContainer = document.getElementById('groupsContainer');
+        const searchContainer = document.getElementById('searchContainer');
+        const groupSearch = document.getElementById('groupSearch');
         const sendMessagesBtn = document.getElementById('sendMessagesBtn');
         const selectedCount = document.getElementById('selectedCount');
         const progressContainer = document.getElementById('progressContainer');
@@ -1631,7 +1642,7 @@
         });
 
         selectAllBtn.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.group-checkbox');
+            const checkboxes = document.querySelectorAll('.group-checkbox:not([disabled])');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = true;
             });
@@ -1646,6 +1657,21 @@
             updateSelectedGroups();
         });
 
+        // Funcionalidade de pesquisa
+        groupSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const groupItems = document.querySelectorAll('.group-item');
+            
+            groupItems.forEach(item => {
+                const groupName = item.dataset.groupName;
+                if (groupName.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
         sendMessagesBtn.addEventListener('click', () => {
             if (selectedGroupsList.length === 0) {
                 addLog('❌ Selecione pelo menos um grupo!', 'danger');
@@ -1658,8 +1684,12 @@
         function renderGroups() {
             if (groups.length === 0) {
                 groupsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum grupo encontrado</p>';
+                searchContainer.style.display = 'none';
                 return;
             }
+
+            // Mostrar campo de pesquisa quando há grupos
+            searchContainer.style.display = 'block';
 
             groupsContainer.innerHTML = groups.map((group, index) => {
                 let statusIcon = '✅';
@@ -1673,7 +1703,7 @@
                 }
                 
                 return `
-                    <div class="group-item ${statusClass}">
+                    <div class="group-item ${statusClass}" data-group-name="${group.name.toLowerCase()}">
                         <input type="checkbox" class="group-checkbox" data-index="${index}" 
                                onchange="updateSelectedGroups()" 
                                ${!group.canSendMessages ? 'disabled' : ''}>
