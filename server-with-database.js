@@ -69,6 +69,38 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
             }
         } else if (connection === 'open') {
             console.log(`✅ WhatsApp conectado para usuário ${userId}`);
+            
+            // Salvar sessão no banco de dados
+            try {
+                const userInfo = sock.user;
+                const accountName = userInfo?.name || 'WhatsApp User';
+                const accountNumber = userInfo?.id?.split(':')[0] || '';
+                
+                // Verificar se já existe sessão
+                const [existingSession] = await db.execute(
+                    'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
+                    [userId, sessionId]
+                );
+                
+                if (existingSession.length === 0) {
+                    // Criar nova sessão
+                    await db.execute(
+                        'INSERT INTO whatsapp_sessions (user_id, session_id, account_name, account_number, is_active) VALUES (?, ?, ?, ?, 1)',
+                        [userId, sessionId, accountName, accountNumber]
+                    );
+                    console.log('💾 Sessão salva no banco de dados para usuário:', userId);
+                } else {
+                    // Atualizar sessão existente
+                    await db.execute(
+                        'UPDATE whatsapp_sessions SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND session_id = ?',
+                        [userId, sessionId]
+                    );
+                    console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao salvar sessão no banco:', error);
+            }
+            
             io.to(`user_${userId}`).emit('connection-status', { connected: true });
         }
     });
@@ -95,6 +127,20 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: userIdentifier =', userIdentifier);
         
         try {
+            // Verificar se já existe sessão salva no banco
+            if (userIdentifier !== 'default') {
+                const [savedSessions] = await db.execute(
+                    'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1',
+                    [userIdentifier]
+                );
+                
+                if (savedSessions.length > 0) {
+                    console.log('💾 Sessão salva encontrada para usuário:', userIdentifier);
+                    // Aqui você pode implementar lógica para usar sessão salva
+                    // Por enquanto, vamos continuar com o fluxo normal
+                }
+            }
+            
             if (!userSessions.has(userIdentifier)) {
                 userSessions.set(userIdentifier, {});
             }
@@ -139,6 +185,22 @@ io.on('connection', (socket) => {
         } catch (error) {
             console.error('Erro ao carregar grupos:', error);
             socket.emit('groups-loaded', { groups: [] });
+        }
+    });
+
+    // Rota para listar sessões salvas do usuário
+    socket.on('get-saved-sessions', async (data) => {
+        const { userId } = data;
+        try {
+            const [sessions] = await db.execute(
+                'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC',
+                [userId]
+            );
+            socket.emit('saved-sessions', sessions);
+            console.log('📋 Sessões salvas enviadas para usuário:', userId);
+        } catch (error) {
+            console.error('❌ Erro ao buscar sessões salvas:', error);
+            socket.emit('saved-sessions', []);
         }
     });
 
