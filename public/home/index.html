@@ -1365,19 +1365,19 @@
         const updateMessageBtn = document.getElementById('updateMessageBtn');
         const loadGroupsBtn = document.getElementById('loadGroupsBtn');
         
-        // Aguardar um pouco para garantir que os elementos estejam carregados
-        setTimeout(() => {
+        // Função para configurar os botões
+        function setupButtons() {
             const selectAllBtn = document.getElementById('selectAllBtn');
             const deselectAllBtn = document.getElementById('deselectAllBtn');
             
-            console.log('Delayed - selectAllBtn:', selectAllBtn);
-            console.log('Delayed - deselectAllBtn:', deselectAllBtn);
+            console.log('Setup - selectAllBtn:', selectAllBtn);
+            console.log('Setup - deselectAllBtn:', deselectAllBtn);
             
             if (selectAllBtn && deselectAllBtn) {
-                console.log('✅ Botões encontrados com delay!');
-                updateDebugInfo('✅ Botões encontrados com delay!');
+                console.log('✅ Botões encontrados!');
+                updateDebugInfo('✅ Botões encontrados!');
                 
-                // Adicionar event listeners aqui
+                // Adicionar event listeners
                 selectAllBtn.addEventListener('click', () => {
                     console.log('Select all button clicked');
                     updateDebugInfo('🔄 Clicou em Selecionar Todos...');
@@ -1423,11 +1423,25 @@
                     addLog('❌ Todos os grupos desmarcados', 'info');
                     updateDebugInfo(`❌ ${checkboxes.length} grupos desmarcados com sucesso!`);
                 });
+                
+                return true; // Sucesso
             } else {
-                console.error('❌ Botões ainda não encontrados com delay!');
-                updateDebugInfo('❌ Botões ainda não encontrados com delay!');
+                console.error('❌ Botões não encontrados!');
+                updateDebugInfo('❌ Botões não encontrados!');
+                return false; // Falha
             }
-        }, 2000);
+        }
+        
+        // Tentar configurar imediatamente
+        if (!setupButtons()) {
+            // Se falhou, tentar novamente com delay
+            setTimeout(() => {
+                if (!setupButtons()) {
+                    // Se ainda falhou, tentar com delay maior
+                    setTimeout(setupButtons, 3000);
+                }
+            }, 1000);
+        }
         
         // Declarar variáveis de debug primeiro
         const debugStatus = document.getElementById('debugStatus');
