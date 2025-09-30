@@ -2649,16 +2649,16 @@
                 console.log('🔍 Selected account:', selectedAccount);
                 
             if (selectedAccount) {
-                    console.log('🔍 DEBUG: NÃO emitindo connect-whatsapp automaticamente para evitar QR codes infinitos');
-                // socket.emit('connect-whatsapp', { accountId: selectedAccount });
-                addLog(`🔒 Conecte manualmente se necessário (${selectedAccount})...`, 'info');
+                    console.log('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
+                socket.emit('connect-whatsapp', { accountId: selectedAccount });
+                addLog(`🔄 Conectando ao WhatsApp (${selectedAccount})...`, 'info');
             } else {
-                    console.log('🔍 DEBUG: NÃO emitindo connect-whatsapp automaticamente para evitar QR codes infinitos');
+                    console.log('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
                 // Entrar na sala do usuário logado
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 socket.emit('join-user', { userId: userData.id });
-                // socket.emit('connect-whatsapp', { userId: userData.id });
-                addLog('🔒 Conecte manualmente se necessário...', 'info');
+                socket.emit('connect-whatsapp', { userId: userData.id });
+                addLog('🔄 Conectando ao WhatsApp...', 'info');
             }
             
             // Adicionar log para debug
@@ -3151,8 +3151,8 @@
             currentAccount = selectedAccount;
             localStorage.setItem('current-account', currentAccount);
             
-            // socket.emit('connect-whatsapp', { accountId: selectedAccount });
-            console.log('🔒 NÃO emitindo connect-whatsapp automaticamente para evitar QR codes infinitos');
+            socket.emit('connect-whatsapp', { accountId: selectedAccount });
+            console.log('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
         }
 
         // Event listeners
