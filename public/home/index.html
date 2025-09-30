@@ -1957,6 +1957,11 @@
                     addLog('✅ WhatsApp conectado com sucesso!', 'success');
                 }
                 
+                // Carregar grupos automaticamente quando conectar
+                console.log('🔄 Carregando grupos automaticamente...');
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                socket.emit('load-groups', { userId: userData.id });
+                
                 // Atualizar sidebar
                 updateSidebarStatus(true, data.whatsappInfo);
                 // updateDebugInfo('✅ WhatsApp conectado com sucesso!');
@@ -2393,7 +2398,8 @@
         loadGroupsBtn.addEventListener('click', () => {
             console.log('Load groups button clicked');
             // updateDebugInfo('🔄 Carregando grupos...');
-            socket.emit('load-groups');
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            socket.emit('load-groups', { userId: userData.id });
             addLog('📋 Carregando grupos...', 'info');
         });
 
