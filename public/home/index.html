@@ -2503,6 +2503,17 @@
             sendMessagesBtn.disabled = true;
             sendMessagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             addLog(`📤 Enviando para ${selectedGroupsList.length} grupos...`, 'info');
+            
+            // Timeout de segurança para evitar spinner infinito
+            setTimeout(() => {
+                if (isSending) {
+                    console.log('⚠️ Timeout: Servidor não respondeu em 30 segundos');
+                    addLog('⚠️ Timeout: Servidor não respondeu. Verifique a conexão.', 'warning');
+                    isSending = false;
+                    sendMessagesBtn.disabled = false;
+                    sendMessagesBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar Mensagens';
+                }
+            }, 30000);
         });
 
         // Functions
