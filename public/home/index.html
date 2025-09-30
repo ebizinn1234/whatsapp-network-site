@@ -2092,6 +2092,18 @@
                 if (userData.id) {
                     console.log('🔍 DEBUG: Entrando na sala do usuário:', userData.id);
                     socket.emit('join-user', { userId: userData.id });
+                    
+                    // VERIFICAR SESSÕES SALVAS APÓS CONECTAR
+                    console.log('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
+                    console.log('🔍 DEBUG: Socket status:', socket.connected);
+                    console.log('🔍 DEBUG: Emitindo get-saved-sessions...');
+                    socket.emit('get-saved-sessions', { userId: userData.id });
+                    
+                    // Aguardar um pouco e tentar reconectar automaticamente
+                    setTimeout(() => {
+                        console.log('🔄 Tentando reconectar automaticamente...');
+                        socket.emit('connect-whatsapp', { userId: userData.id });
+                    }, 2000);
                 } else {
                     console.log('🔍 DEBUG: userData.id não encontrado, entrando na sala default');
                     socket.emit('join-user', { userId: 'default' });
@@ -3448,24 +3460,10 @@
             const loginBtn = document.querySelector('.btn-login');
             const registerBtn = document.querySelector('.btn-register');
             
-            // Verificar se há sessões salvas do WhatsApp
-            const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            if (userData.id && typeof socket !== 'undefined') {
-                console.log('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
-                console.log('🔍 DEBUG: Socket status:', socket.connected);
-                console.log('🔍 DEBUG: Emitindo get-saved-sessions...');
-                socket.emit('get-saved-sessions', { userId: userData.id });
-                
-                // Aguardar um pouco e tentar reconectar automaticamente
-                setTimeout(() => {
-                    console.log('🔄 Tentando reconectar automaticamente...');
-                    socket.emit('connect-whatsapp', { userId: userData.id });
-                }, 2000);
-            } else {
-                console.log('🔍 DEBUG: Usuário não logado ou socket não disponível');
-                console.log('🔍 DEBUG: userData.id:', userData.id);
-                console.log('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
-            }
+        // Verificar se há sessões salvas do WhatsApp - MOVER PARA DENTRO DO SOCKET CONNECT
+        console.log('🔍 DEBUG: Usuário logado, mas socket ainda não conectado');
+        console.log('🔍 DEBUG: userData.id:', userData.id);
+        console.log('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
             
             if (loginBtn) loginBtn.style.display = 'none';
             if (registerBtn) registerBtn.style.display = 'none';
