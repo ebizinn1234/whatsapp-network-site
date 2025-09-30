@@ -239,6 +239,7 @@ io.on('connection', (socket) => {
             console.log('📊 Grupos encontrados:', Object.keys(groups).length);
             console.log('📊 Primeiros 3 grupos:', Object.keys(groups).slice(0, 3));
             
+            // TESTE: Retornar TODOS os grupos sem filtros para debug
             const groupsList = Object.values(groups).map(group => {
                 console.log('🔍 DEBUG: Processando grupo:', group.subject, 'ID:', group.id);
                 console.log('🔍 DEBUG: Grupo details:', {
@@ -250,17 +251,16 @@ io.on('connection', (socket) => {
                 
                 return {
                     id: group.id,
-                    name: group.subject,
-                    description: group.desc,
+                    name: group.subject || 'Sem nome',
+                    description: group.desc || '',
                     participantCount: group.participants ? Object.keys(group.participants).length : 0,
                     isCommunity: group.endOfHistoryTransparencyDenied || false,
                     isPrivate: group.restrict || false
                 };
-            }).filter(group => {
-                const isFiltered = !group.isCommunity && !group.isPrivate;
-                console.log(`🔍 DEBUG: Grupo ${group.name} - Community: ${group.isCommunity}, Private: ${group.isPrivate}, Passou filtro: ${isFiltered}`);
-                return isFiltered;
             });
+            
+            console.log('🔍 DEBUG: TODOS os grupos (sem filtros):', groupsList.length);
+            console.log('🔍 DEBUG: Primeiros 3 grupos:', groupsList.slice(0, 3));
             
             console.log('📊 Grupos filtrados (sem comunidades/privados):', groupsList.length);
             socket.emit('groups-loaded', { groups: groupsList });
