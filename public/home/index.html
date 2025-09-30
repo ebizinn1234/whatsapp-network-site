@@ -1856,6 +1856,17 @@
 
         // Tornar a função global
         window.closeQRModal = closeQRModal;
+        
+        // Função global para fechar modal QR Code (pode ser chamada de qualquer lugar)
+        window.forceCloseQRModal = function() {
+            const qrModal = document.getElementById('qrModal');
+            if (qrModal) {
+                console.log('🔍 DEBUG: Forçando fechamento do modal QR Code');
+                qrModal.style.display = 'none';
+                return true;
+            }
+            return false;
+        };
 
         // Event listener para o botão X - será adicionado quando o modal for exibido
         function addCloseListener() {
@@ -1956,11 +1967,23 @@
                 
                 // Fechar modal de QR Code automaticamente quando conectar
                 const qrModal = document.getElementById('qrModal');
-                if (qrModal && qrModal.style.display === 'block') {
+                if (qrModal) {
                     console.log('🔍 DEBUG: Fechando modal QR Code automaticamente');
+                    console.log('🔍 DEBUG: Modal display atual:', qrModal.style.display);
                     qrModal.style.display = 'none';
                     addLog('✅ WhatsApp conectado com sucesso!', 'success');
+                } else {
+                    console.log('❌ Modal QR Code não encontrado');
                 }
+                
+                // Garantir que o modal seja fechado com timeout
+                setTimeout(() => {
+                    const qrModalCheck = document.getElementById('qrModal');
+                    if (qrModalCheck && qrModalCheck.style.display !== 'none') {
+                        console.log('🔍 DEBUG: Forçando fechamento do modal QR Code');
+                        qrModalCheck.style.display = 'none';
+                    }
+                }, 1000);
                 
                 
                 // Carregar grupos automaticamente quando conectar (apenas uma vez)
