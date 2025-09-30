@@ -93,23 +93,23 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 // Verificar se já existe sessão
                 const [existingSession] = await db.execute(
                     'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
-                    [userId, sessionId]
+                    [userId, uniqueSessionId]
                 );
                 
                 if (existingSession.length === 0) {
                     // Criar nova sessão
                     await db.execute(
                         'INSERT INTO whatsapp_sessions (user_id, session_id, account_name, account_number, is_active) VALUES (?, ?, ?, ?, 1)',
-                        [userId, sessionId, accountName, accountNumber]
+                        [userId, uniqueSessionId, accountName, accountNumber]
                     );
-                    console.log('💾 Sessão salva no banco de dados para usuário:', userId);
+                    console.log('💾 Sessão salva no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
                 } else {
                     // Atualizar sessão existente
                     await db.execute(
                         'UPDATE whatsapp_sessions SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND session_id = ?',
-                        [userId, sessionId]
+                        [userId, uniqueSessionId]
                     );
-                    console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId);
+                    console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
                 }
             } catch (error) {
                 console.error('❌ Erro ao salvar sessão no banco:', error);
@@ -147,10 +147,14 @@ io.on('connection', (socket) => {
 
     socket.on('connect-whatsapp', async (data = {}) => {
         console.log('🔍 DEBUG: connect-whatsapp recebido com data:', data);
-        const { userId, accountId, sessionId = 'default' } = data || {};
+        const { userId, accountId, sessionId } = data || {};
         
         // CORREÇÃO CRÍTICA: Usar userId específico, não 'default'
         const userIdentifier = userId || accountId;
+        
+        // Gerar session_id único para cada usuário
+        const uniqueSessionId = sessionId || `user_${userIdentifier}_${Date.now()}`;
+        console.log('🔍 DEBUG: sessionId único gerado:', uniqueSessionId);
         if (!userIdentifier) {
             console.log('❌ ERRO: userId não fornecido - conexão negada por segurança');
             socket.emit('connection-error', { message: 'Usuário não identificado. Faça login novamente.' });
@@ -208,12 +212,12 @@ io.on('connection', (socket) => {
                 userSessions.set(userIdentifier, {});
             }
             
-            const sock = await createWhatsAppSocket(userIdentifier, sessionId);
-            userSessions.get(userIdentifier)[sessionId] = {
-                sock,
-                isConnected: false,
-                sessionId
-            };
+                const sock = await createWhatsAppSocket(userIdentifier, uniqueSessionId);
+                userSessions.get(userIdentifier)[uniqueSessionId] = {
+                    sock,
+                    isConnected: false,
+                    sessionId: uniqueSessionId
+                };
             
             console.log(`📱 Conectando WhatsApp para usuário ${userIdentifier}`);
         } catch (error) {
