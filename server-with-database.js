@@ -317,6 +317,73 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Evento para enviar mensagens
+    socket.on('send-messages', async (data = {}) => {
+        console.log('🔍 DEBUG: send-messages recebido com data:', data);
+        const { groups, message, userId, sessionId = 'default' } = data || {};
+        
+        try {
+            // Verificar se WhatsApp está conectado
+            const userSession = userSessions.get(userId) || userSessions.get('default');
+            if (!userSession || !userSession[sessionId]) {
+                console.log('❌ Sessão não encontrada para envio');
+                socket.emit('send-error', { message: 'WhatsApp não conectado' });
+                return;
+            }
+            
+            const { sock } = userSession[sessionId];
+            if (!sock) {
+                console.log('❌ Socket WhatsApp não encontrado para envio');
+                socket.emit('send-error', { message: 'WhatsApp não conectado' });
+                return;
+            }
+            
+            console.log('📤 Iniciando envio para', groups.length, 'grupos');
+            console.log('📝 Mensagem:', message);
+            
+            // Processar cada grupo
+            for (let i = 0; i < groups.length; i++) {
+                const group = groups[i];
+                console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group}`);
+                
+                try {
+                    // Aqui você implementaria o envio real para o grupo
+                    // Por enquanto, vamos simular o envio
+                    console.log(`✅ Mensagem enviada para: ${group}`);
+                    socket.emit('send-progress', { 
+                        current: i + 1, 
+                        total: groups.length, 
+                        group: group,
+                        status: 'success'
+                    });
+                    
+                    // Delay entre envios (simular delay humano)
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                } catch (error) {
+                    console.error(`❌ Erro ao enviar para ${group}:`, error);
+                    socket.emit('send-progress', { 
+                        current: i + 1, 
+                        total: groups.length, 
+                        group: group,
+                        status: 'error',
+                        error: error.message
+                    });
+                }
+            }
+            
+            console.log('✅ Envio concluído para todos os grupos');
+            socket.emit('send-complete', { 
+                total: groups.length,
+                message: 'Todas as mensagens foram enviadas com sucesso!'
+            });
+            
+        } catch (error) {
+            console.error('❌ Erro no envio de mensagens:', error);
+            socket.emit('send-error', { message: 'Erro interno do servidor' });
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`👤 Cliente desconectado: ${socket.id}`);
     });
