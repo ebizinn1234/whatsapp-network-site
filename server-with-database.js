@@ -208,17 +208,32 @@ io.on('connection', (socket) => {
     });
 
     socket.on('load-groups', async (data = {}) => {
+        console.log('🔍 DEBUG: load-groups recebido com data:', data);
         const { userId, sessionId = 'default' } = data || {};
+        console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
         
         try {
             const userSession = userSessions.get(userId);
+            console.log('🔍 DEBUG: userSession encontrada:', !!userSession);
+            
             if (!userSession || !userSession[sessionId]) {
+                console.log('❌ Sessão não encontrada para userId:', userId);
                 socket.emit('groups-loaded', { groups: [] });
                 return;
             }
             
             const { sock } = userSession[sessionId];
+            console.log('🔍 DEBUG: sock encontrado:', !!sock);
+            
+            if (!sock) {
+                console.log('❌ Socket WhatsApp não encontrado');
+                socket.emit('groups-loaded', { groups: [] });
+                return;
+            }
+            
+            console.log('🔄 Buscando grupos do WhatsApp...');
             const groups = await sock.groupFetchAllParticipating();
+            console.log('📊 Grupos encontrados:', Object.keys(groups).length);
             
             const groupsList = Object.values(groups).map(group => ({
                 id: group.id,
@@ -229,9 +244,10 @@ io.on('connection', (socket) => {
                 isPrivate: group.restrict || false
             })).filter(group => !group.isCommunity && !group.isPrivate);
             
+            console.log('📊 Grupos filtrados (sem comunidades/privados):', groupsList.length);
             socket.emit('groups-loaded', { groups: groupsList });
         } catch (error) {
-            console.error('Erro ao carregar grupos:', error);
+            console.error('❌ Erro ao carregar grupos:', error);
             socket.emit('groups-loaded', { groups: [] });
         }
     });

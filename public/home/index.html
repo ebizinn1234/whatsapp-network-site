@@ -2066,7 +2066,11 @@
 
         socket.on('groups-loaded', (groupsData) => {
             console.log('📊 Evento groups-loaded recebido:', groupsData);
-            groups = groupsData;
+            console.log('📊 Tipo de groupsData:', typeof groupsData);
+            console.log('📊 groupsData.groups:', groupsData.groups);
+            console.log('📊 Quantidade de grupos:', groupsData.groups ? groupsData.groups.length : 'undefined');
+            
+            groups = groupsData.groups || [];
             totalGroups.textContent = groups.length;
             console.log('📊 Total de grupos definido:', groups.length);
             renderGroups();
