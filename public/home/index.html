@@ -1963,10 +1963,13 @@
                 }
                 
                 
-                // Carregar grupos automaticamente quando conectar
-                console.log('🔄 Carregando grupos automaticamente...');
-                const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                socket.emit('load-groups', { userId: userData.id });
+                // Carregar grupos automaticamente quando conectar (apenas uma vez)
+                if (!window.groupsLoaded) {
+                    console.log('🔄 Carregando grupos automaticamente...');
+                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                    socket.emit('load-groups', { userId: userData.id });
+                    window.groupsLoaded = true;
+                }
                 
                 // Atualizar sidebar
                 updateSidebarStatus(true, data.whatsappInfo);
@@ -1983,6 +1986,9 @@
                 connectBtn.disabled = false;
                 connectBtn.style.display = 'inline-block';
                 disconnectBtn.style.display = 'none';
+                
+                // Reset da flag para permitir novo carregamento
+                window.groupsLoaded = false;
                 
                 // Atualizar sidebar
                 updateSidebarStatus(false);
