@@ -3452,6 +3452,8 @@
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
             if (userData.id && typeof socket !== 'undefined') {
                 console.log('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
+                console.log('🔍 DEBUG: Socket status:', socket.connected);
+                console.log('🔍 DEBUG: Emitindo get-saved-sessions...');
                 socket.emit('get-saved-sessions', { userId: userData.id });
                 
                 // Aguardar um pouco e tentar reconectar automaticamente
@@ -3459,6 +3461,10 @@
                     console.log('🔄 Tentando reconectar automaticamente...');
                     socket.emit('connect-whatsapp', { userId: userData.id });
                 }, 2000);
+            } else {
+                console.log('🔍 DEBUG: Usuário não logado ou socket não disponível');
+                console.log('🔍 DEBUG: userData.id:', userData.id);
+                console.log('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
             }
             
             if (loginBtn) loginBtn.style.display = 'none';
