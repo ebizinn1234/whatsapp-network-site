@@ -80,8 +80,15 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
             // Salvar sessão no banco de dados
             try {
                 const userInfo = sock.user;
+                console.log('🔍 DEBUG: Informações do WhatsApp:', {
+                    name: userInfo?.name,
+                    id: userInfo?.id,
+                    profilePicture: userInfo?.profilePicture
+                });
+                
                 const accountName = userInfo?.name || 'WhatsApp User';
                 const accountNumber = userInfo?.id?.split(':')[0] || '';
+                const profilePicture = userInfo?.profilePicture || null;
                 
                 // Verificar se já existe sessão
                 const [existingSession] = await db.execute(

@@ -2179,6 +2179,15 @@
             addLog(`❌ Erro no envio: ${errorMessage}`, 'danger');
         });
 
+        // Listener para envio concluído
+        socket.on('send-complete', (data) => {
+            console.log('✅ Envio concluído recebido:', data);
+            isSending = false;
+            sendMessagesBtn.disabled = false;
+            sendMessagesBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar Mensagens';
+            addLog(`✅ Envio concluído! ${data.total} grupos processados`, 'success');
+        });
+
         // Funções de controle
         function showControls() {
             controlButtons.classList.remove('hidden');
