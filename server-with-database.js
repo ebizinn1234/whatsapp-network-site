@@ -54,31 +54,12 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
-            // VERIFICAR SE JÁ ESTÁ CONECTADO - NÃO GERAR QR CODE
-            const userSession = userSessions.get(userId);
-            if (userSession && userSession[sessionId] && userSession[sessionId].isConnected) {
-                console.log('🔍 DEBUG: WhatsApp já conectado, ignorando QR Code');
-                return;
-            }
+            // SOLUÇÃO RADICAL: NUNCA gerar QR Code automaticamente
+            console.log('🔒 BLOQUEANDO QR Code - sistema não deve gerar QR Code automaticamente');
+            console.log('💾 Usuário deve conectar manualmente se necessário');
             
-            // Verificar se o socket já tem usuário conectado
-            if (sock.user && sock.user.id) {
-                console.log('🔍 DEBUG: Socket já tem usuário conectado, ignorando QR Code');
-                return;
-            }
-            
-            console.log('🔍 DEBUG: QR Code gerado para userId:', userId);
-            
-            const qrCode = await qrcode.toDataURL(qr);
-            console.log('🔍 DEBUG: Enviando QR Code para sala user_' + userId);
-            io.to(`user_${userId}`).emit('qr-code', qrCode);
-            console.log('🔍 DEBUG: QR Code enviado com sucesso!');
-            
-            // Também enviar para a sala default como fallback
-            if (userId !== 'default') {
-                console.log('🔍 DEBUG: Enviando QR Code também para sala user_default como fallback');
-                io.to('user_default').emit('qr-code', qrCode);
-            }
+            // NÃO gerar QR Code - apenas informar que precisa conectar manualmente
+            return;
         } else {
             console.log('🔍 DEBUG: Nenhum QR Code gerado');
         }
