@@ -83,6 +83,8 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
             }
         } else if (connection === 'open') {
             console.log(`✅ WhatsApp conectado para usuário ${userId}`);
+            console.log('🔍 DEBUG: Total de userSessions após connect:', userSessions.size);
+            console.log('🔍 DEBUG: userSessions keys após connect:', Array.from(userSessions.keys()));
             
             // Salvar sessão no banco de dados
             try {
@@ -134,6 +136,9 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 profilePicture: userInfo.profilePicture || null
             } : null;
             
+            console.log('🔍 DEBUG: Emitindo connection-status para usuário:', userId);
+            console.log('🔍 DEBUG: Total de userSessions antes de connection-status:', userSessions.size);
+            console.log('🔍 DEBUG: userSessions keys antes de connection-status:', Array.from(userSessions.keys()));
             io.to(`user_${userId}`).emit('connection-status', { 
                 connected: true,
                 whatsappInfo: whatsappInfo
@@ -149,15 +154,21 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
 // Socket.io events
 io.on('connection', (socket) => {
     console.log(`👤 Cliente conectado: ${socket.id}`);
+    console.log('🔍 DEBUG: Total de userSessions:', userSessions.size);
+    console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
     
     socket.on('join-user', async (data = {}) => {
         const { userId } = data || {};
         socket.join(`user_${userId}`);
         console.log(`👤 Usuário ${userId} entrou na sala`);
+        console.log('🔍 DEBUG: Total de userSessions após join:', userSessions.size);
+        console.log('🔍 DEBUG: userSessions keys após join:', Array.from(userSessions.keys()));
     });
 
     socket.on('connect-whatsapp', async (data = {}) => {
         console.log('🔍 DEBUG: connect-whatsapp recebido com data:', data);
+        console.log('🔍 DEBUG: Total de userSessions antes de connect:', userSessions.size);
+        console.log('🔍 DEBUG: userSessions keys antes de connect:', Array.from(userSessions.keys()));
         const { userId, accountId, sessionId } = data || {};
         
         // CORREÇÃO CRÍTICA: Usar userId específico, não 'default'
@@ -207,6 +218,9 @@ io.on('connection', (socket) => {
                                 profilePicture: userInfo.profilePicture || null
                             } : null;
                             
+                            console.log('🔍 DEBUG: Emitindo connection-status para usuário conectado:', userIdentifier);
+                            console.log('🔍 DEBUG: Total de userSessions antes de connection-status conectado:', userSessions.size);
+                            console.log('🔍 DEBUG: userSessions keys antes de connection-status conectado:', Array.from(userSessions.keys()));
                             socket.emit('connection-status', { 
                                 connected: true,
                                 whatsappInfo: whatsappInfo
@@ -262,6 +276,8 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: Timestamp:', new Date().toISOString());
         console.log('🔍 DEBUG: Socket ID:', socket.id);
         console.log('🔍 DEBUG: EVENTO LOAD-GROUPS PROCESSADO!');
+        console.log('🔍 DEBUG: userSessions total:', userSessions.size);
+        console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
         const { userId, sessionId = 'default' } = data || {};
         console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
         
@@ -373,6 +389,8 @@ io.on('connection', (socket) => {
     socket.on('get-saved-sessions', async (data = {}) => {
         const { userId } = data || {};
         console.log('🔍 DEBUG: get-saved-sessions recebido para userId:', userId);
+        console.log('🔍 DEBUG: Total de userSessions antes de get-saved-sessions:', userSessions.size);
+        console.log('🔍 DEBUG: userSessions keys antes de get-saved-sessions:', Array.from(userSessions.keys()));
         try {
             const [sessions] = await db.execute(
                 'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC',
