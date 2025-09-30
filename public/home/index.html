@@ -3461,6 +3461,7 @@
             const registerBtn = document.querySelector('.btn-register');
             
         // Verificar se há sessões salvas do WhatsApp - MOVER PARA DENTRO DO SOCKET CONNECT
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
         console.log('🔍 DEBUG: Usuário logado, mas socket ainda não conectado');
         console.log('🔍 DEBUG: userData.id:', userData.id);
         console.log('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
