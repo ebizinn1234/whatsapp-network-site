@@ -60,6 +60,12 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 return;
             }
             
+            // Verificar se o socket já tem usuário conectado
+            if (sock.user && sock.user.id) {
+                console.log('🔍 DEBUG: Socket já tem usuário conectado, ignorando QR Code');
+                return;
+            }
+            
             console.log('🔍 DEBUG: QR Code gerado para userId:', userId);
             
             const qrCode = await qrcode.toDataURL(qr);
@@ -81,69 +87,75 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
             if (shouldReconnect) {
                 setTimeout(() => createWhatsAppSocket(userId, sessionId), 3000);
             }
-        } else if (connection === 'open') {
-            console.log(`✅ WhatsApp conectado para usuário ${userId}`);
-            console.log('🔍 DEBUG: Total de userSessions após connect:', userSessions.size);
-            console.log('🔍 DEBUG: userSessions keys após connect:', Array.from(userSessions.keys()));
-            
-            // Salvar sessão no banco de dados
-            try {
-                const userInfo = sock.user;
-                console.log('🔍 DEBUG: Informações do WhatsApp:', {
-                    name: userInfo?.name,
-                    id: userInfo?.id,
-                    profilePicture: userInfo?.profilePicture
-                });
+            } else if (connection === 'open') {
+                console.log(`✅ WhatsApp conectado para usuário ${userId}`);
+                console.log('🔍 DEBUG: Total de userSessions após connect:', userSessions.size);
+                console.log('🔍 DEBUG: userSessions keys após connect:', Array.from(userSessions.keys()));
                 
-                const accountName = userInfo?.name || 'WhatsApp User';
-                const accountNumber = userInfo?.id?.split(':')[0] || '';
-                const profilePicture = userInfo?.profilePicture || null;
+                // Atualizar status da sessão na memória
+                if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
+                    userSessions.get(userId)[sessionId].isConnected = true;
+                    console.log('✅ Status da sessão atualizado na memória');
+                }
                 
-                // Usar o sessionId que foi passado para a função createWhatsAppSocket
-                const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;
-                console.log('🔍 DEBUG: sessionId único gerado para conexão:', uniqueSessionId);
-                
-                // Verificar se já existe sessão
-                const [existingSession] = await db.execute(
-                    'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
-                    [userId, uniqueSessionId]
-                );
-                
-                if (existingSession.length === 0) {
-                    // Criar nova sessão
-                    await db.execute(
-                        'INSERT INTO whatsapp_sessions (user_id, session_id, account_name, account_number, is_active) VALUES (?, ?, ?, ?, 1)',
-                        [userId, uniqueSessionId, accountName, accountNumber]
-                    );
-                    console.log('💾 Sessão salva no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
-                } else {
-                    // Atualizar sessão existente
-                    await db.execute(
-                        'UPDATE whatsapp_sessions SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND session_id = ?',
+                // Salvar sessão no banco de dados
+                try {
+                    const userInfo = sock.user;
+                    console.log('🔍 DEBUG: Informações do WhatsApp:', {
+                        name: userInfo?.name,
+                        id: userInfo?.id,
+                        profilePicture: userInfo?.profilePicture
+                    });
+                    
+                    const accountName = userInfo?.name || 'WhatsApp User';
+                    const accountNumber = userInfo?.id?.split(':')[0] || '';
+                    const profilePicture = userInfo?.profilePicture || null;
+                    
+                    // Usar o sessionId que foi passado para a função createWhatsAppSocket
+                    const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;
+                    console.log('🔍 DEBUG: sessionId único gerado para conexão:', uniqueSessionId);
+                    
+                    // Verificar se já existe sessão
+                    const [existingSession] = await db.execute(
+                        'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
                         [userId, uniqueSessionId]
                     );
-                    console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
+                    
+                    if (existingSession.length === 0) {
+                        // Criar nova sessão
+                        await db.execute(
+                            'INSERT INTO whatsapp_sessions (user_id, session_id, account_name, account_number, is_active) VALUES (?, ?, ?, ?, 1)',
+                            [userId, uniqueSessionId, accountName, accountNumber]
+                        );
+                        console.log('💾 Sessão salva no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
+                    } else {
+                        // Atualizar sessão existente
+                        await db.execute(
+                            'UPDATE whatsapp_sessions SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND session_id = ?',
+                            [userId, uniqueSessionId]
+                        );
+                        console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao salvar sessão no banco:', error);
                 }
-            } catch (error) {
-                console.error('❌ Erro ao salvar sessão no banco:', error);
+                
+                // Enviar informações do WhatsApp quando conectar
+                const userInfo = sock.user;
+                const whatsappInfo = userInfo ? {
+                    name: userInfo.name || 'WhatsApp User',
+                    number: userInfo.id?.split(':')[0] || '',
+                    profilePicture: userInfo.profilePicture || null
+                } : null;
+                
+                console.log('🔍 DEBUG: Emitindo connection-status para usuário:', userId);
+                console.log('🔍 DEBUG: Total de userSessions antes de connection-status:', userSessions.size);
+                console.log('🔍 DEBUG: userSessions keys antes de connection-status:', Array.from(userSessions.keys()));
+                io.to(`user_${userId}`).emit('connection-status', { 
+                    connected: true,
+                    whatsappInfo: whatsappInfo
+                });
             }
-            
-            // Enviar informações do WhatsApp quando conectar
-            const userInfo = sock.user;
-            const whatsappInfo = userInfo ? {
-                name: userInfo.name || 'WhatsApp User',
-                number: userInfo.id?.split(':')[0] || '',
-                profilePicture: userInfo.profilePicture || null
-            } : null;
-            
-            console.log('🔍 DEBUG: Emitindo connection-status para usuário:', userId);
-            console.log('🔍 DEBUG: Total de userSessions antes de connection-status:', userSessions.size);
-            console.log('🔍 DEBUG: userSessions keys antes de connection-status:', Array.from(userSessions.keys()));
-            io.to(`user_${userId}`).emit('connection-status', { 
-                connected: true,
-                whatsappInfo: whatsappInfo
-            });
-        }
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -178,6 +190,30 @@ io.on('connection', (socket) => {
         
         // CORREÇÃO CRÍTICA: Usar userId específico, não 'default'
         const userIdentifier = userId || accountId;
+        
+        // Verificar se já existe uma conexão ativa para este usuário
+        if (userSessions.has(userIdentifier)) {
+            const existingSessions = userSessions.get(userIdentifier);
+            for (const [sessionKey, session] of Object.entries(existingSessions)) {
+                if (session.sock && session.sock.user && session.sock.user.id) {
+                    console.log('✅ WhatsApp já conectado para usuário:', userIdentifier);
+                    console.log('🔍 DEBUG: Emitindo connection-status para usuário já conectado:', userIdentifier);
+                    
+                    const userInfo = session.sock.user;
+                    const whatsappInfo = userInfo ? {
+                        name: userInfo.name || 'WhatsApp User',
+                        number: userInfo.id?.split(':')[0] || '',
+                        profilePicture: userInfo.profilePicture || null
+                    } : null;
+                    
+                    socket.emit('connection-status', { 
+                        connected: true,
+                        whatsappInfo: whatsappInfo
+                    });
+                    return;
+                }
+            }
+        }
         
         // Gerar session_id único para cada usuário
         const uniqueSessionId = sessionId || `user_${userIdentifier}_${Date.now()}`;
@@ -296,6 +332,61 @@ io.on('connection', (socket) => {
             if (!userSession || !userSession[sessionId]) {
                 console.log('❌ Sessão não encontrada para userId:', userId);
                 console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
+                
+                // Tentar encontrar sessão ativa no banco de dados
+                try {
+                    const [activeSessions] = await db.execute(
+                        'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1',
+                        [userId]
+                    );
+                    
+                    if (activeSessions.length > 0) {
+                        const activeSession = activeSessions[0];
+                        console.log('💾 Sessão ativa encontrada no banco:', activeSession.session_id);
+                        
+                        // Tentar reconectar com a sessão salva
+                        try {
+                            const sock = await createWhatsAppSocket(userId, activeSession.session_id);
+                            
+                            if (!userSessions.has(userId)) {
+                                userSessions.set(userId, {});
+                            }
+                            
+                            userSessions.get(userId)[activeSession.session_id] = {
+                                sock,
+                                isConnected: false,
+                                sessionId: activeSession.session_id
+                            };
+                            
+                            console.log('✅ Sessão reconectada com sucesso!');
+                            
+                            // Aguardar um pouco para a conexão se estabelecer
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                            
+                            // Verificar se está conectado
+                            if (sock.user && sock.user.id) {
+                                console.log('✅ WhatsApp conectado, carregando grupos...');
+                                const groups = await sock.groupFetchAllParticipating();
+                                const groupsList = Object.values(groups).map(group => ({
+                                    id: group.id,
+                                    name: group.subject || 'Sem nome',
+                                    description: group.desc || '',
+                                    participantCount: group.participants ? Object.keys(group.participants).length : 0,
+                                    isCommunity: group.endOfHistoryTransparencyDenied || false,
+                                    isPrivate: group.restrict || false
+                                }));
+                                
+                                console.log('📊 Grupos carregados:', groupsList.length);
+                                socket.emit('groups-loaded', { groups: groupsList });
+                                return;
+                            }
+                        } catch (reconnectError) {
+                            console.error('❌ Erro ao reconectar sessão:', reconnectError);
+                        }
+                    }
+                } catch (dbError) {
+                    console.error('❌ Erro ao buscar sessão no banco:', dbError);
+                }
                 
                 // SEGURANÇA: Não usar sessão default para outros usuários
                 console.log('❌ SEGURANÇA: Sessão não encontrada para userId:', userId);
