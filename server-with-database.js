@@ -8,6 +8,7 @@ import { makeWASocket, DisconnectReason, useMultiFileAuthState } from '@whiskeys
 import { Boom } from '@hapi/boom';
 import P from 'pino';
 import qrcode from 'qrcode';
+import fs from 'fs';
 import authRoutes from './routes/auth.js';
 import { authenticateToken } from './routes/auth.js';
 import db from './config/database.js';
@@ -262,7 +263,6 @@ io.on('connection', (socket) => {
                 
                 // Verificar se a sessão salva ainda é válida (arquivos de auth existem)
                 const authDir = `auth_info_${userIdentifier}_${savedSession.session_id}`;
-                const fs = require('fs');
                 
                 if (!fs.existsSync(authDir)) {
                     console.log('⚠️ Sessão salva inválida - arquivos de auth não existem, continuando com nova conexão...');
