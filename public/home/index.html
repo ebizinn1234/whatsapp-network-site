@@ -2287,12 +2287,9 @@
                 console.log('🔍 DEBUG: activeSession.user_id:', activeSession.user_id);
                 console.log('🔍 DEBUG: activeSession.session_id:', activeSession.session_id);
                 
-                // Conectar automaticamente com sessão salva
-                socket.emit('connect-whatsapp', { 
-                    userId: activeSession.user_id,
-                    sessionId: activeSession.session_id 
-                });
-                console.log('🔍 DEBUG: connect-whatsapp emitido com userId:', activeSession.user_id, 'sessionId:', activeSession.session_id);
+                // Verificar status da conexão em vez de reconectar automaticamente
+                console.log('🔍 DEBUG: Verificando status da conexão existente...');
+                socket.emit('check-connection');
                 
                 // Aguardar um pouco e verificar se conectou
                 setTimeout(() => {
