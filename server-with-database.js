@@ -141,7 +141,15 @@ io.on('connection', (socket) => {
     socket.on('connect-whatsapp', async (data = {}) => {
         console.log('🔍 DEBUG: connect-whatsapp recebido com data:', data);
         const { userId, accountId, sessionId = 'default' } = data || {};
-        const userIdentifier = userId || accountId || 'default';
+        
+        // CORREÇÃO CRÍTICA: Usar userId específico, não 'default'
+        const userIdentifier = userId || accountId;
+        if (!userIdentifier) {
+            console.log('❌ ERRO: userId não fornecido - conexão negada por segurança');
+            socket.emit('connection-error', { message: 'Usuário não identificado. Faça login novamente.' });
+            return;
+        }
+        
         console.log('🔍 DEBUG: userIdentifier =', userIdentifier);
         
         try {
@@ -223,32 +231,9 @@ io.on('connection', (socket) => {
                 console.log('❌ Sessão não encontrada para userId:', userId);
                 console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
                 
-                // FALLBACK: Tentar usar sessão 'default' se userId não existir
-                if (userSessions.has('default')) {
-                    console.log('🔄 FALLBACK: Usando sessão default para userId:', userId);
-                    const defaultSession = userSessions.get('default');
-                    const { sock } = defaultSession[sessionId];
-                    
-                    if (sock) {
-                        console.log('🔄 Buscando grupos do WhatsApp (fallback)...');
-                        const groups = await sock.groupFetchAllParticipating();
-                        console.log('📊 Grupos encontrados (fallback):', Object.keys(groups).length);
-                        
-                        const groupsList = Object.values(groups).map(group => ({
-                            id: group.id,
-                            name: group.subject || 'Sem nome',
-                            description: group.desc || '',
-                            participantCount: group.participants ? Object.keys(group.participants).length : 0,
-                            isCommunity: group.endOfHistoryTransparencyDenied || false,
-                            isPrivate: group.restrict || false
-                        }));
-                        
-                        console.log('📊 Grupos processados (fallback):', groupsList.length);
-                        socket.emit('groups-loaded', { groups: groupsList });
-                        return;
-                    }
-                }
-                
+                // SEGURANÇA: Não usar sessão default para outros usuários
+                console.log('❌ SEGURANÇA: Sessão não encontrada para userId:', userId);
+                console.log('❌ SEGURANÇA: Negando acesso por segurança');
                 socket.emit('groups-loaded', { groups: [] });
                 return;
             }
