@@ -262,8 +262,8 @@ io.on('connection', (socket) => {
                     }
                 }
                 
-                // SOLUÇÃO RADICAL: NÃO tentar reconectar automaticamente
-                console.log('🔒 Sessão salva encontrada - NÃO reconectando automaticamente para evitar QR codes infinitos');
+                // PERMITIR reconexão quando usuário clica em "Conectar"
+                console.log('🔄 Tentando reconectar com sessão salva...');
                 
                 // Apenas verificar se já existe na memória
                 if (userSessions.has(userIdentifier) && userSessions.get(userIdentifier)[savedSession.session_id]) {
@@ -281,15 +281,48 @@ io.on('connection', (socket) => {
                     }
                 }
                 
-                // Se não está conectado, apenas informar que há sessão salva
-                console.log('💾 Sessão salva disponível - usuário deve conectar manualmente');
-                socket.emit('connection-status', { 
-                    connected: false, 
-                    userId: userIdentifier,
-                    sessionId: savedSession.session_id,
-                    message: 'Sessão salva disponível - clique em conectar'
-                });
-                return;
+                // Tentar reconectar com a sessão salva
+                try {
+                    const sock = await createWhatsAppSocket(userIdentifier, savedSession.session_id);
+                    
+                    if (!userSessions.has(userIdentifier)) {
+                        userSessions.set(userIdentifier, {});
+                    }
+                    
+                    userSessions.get(userIdentifier)[savedSession.session_id] = {
+                        sock,
+                        isConnected: false,
+                        sessionId: savedSession.session_id
+                    };
+                    
+                    console.log('✅ Reconexão com sessão salva iniciada!');
+                    
+                    // Aguardar um pouco para a conexão se estabelecer
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    // Verificar se está conectado
+                    if (sock.user && sock.user.id) {
+                        console.log('✅ WhatsApp conectado com sessão salva!');
+                        
+                        const userInfo = sock.user;
+                        const whatsappInfo = userInfo ? {
+                            name: userInfo.name || 'WhatsApp User',
+                            number: userInfo.id?.split(':')[0] || '',
+                            profilePicture: userInfo.profilePicture || null
+                        } : null;
+                        
+                        socket.emit('connection-status', { 
+                            connected: true,
+                            whatsappInfo: whatsappInfo
+                        });
+                        return;
+                    } else {
+                        console.log('⚠️ Reconexão falhou - sessão expirada, continuando com nova conexão...');
+                    }
+                } catch (reconnectError) {
+                    console.error('❌ Erro ao reconectar com sessão salva:', reconnectError);
+                    console.log('⚠️ Sessão salva inválida, continuando com nova conexão...');
+                }
             }
         } catch (dbError) {
             console.error('❌ Erro ao verificar sessão no banco:', dbError);
