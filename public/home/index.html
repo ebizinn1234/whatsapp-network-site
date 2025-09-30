@@ -321,6 +321,148 @@
             text-align: center;
         }
 
+        /* Interface de Progresso */
+        #progressCard {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto 25px auto;
+        }
+
+        .progress-stats {
+            background: #24d366;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .progress-container {
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #24d366, #20c55e);
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .groups-progress {
+            margin-bottom: 25px;
+        }
+
+        .groups-progress h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .groups-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .group-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .group-item.success {
+            border-left-color: #24d366;
+            background: #f0fff4;
+        }
+
+        .group-item.error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .group-item.processing {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .group-status {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .group-name {
+            flex: 1;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .group-time {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .progress-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .progress-controls .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .progress-controls .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
 
 
         .status {
@@ -1693,6 +1835,49 @@
             </div>
         </div>
 
+        <!-- Aba de Progresso -->
+        <div class="card" id="progressCard" style="display: none;">
+            <div class="card-header">
+                <h3><i class="fas fa-paper-plane"></i> Progresso do Envio</h3>
+                <div class="progress-stats">
+                    <span id="progressStats">0/0 grupos</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progressText">Aguardando...</span>
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Lista de Grupos -->
+                <div class="groups-progress">
+                    <h4>Grupos sendo processados:</h4>
+                    <div id="groupsList" class="groups-list">
+                        <!-- Grupos serão adicionados aqui dinamicamente -->
+                    </div>
+                </div>
+                
+                <!-- Botões de Controle -->
+                <div class="progress-controls">
+                    <button id="pauseBtn" class="btn btn-warning" style="display: none;">
+                        <i class="fas fa-pause"></i> Pausar
+                    </button>
+                    <button id="resumeBtn" class="btn btn-success" style="display: none;">
+                        <i class="fas fa-play"></i> Continuar
+                    </button>
+                    <button id="cancelBtn" class="btn btn-danger" style="display: none;">
+                        <i class="fas fa-stop"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Log de Atividades -->
         <div class="card">
             <h2><i class="fas fa-clipboard-list" style="margin-right: 8px; color: #24d366;"></i>Log de Atividades</h2>
@@ -2183,6 +2368,7 @@
         socket.on('send-progress', (data) => {
             console.log('📤 Progresso do envio recebido:', data);
             addLog(`📤 Enviando para ${data.current}/${data.total}: ${data.group}`, 'info');
+            updateProgress(data);
         });
 
         // Listener para envio concluído
@@ -2192,7 +2378,106 @@
             sendMessagesBtn.disabled = false;
             sendMessagesBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar Mensagens';
             addLog(`✅ Envio concluído! ${data.total} grupos processados`, 'success');
+            completeProgress(data);
         });
+
+        // Funções de controle de progresso
+        function showProgressCard() {
+            const progressCard = document.getElementById('progressCard');
+            if (progressCard) {
+                progressCard.style.display = 'block';
+                progressCard.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function hideProgressCard() {
+            const progressCard = document.getElementById('progressCard');
+            if (progressCard) {
+                progressCard.style.display = 'none';
+            }
+        }
+
+        function updateProgress(data) {
+            const { current, total, group, status } = data;
+            
+            // Mostrar card de progresso
+            showProgressCard();
+            
+            // Atualizar estatísticas
+            const progressStats = document.getElementById('progressStats');
+            if (progressStats) {
+                progressStats.textContent = `${current}/${total} grupos`;
+            }
+            
+            // Atualizar barra de progresso
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressBar && progressPercentage && progressText) {
+                const percentage = Math.round((current / total) * 100);
+                progressBar.style.width = `${percentage}%`;
+                progressPercentage.textContent = `${percentage}%`;
+                progressText.textContent = `Enviando para: ${group}`;
+            }
+            
+            // Adicionar grupo à lista
+            addGroupToList(group, status, current);
+        }
+
+        function addGroupToList(groupName, status, current) {
+            const groupsList = document.getElementById('groupsList');
+            if (!groupsList) return;
+            
+            const groupItem = document.createElement('div');
+            groupItem.className = `group-item ${status}`;
+            groupItem.id = `group-${current}`;
+            
+            const statusIcon = getStatusIcon(status);
+            const currentTime = new Date().toLocaleTimeString();
+            
+            groupItem.innerHTML = `
+                <span class="group-status">${statusIcon}</span>
+                <span class="group-name">${groupName}</span>
+                <span class="group-time">${currentTime}</span>
+            `;
+            
+            groupsList.appendChild(groupItem);
+            
+            // Scroll para o último item
+            groupItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function getStatusIcon(status) {
+            switch(status) {
+                case 'success':
+                    return '<i class="fas fa-check-circle" style="color: #24d366;"></i>';
+                case 'error':
+                    return '<i class="fas fa-times-circle" style="color: #dc3545;"></i>';
+                case 'processing':
+                    return '<i class="fas fa-spinner fa-spin" style="color: #ffc107;"></i>';
+                default:
+                    return '<i class="fas fa-clock" style="color: #6c757d;"></i>';
+            }
+        }
+
+        function completeProgress(data) {
+            const progressText = document.getElementById('progressText');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            if (progressText) {
+                progressText.textContent = 'Envio concluído com sucesso!';
+            }
+            
+            if (progressPercentage) {
+                progressPercentage.textContent = '100%';
+            }
+            
+            // Esconder card após 3 segundos
+            setTimeout(() => {
+                hideProgressCard();
+            }, 3000);
+        }
 
         // Funções de controle
         function showControls() {

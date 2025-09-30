@@ -339,13 +339,19 @@ io.on('connection', (socket) => {
                 console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group}`);
                 
                 try {
-                    // Aqui você implementaria o envio real para o grupo
-                    // Por enquanto, vamos simular o envio
-                    console.log(`✅ Mensagem enviada para: ${group}`);
+                    // ENVIO REAL PARA O WHATSAPP
+                    console.log(`📤 Enviando mensagem real para: ${group.name || group}`);
+                    
+                    // Enviar mensagem para o grupo via WhatsApp
+                    await sock.sendMessage(group.id, { 
+                        text: message 
+                    });
+                    
+                    console.log(`✅ Mensagem enviada com sucesso para: ${group.name || group}`);
                     socket.emit('send-progress', { 
                         current: i + 1, 
                         total: groups.length, 
-                        group: group,
+                        group: group.name || group,
                         status: 'success'
                     });
                     
