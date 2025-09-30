@@ -260,6 +260,7 @@ io.on('connection', (socket) => {
     socket.on('load-groups', async (data = {}) => {
         console.log('🔍 DEBUG: load-groups recebido com data:', data);
         console.log('🔍 DEBUG: Timestamp:', new Date().toISOString());
+        console.log('🔍 DEBUG: Socket ID:', socket.id);
         const { userId, sessionId = 'default' } = data || {};
         console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
         
