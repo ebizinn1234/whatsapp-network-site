@@ -352,6 +352,13 @@ io.on('connection', (socket) => {
         socket.on('send-messages', async (data = {}) => {
             console.log('🔍 DEBUG: send-messages recebido com data:', data);
             const { groups, message, userId, sessionId = 'default', delay = 2000, minDelay = 1000, maxDelay = 5000, humanMode = true } = data || {};
+            
+            console.log('⏱️ DEBUG: Configurações de delay recebidas:', {
+                delay: delay,
+                minDelay: minDelay,
+                maxDelay: maxDelay,
+                humanMode: humanMode
+            });
         
         try {
             // Verificar se WhatsApp está conectado
@@ -371,6 +378,13 @@ io.on('connection', (socket) => {
             
             console.log('📤 Iniciando envio para', groups.length, 'grupos');
             console.log('📝 Mensagem:', message);
+            
+            // Aplicar delay inicial se humanMode estiver ativo
+            if (humanMode && groups.length > 0) {
+                const initialDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+                console.log(`⏱️ Delay inicial: ${initialDelay}ms`);
+                await new Promise(resolve => setTimeout(resolve, initialDelay));
+            }
             
             // Processar cada grupo
             for (let i = 0; i < groups.length; i++) {
