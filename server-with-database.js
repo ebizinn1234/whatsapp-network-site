@@ -310,9 +310,9 @@ io.on('connection', (socket) => {
     });
 
     // Evento para enviar mensagens
-    socket.on('send-messages', async (data = {}) => {
-        console.log('🔍 DEBUG: send-messages recebido com data:', data);
-        const { groups, message, userId, sessionId = 'default' } = data || {};
+        socket.on('send-messages', async (data = {}) => {
+            console.log('🔍 DEBUG: send-messages recebido com data:', data);
+            const { groups, message, userId, sessionId = 'default', delay = 2000, minDelay = 1000, maxDelay = 5000, humanMode = true } = data || {};
         
         try {
             // Verificar se WhatsApp está conectado
@@ -355,8 +355,19 @@ io.on('connection', (socket) => {
                         status: 'success'
                     });
                     
-                    // Delay entre envios (simular delay humano)
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Delay entre envios baseado na configuração do usuário
+                    let actualDelay = delay;
+                    
+                    if (humanMode) {
+                        // Delay humano: variação aleatória entre minDelay e maxDelay
+                        const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+                        actualDelay = randomDelay;
+                        console.log(`⏱️ Delay humano: ${actualDelay}ms (${minDelay}-${maxDelay}ms)`);
+                    } else {
+                        console.log(`⏱️ Delay fixo: ${actualDelay}ms`);
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, actualDelay));
                     
                 } catch (error) {
                     console.error(`❌ Erro ao enviar para ${group}:`, error);
