@@ -2504,25 +2504,14 @@
             // updateDebugInfo(`✅ Campo de pesquisa ativado para ${groups.length} grupos`);
 
             const groupsHTML = groups.map((group, index) => {
-                let statusIcon = '';
-                let statusText = '';
-                let statusClass = 'group-available';
-                
-                if (!group.canSendMessages) {
-                    statusIcon = '🔒';
-                    statusText = 'Somente leitura';
-                    statusClass = 'group-readonly';
-                }
-                
                 return `
-                    <div class="group-item ${statusClass}" data-group-name="${group.name.toLowerCase()}">
+                    <div class="group-item group-available" data-group-name="${group.name.toLowerCase()}">
                         <input type="checkbox" class="group-checkbox" data-index="${index}" 
-                               onchange="console.log('🔄 Checkbox changed:', this.checked, 'Index:', this.dataset.index, 'Group:', '${group.name}'); window.updateSelectedGroups();" 
-                               ${!group.canSendMessages ? 'disabled' : ''}>
+                               onchange="console.log('🔄 Checkbox changed:', this.checked, 'Index:', this.dataset.index, 'Group:', '${group.name}'); window.updateSelectedGroups();">
                         <div class="group-info">
                             <div class="group-name">${group.name}</div>
                             <div class="group-meta">
-                                ${group.participants} participantes • ${statusIcon} ${statusText}
+                                ${group.participantCount} participantes
                             </div>
                         </div>
                     </div>
