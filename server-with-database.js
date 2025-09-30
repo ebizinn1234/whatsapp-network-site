@@ -261,6 +261,7 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: load-groups recebido com data:', data);
         console.log('🔍 DEBUG: Timestamp:', new Date().toISOString());
         console.log('🔍 DEBUG: Socket ID:', socket.id);
+        console.log('🔍 DEBUG: EVENTO LOAD-GROUPS PROCESSADO!');
         const { userId, sessionId = 'default' } = data || {};
         console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
         
