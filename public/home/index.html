@@ -2179,6 +2179,12 @@
             addLog(`❌ Erro no envio: ${errorMessage}`, 'danger');
         });
 
+        // Listener para progresso do envio
+        socket.on('send-progress', (data) => {
+            console.log('📤 Progresso do envio recebido:', data);
+            addLog(`📤 Enviando para ${data.current}/${data.total}: ${data.group}`, 'info');
+        });
+
         // Listener para envio concluído
         socket.on('send-complete', (data) => {
             console.log('✅ Envio concluído recebido:', data);
