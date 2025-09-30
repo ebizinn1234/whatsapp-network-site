@@ -2099,11 +2099,8 @@
                     console.log('🔍 DEBUG: Emitindo get-saved-sessions...');
                     socket.emit('get-saved-sessions', { userId: userData.id });
                     
-                    // Aguardar um pouco e tentar reconectar automaticamente
-                    setTimeout(() => {
-                        console.log('🔄 Tentando reconectar automaticamente...');
-                        socket.emit('connect-whatsapp', { userId: userData.id });
-                    }, 2000);
+                    // SOLUÇÃO RADICAL: NÃO tentar reconectar automaticamente
+                    console.log('🔒 NÃO tentando reconectar automaticamente para evitar QR codes infinitos');
                 } else {
                     console.log('🔍 DEBUG: userData.id não encontrado, entrando na sala default');
                     socket.emit('join-user', { userId: 'default' });
