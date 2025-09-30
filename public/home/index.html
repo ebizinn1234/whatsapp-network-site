@@ -2258,6 +2258,8 @@
         // Evento para receber sessões salvas
         socket.on('saved-sessions', (sessions) => {
             console.log('🔍 DEBUG: Sessões salvas recebidas:', sessions);
+            console.log('🔍 DEBUG: Tipo de sessions:', typeof sessions);
+            console.log('🔍 DEBUG: sessions.length:', sessions ? sessions.length : 'undefined');
             
             if (sessions && sessions.length > 0) {
                 console.log('✅ Sessões WhatsApp encontradas! Conectando automaticamente...');
@@ -2266,12 +2268,15 @@
                 // Usar a primeira sessão ativa
                 const activeSession = sessions[0];
                 console.log('🔍 DEBUG: Usando sessão:', activeSession);
+                console.log('🔍 DEBUG: activeSession.user_id:', activeSession.user_id);
+                console.log('🔍 DEBUG: activeSession.session_id:', activeSession.session_id);
                 
                 // Conectar automaticamente com sessão salva
                 socket.emit('connect-whatsapp', { 
                     userId: activeSession.user_id,
                     sessionId: activeSession.session_id 
                 });
+                console.log('🔍 DEBUG: connect-whatsapp emitido com userId:', activeSession.user_id, 'sessionId:', activeSession.session_id);
                 
                 // Aguardar um pouco e verificar se conectou
                 setTimeout(() => {
