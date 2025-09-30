@@ -1957,6 +1957,12 @@
                     addLog('✅ WhatsApp conectado com sucesso!', 'success');
                 }
                 
+                // Fechar container QR se existir
+                const qrContainer = document.getElementById('qrContainer');
+                if (qrContainer) {
+                    qrContainer.classList.add('hidden');
+                }
+                
                 // Carregar grupos automaticamente quando conectar
                 console.log('🔄 Carregando grupos automaticamente...');
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');

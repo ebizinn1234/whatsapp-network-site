@@ -232,17 +232,35 @@ io.on('connection', (socket) => {
             }
             
             console.log('🔄 Buscando grupos do WhatsApp...');
+            console.log('🔍 DEBUG: Socket WhatsApp status:', sock.user ? 'Conectado' : 'Desconectado');
+            console.log('🔍 DEBUG: Socket WhatsApp user:', sock.user ? sock.user.name : 'N/A');
+            
             const groups = await sock.groupFetchAllParticipating();
             console.log('📊 Grupos encontrados:', Object.keys(groups).length);
+            console.log('📊 Primeiros 3 grupos:', Object.keys(groups).slice(0, 3));
             
-            const groupsList = Object.values(groups).map(group => ({
-                id: group.id,
-                name: group.subject,
-                description: group.desc,
-                participantCount: group.participants ? Object.keys(group.participants).length : 0,
-                isCommunity: group.endOfHistoryTransparencyDenied || false,
-                isPrivate: group.restrict || false
-            })).filter(group => !group.isCommunity && !group.isPrivate);
+            const groupsList = Object.values(groups).map(group => {
+                console.log('🔍 DEBUG: Processando grupo:', group.subject, 'ID:', group.id);
+                console.log('🔍 DEBUG: Grupo details:', {
+                    subject: group.subject,
+                    participants: group.participants ? Object.keys(group.participants).length : 0,
+                    endOfHistoryTransparencyDenied: group.endOfHistoryTransparencyDenied,
+                    restrict: group.restrict
+                });
+                
+                return {
+                    id: group.id,
+                    name: group.subject,
+                    description: group.desc,
+                    participantCount: group.participants ? Object.keys(group.participants).length : 0,
+                    isCommunity: group.endOfHistoryTransparencyDenied || false,
+                    isPrivate: group.restrict || false
+                };
+            }).filter(group => {
+                const isFiltered = !group.isCommunity && !group.isPrivate;
+                console.log(`🔍 DEBUG: Grupo ${group.name} - Community: ${group.isCommunity}, Private: ${group.isPrivate}, Passou filtro: ${isFiltered}`);
+                return isFiltered;
+            });
             
             console.log('📊 Grupos filtrados (sem comunidades/privados):', groupsList.length);
             socket.emit('groups-loaded', { groups: groupsList });
