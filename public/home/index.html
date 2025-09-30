@@ -2758,6 +2758,9 @@
             console.log('Load groups button clicked');
             // updateDebugInfo('🔄 Carregando grupos...');
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            console.log('🔍 DEBUG: Enviando load-groups com userId:', userData.id);
+            console.log('🔍 DEBUG: Socket status:', socket.connected);
+            console.log('🔍 DEBUG: Socket ID:', socket.id);
             socket.emit('load-groups', { userId: userData.id });
             addLog('📋 Carregando grupos...', 'info');
         });
