@@ -254,11 +254,21 @@ io.on('connection', (socket) => {
                 return;
             }
             
-            console.log('🔄 Buscando grupos do WhatsApp...');
-            console.log('🔍 DEBUG: Socket WhatsApp status:', sock.user ? 'Conectado' : 'Desconectado');
-            console.log('🔍 DEBUG: Socket WhatsApp user:', sock.user ? sock.user.name : 'N/A');
-            
-            const groups = await sock.groupFetchAllParticipating();
+                console.log('🔄 Buscando grupos do WhatsApp...');
+                console.log('🔍 DEBUG: Socket WhatsApp status:', sock.user ? 'Conectado' : 'Desconectado');
+                console.log('🔍 DEBUG: Socket WhatsApp user:', sock.user ? sock.user.name : 'N/A');
+                
+                // Verificar se a conexão está realmente ativa
+                if (!sock.user || !sock.user.id) {
+                    console.log('❌ WhatsApp não está completamente conectado');
+                    socket.emit('groups-loaded', { groups: [] });
+                    return;
+                }
+                
+                // Aguardar um pouco para garantir estabilidade
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const groups = await sock.groupFetchAllParticipating();
             console.log('📊 Grupos encontrados:', Object.keys(groups).length);
             console.log('📊 Primeiros 3 grupos:', Object.keys(groups).slice(0, 3));
             
@@ -287,10 +297,39 @@ io.on('connection', (socket) => {
             
             console.log('📊 Grupos filtrados (sem comunidades/privados):', groupsList.length);
             socket.emit('groups-loaded', { groups: groupsList });
-        } catch (error) {
-            console.error('❌ Erro ao carregar grupos:', error);
-            socket.emit('groups-loaded', { groups: [] });
-        }
+            } catch (error) {
+                console.error('❌ Erro ao carregar grupos:', error);
+                
+                // Se for erro de conexão, tentar reconectar
+                if (error.message.includes('Connection Closed') || error.message.includes('Timed Out')) {
+                    console.log('🔄 Tentando reconectar WhatsApp...');
+                    try {
+                        // Limpar sessão atual
+                        if (userSessions.has(userId)) {
+                            delete userSessions.get(userId)[sessionId];
+                        }
+                        
+                        // Tentar reconectar
+                        setTimeout(async () => {
+                            try {
+                                const newSock = await createWhatsAppSocket(userId, sessionId);
+                                userSessions.get(userId)[sessionId] = {
+                                    sock: newSock,
+                                    isConnected: false,
+                                    sessionId
+                                };
+                                console.log('✅ Reconexão iniciada');
+                            } catch (reconnectError) {
+                                console.error('❌ Erro na reconexão:', reconnectError);
+                            }
+                        }, 5000);
+                    } catch (reconnectError) {
+                        console.error('❌ Erro ao tentar reconectar:', reconnectError);
+                    }
+                }
+                
+                socket.emit('groups-loaded', { groups: [] });
+            }
     });
 
     // Rota para listar sessões salvas do usuário
