@@ -191,6 +191,17 @@ io.on('connection', (socket) => {
         // CORREÇÃO CRÍTICA: Usar userId específico, não 'default'
         const userIdentifier = userId || accountId;
         
+        // Proteção contra múltiplas conexões simultâneas
+        if (userSessions.has(userIdentifier)) {
+            const existingSessions = userSessions.get(userIdentifier);
+            for (const [sessionKey, session] of Object.entries(existingSessions)) {
+                if (session.sock && session.sock.user && session.sock.user.id) {
+                    console.log('✅ WhatsApp já conectado para usuário:', userIdentifier, '- ignorando nova conexão');
+                    return;
+                }
+            }
+        }
+        
         // Verificar se já existe uma conexão ativa para este usuário
         if (userSessions.has(userIdentifier)) {
             const existingSessions = userSessions.get(userIdentifier);
@@ -226,6 +237,29 @@ io.on('connection', (socket) => {
                 const savedSession = savedSessions[0];
                 console.log('💾 Sessão ativa encontrada no banco para usuário:', userIdentifier, 'sessionId:', savedSession.session_id);
                 
+                // Verificar se já existe uma sessão ativa na memória
+                if (userSessions.has(userIdentifier) && userSessions.get(userIdentifier)[savedSession.session_id]) {
+                    const existingSession = userSessions.get(userIdentifier)[savedSession.session_id];
+                    
+                    // Se já está conectado, retornar status
+                    if (existingSession.sock && existingSession.sock.user && existingSession.sock.user.id) {
+                        console.log('✅ WhatsApp já conectado com sessão salva!');
+                        
+                        const userInfo = existingSession.sock.user;
+                        const whatsappInfo = userInfo ? {
+                            name: userInfo.name || 'WhatsApp User',
+                            number: userInfo.id?.split(':')[0] || '',
+                            profilePicture: userInfo.profilePicture || null
+                        } : null;
+                        
+                        socket.emit('connection-status', { 
+                            connected: true,
+                            whatsappInfo: whatsappInfo
+                        });
+                        return;
+                    }
+                }
+                
                 // Tentar reconectar com a sessão salva
                 try {
                     const sock = await createWhatsAppSocket(userIdentifier, savedSession.session_id);
@@ -243,7 +277,7 @@ io.on('connection', (socket) => {
                     console.log('✅ Reconexão com sessão salva iniciada!');
                     
                     // Aguardar um pouco para a conexão se estabelecer
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                     
                     // Verificar se está conectado
                     if (sock.user && sock.user.id) {
@@ -261,6 +295,8 @@ io.on('connection', (socket) => {
                             whatsappInfo: whatsappInfo
                         });
                         return;
+                    } else {
+                        console.log('⚠️ Reconexão falhou, continuando com nova conexão...');
                     }
                 } catch (reconnectError) {
                     console.error('❌ Erro ao reconectar com sessão salva:', reconnectError);
