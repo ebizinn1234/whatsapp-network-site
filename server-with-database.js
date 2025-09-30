@@ -212,6 +212,25 @@ io.on('connection', (socket) => {
                                 whatsappInfo: whatsappInfo
                             });
                             return;
+                        } else {
+                            console.log('🔄 Sessão encontrada mas não conectada, tentando reconectar...');
+                            
+                            // Tentar reconectar a sessão existente
+                            try {
+                                const sock = await createWhatsAppSocket(userIdentifier, sessionId);
+                                
+                                userSessions.get(userIdentifier)[sessionId] = {
+                                    sock,
+                                    isConnected: false,
+                                    sessionId: sessionId
+                                };
+                                
+                                console.log('✅ Sessão reconectada com sucesso!');
+                                return;
+                            } catch (error) {
+                                console.error('❌ Erro ao reconectar sessão:', error);
+                                // Se falhar, continuar com nova conexão
+                            }
                         }
                     }
                     
