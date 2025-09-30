@@ -2151,7 +2151,9 @@
         });
 
         socket.on('send-error', (error) => {
-            addLog(`❌ Erro no envio: ${error}`, 'danger');
+            console.log('❌ Erro no envio recebido:', error);
+            const errorMessage = error.message || error || 'Erro desconhecido';
+            addLog(`❌ Erro no envio: ${errorMessage}`, 'danger');
         });
 
         // Funções de controle
@@ -2483,15 +2485,24 @@
                 return;
             }
             
-            // Enviar grupos selecionados para o servidor ANTES de enviar mensagens
             console.log('📤 Enviando grupos selecionados para o servidor:', selectedGroupsList.length);
-            socket.emit('select-groups', selectedGroupsList);
+            console.log('🚀 Iniciando envio de mensagens...');
+            console.log('📝 Mensagem:', messageText.value);
             
-            // Aguardar um pouco para garantir que o servidor recebeu os grupos
-            setTimeout(() => {
-                console.log('🚀 Iniciando envio de mensagens...');
-            socket.emit('send-messages');
-            }, 100);
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const sendData = {
+                groups: selectedGroupsList,
+                message: messageText.value,
+                userId: userData.id
+            };
+            
+            console.log('📤 Dados enviados:', sendData);
+            socket.emit('send-messages', sendData);
+            
+            isSending = true;
+            sendMessagesBtn.disabled = true;
+            sendMessagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            addLog(`📤 Enviando para ${selectedGroupsList.length} grupos...`, 'info');
         });
 
         // Functions
