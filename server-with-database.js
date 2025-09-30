@@ -222,6 +222,33 @@ io.on('connection', (socket) => {
             if (!userSession || !userSession[sessionId]) {
                 console.log('❌ Sessão não encontrada para userId:', userId);
                 console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
+                
+                // FALLBACK: Tentar usar sessão 'default' se userId não existir
+                if (userSessions.has('default')) {
+                    console.log('🔄 FALLBACK: Usando sessão default para userId:', userId);
+                    const defaultSession = userSessions.get('default');
+                    const { sock } = defaultSession[sessionId];
+                    
+                    if (sock) {
+                        console.log('🔄 Buscando grupos do WhatsApp (fallback)...');
+                        const groups = await sock.groupFetchAllParticipating();
+                        console.log('📊 Grupos encontrados (fallback):', Object.keys(groups).length);
+                        
+                        const groupsList = Object.values(groups).map(group => ({
+                            id: group.id,
+                            name: group.subject || 'Sem nome',
+                            description: group.desc || '',
+                            participantCount: group.participants ? Object.keys(group.participants).length : 0,
+                            isCommunity: group.endOfHistoryTransparencyDenied || false,
+                            isPrivate: group.restrict || false
+                        }));
+                        
+                        console.log('📊 Grupos processados (fallback):', groupsList.length);
+                        socket.emit('groups-loaded', { groups: groupsList });
+                        return;
+                    }
+                }
+                
                 socket.emit('groups-loaded', { groups: [] });
                 return;
             }
@@ -309,4 +336,5 @@ server.listen(PORT, () => {
     console.log(`🚀 Servidor com banco de dados rodando em http://localhost:${PORT}`);
     console.log(`📱 Sistema de autenticação ativo!`);
     console.log(`🌐 Pronto para deploy online!`);
+    console.log('🔍 DEBUG: Servidor server-with-database.js iniciado!');
 });
