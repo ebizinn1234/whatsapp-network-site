@@ -53,6 +53,13 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
+            // VERIFICAR SE JÁ ESTÁ CONECTADO - NÃO GERAR QR CODE
+            const userSession = userSessions.get(userId);
+            if (userSession && userSession[sessionId] && userSession[sessionId].isConnected) {
+                console.log('🔍 DEBUG: WhatsApp já conectado, ignorando QR Code');
+                return;
+            }
+            
             console.log('🔍 DEBUG: QR Code gerado para userId:', userId);
             
             const qrCode = await qrcode.toDataURL(qr);
@@ -343,11 +350,14 @@ io.on('connection', (socket) => {
     // Rota para listar sessões salvas do usuário
     socket.on('get-saved-sessions', async (data = {}) => {
         const { userId } = data || {};
+        console.log('🔍 DEBUG: get-saved-sessions recebido para userId:', userId);
         try {
             const [sessions] = await db.execute(
                 'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC',
                 [userId]
             );
+            console.log('🔍 DEBUG: Sessões encontradas no banco:', sessions.length);
+            console.log('🔍 DEBUG: Sessões:', sessions);
             socket.emit('saved-sessions', sessions);
             console.log('📋 Sessões salvas enviadas para usuário:', userId);
         } catch (error) {
