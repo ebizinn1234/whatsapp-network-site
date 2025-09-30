@@ -219,33 +219,6 @@ io.on('connection', (socket) => {
                 }
             }
             
-            // SE HÁ SESSÃO SALVA, NÃO CRIAR NOVA CONEXÃO
-            if (savedSessions && savedSessions.length > 0) {
-                console.log('🔍 DEBUG: Sessão salva encontrada, tentando restaurar...');
-                const savedSession = savedSessions[0];
-                const sessionId = savedSession.session_id;
-                
-                // Tentar restaurar a sessão salva
-                try {
-                    const sock = await createWhatsAppSocket(userIdentifier, sessionId);
-                    
-                    if (!userSessions.has(userIdentifier)) {
-                        userSessions.set(userIdentifier, {});
-                    }
-                    
-                    userSessions.get(userIdentifier)[sessionId] = {
-                        sock,
-                        isConnected: false,
-                        sessionId: sessionId
-                    };
-                    
-                    console.log('✅ Sessão restaurada com sucesso!');
-                    return;
-                } catch (error) {
-                    console.error('❌ Erro ao restaurar sessão:', error);
-                    // Se falhar, continuar com nova conexão
-                }
-            }
             
             if (!userSessions.has(userIdentifier)) {
                 userSessions.set(userIdentifier, {});
