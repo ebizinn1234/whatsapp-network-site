@@ -1947,7 +1947,12 @@
                 connectBtn.disabled = true;
                 connectBtn.style.display = 'none';
                 disconnectBtn.style.display = 'inline-block';
-                qrContainer.classList.add('hidden');
+                
+                // Verificar se qrContainer existe antes de usar
+                const qrContainer = document.getElementById('qrContainer');
+                if (qrContainer) {
+                    qrContainer.classList.add('hidden');
+                }
                 
                 // Fechar modal de QR Code automaticamente quando conectar
                 const qrModal = document.getElementById('qrModal');
@@ -1957,11 +1962,6 @@
                     addLog('✅ WhatsApp conectado com sucesso!', 'success');
                 }
                 
-                // Fechar container QR se existir
-                const qrContainer = document.getElementById('qrContainer');
-                if (qrContainer) {
-                    qrContainer.classList.add('hidden');
-                }
                 
                 // Carregar grupos automaticamente quando conectar
                 console.log('🔄 Carregando grupos automaticamente...');
