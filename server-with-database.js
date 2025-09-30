@@ -108,7 +108,18 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 console.error('❌ Erro ao salvar sessão no banco:', error);
             }
             
-            io.to(`user_${userId}`).emit('connection-status', { connected: true });
+            // Enviar informações do WhatsApp quando conectar
+            const userInfo = sock.user;
+            const whatsappInfo = userInfo ? {
+                name: userInfo.name || 'WhatsApp User',
+                number: userInfo.id?.split(':')[0] || '',
+                profilePicture: userInfo.profilePicture || null
+            } : null;
+            
+            io.to(`user_${userId}`).emit('connection-status', { 
+                connected: true,
+                whatsappInfo: whatsappInfo
+            });
         }
     });
 
@@ -157,7 +168,19 @@ io.on('connection', (socket) => {
                         // Verificar se ainda está conectado
                         if (existingSession.sock && existingSession.isConnected) {
                             console.log('✅ WhatsApp já conectado com sessão salva!');
-                            socket.emit('connection-status', { connected: true });
+                            
+                            // Enviar informações do WhatsApp se disponíveis
+                            const userInfo = existingSession.sock.user;
+                            const whatsappInfo = userInfo ? {
+                                name: userInfo.name || 'WhatsApp User',
+                                number: userInfo.id?.split(':')[0] || '',
+                                profilePicture: userInfo.profilePicture || null
+                            } : null;
+                            
+                            socket.emit('connection-status', { 
+                                connected: true,
+                                whatsappInfo: whatsappInfo
+                            });
                             return;
                         }
                     }
