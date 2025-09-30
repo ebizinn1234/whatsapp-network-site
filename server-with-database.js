@@ -157,6 +157,11 @@ io.on('connection', (socket) => {
     console.log('🔍 DEBUG: Total de userSessions:', userSessions.size);
     console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
     
+    // Logger global para todos os eventos
+    socket.onAny((eventName, ...args) => {
+        console.log(`🔍 DEBUG: Evento recebido: ${eventName}`, args);
+    });
+    
     socket.on('join-user', async (data = {}) => {
         const { userId } = data || {};
         socket.join(`user_${userId}`);
@@ -280,6 +285,7 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
         const { userId, sessionId = 'default' } = data || {};
         console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
+        console.log('🔍 DEBUG: EVENTO LOAD-GROUPS INICIADO!');
         
         try {
             console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
@@ -349,9 +355,11 @@ io.on('connection', (socket) => {
             console.log('🔍 DEBUG: Primeiros 3 grupos:', groupsList.slice(0, 3));
             
             console.log('📊 Grupos filtrados (sem comunidades/privados):', groupsList.length);
+            console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM SUCESSO!');
             socket.emit('groups-loaded', { groups: groupsList });
             } catch (error) {
                 console.error('❌ Erro ao carregar grupos:', error);
+                console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM ERRO!');
                 
                 // Se for erro de conexão, tentar reconectar
                 if (error.message.includes('Connection Closed') || error.message.includes('Timed Out')) {
@@ -381,6 +389,7 @@ io.on('connection', (socket) => {
                     }
                 }
                 
+                console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM ERRO - ENVIANDO GRUPOS VAZIOS!');
                 socket.emit('groups-loaded', { groups: [] });
             }
     });
