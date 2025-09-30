@@ -209,15 +209,19 @@ io.on('connection', (socket) => {
 
     socket.on('load-groups', async (data = {}) => {
         console.log('🔍 DEBUG: load-groups recebido com data:', data);
+        console.log('🔍 DEBUG: Timestamp:', new Date().toISOString());
         const { userId, sessionId = 'default' } = data || {};
         console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
         
         try {
+            console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
             const userSession = userSessions.get(userId);
             console.log('🔍 DEBUG: userSession encontrada:', !!userSession);
+            console.log('🔍 DEBUG: userSession content:', userSession);
             
             if (!userSession || !userSession[sessionId]) {
                 console.log('❌ Sessão não encontrada para userId:', userId);
+                console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
                 socket.emit('groups-loaded', { groups: [] });
                 return;
             }
