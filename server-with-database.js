@@ -97,8 +97,8 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 const accountNumber = userInfo?.id?.split(':')[0] || '';
                 const profilePicture = userInfo?.profilePicture || null;
                 
-                // Gerar session_id único para este usuário
-                const uniqueSessionId = `user_${userId}_${Date.now()}`;
+                // Usar o sessionId que foi passado para a função createWhatsAppSocket
+                const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;
                 console.log('🔍 DEBUG: sessionId único gerado para conexão:', uniqueSessionId);
                 
                 // Verificar se já existe sessão
