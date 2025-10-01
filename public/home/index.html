@@ -1698,7 +1698,7 @@
                         <!-- Mensagens serão inseridas aqui -->
                     </div>
                 </div>
-            </div>
+                </div>
             
             <div class="form-group" style="margin-top: 25px;">
                 <label><i class="fas fa-tachometer-alt" style="margin-right: 8px; color: #000;"></i>Velocidade de Envio:</label>
@@ -1707,7 +1707,7 @@
                         <div class="custom-radio">
                             <input type="radio" name="speedMode" value="human" checked>
                             <span class="checkmark"></span>
-                        </div>
+                </div>
                         <div style="margin-left: 10px;">
                             <div style="font-weight: 600; margin-bottom: 5px;">
                                 🛡️ Modo Humano (Recomendado)
@@ -1715,29 +1715,29 @@
                             <div style="font-size: 12px; color: #666; line-height: 1.4;">
                                 Envia mensagens com intervalos aleatórios entre <strong>1-5 minutos</strong>. 
                                 <strong>Máxima segurança contra banimento.</strong> ✅ Ideal para uso profissional!
-                            </div>
-                        </div>
+                </div>
+            </div>
                     </label>
                     
                     <label style="display: flex; align-items: flex-start; margin-bottom: 15px; cursor: pointer;">
                         <div class="custom-radio">
                             <input type="radio" name="speedMode" value="safe">
                             <span class="checkmark"></span>
-                        </div>
+                </div>
                         <div style="margin-left: 10px;">
                             <div style="font-weight: 600; margin-bottom: 5px;">⚡ Modo Seguro</div>
                             <div style="font-size: 12px; color: #666; line-height: 1.4;">
                                 Envia mensagens com intervalos aleatórios entre <strong>1-3 minutos</strong>. 
                                 Equilibra velocidade e segurança. Bom para envios moderados.
-                            </div>
-                        </div>
+                </div>
+                </div>
                     </label>
                     
                     <label style="display: flex; align-items: flex-start; margin-bottom: 15px; cursor: pointer;">
                         <div class="custom-radio">
                             <input type="radio" name="speedMode" value="fast">
                             <span class="checkmark"></span>
-                        </div>
+            </div>
                         <div style="margin-left: 10px;">
                             <div style="font-weight: 600; margin-bottom: 5px;">🚀 Rápido</div>
                             <div style="font-size: 12px; color: #666; line-height: 1.4;">
@@ -2409,9 +2409,9 @@
                 // Apenas console, sem addLog
                 console.log('⚠️ Nenhum grupo foi carregado');
             } else {
-                renderGroups();
+            renderGroups();
                 // Log útil: mostrar quantos grupos foram carregados
-                addLog(`📊 ${groups.length} grupos carregados`, 'success');
+            addLog(`📊 ${groups.length} grupos carregados`, 'success');
             }
         });
 
@@ -2494,7 +2494,7 @@
             } else if (data.status === 'error') {
                 addLog(`❌ ${data.current}/${data.total}: ${data.group} - Erro: ${data.error}`, 'danger');
             } else {
-                addLog(`📤 Enviando para ${data.current}/${data.total}: ${data.group}`, 'info');
+            addLog(`📤 Enviando para ${data.current}/${data.total}: ${data.group}`, 'info');
             }
             
             updateProgress(data);
@@ -2529,7 +2529,7 @@
         // Variável para rastrear tempo médio entre envios
         let lastMessageTime = null;
         let averageDelay = null;
-        
+
         function updateProgress(data) {
             const { current, total, group, status } = data;
             
@@ -2931,7 +2931,12 @@
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
             if (!userData.id) return;
             
-            fetch(`/api/messages/${userData.id}`)
+            const token = localStorage.getItem('token');
+            fetch(`/api/messages/${userData.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.messages.length > 0) {
@@ -3001,8 +3006,13 @@
             document.getElementById('messageText').value = messageText;
             
             // Marcar como usada
-            const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            fetch(`/api/messages/${messageId}/use`, { method: 'POST' })
+            const token = localStorage.getItem('token');
+            fetch(`/api/messages/${messageId}/use`, { 
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
                 .then(() => {
                     showSuccessNotification('✅ Mensagem carregada!');
                     loadSavedMessages(); // Recarregar para atualizar contador
@@ -3014,7 +3024,13 @@
         window.deleteMessage = function(messageId) {
             if (!confirm('Tem certeza que deseja deletar esta mensagem?')) return;
             
-            fetch(`/api/messages/${messageId}`, { method: 'DELETE' })
+            const token = localStorage.getItem('token');
+            fetch(`/api/messages/${messageId}`, { 
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -3045,9 +3061,13 @@
                 const messageTitle = words.slice(0, 5).join(' ') + (words.length > 5 ? '...' : '');
                 
                 try {
+                    const token = localStorage.getItem('token');
                     const response = await fetch('/api/messages', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify({
                             userId: userData.id,
                             messageTitle: messageTitle || 'Mensagem sem título',
