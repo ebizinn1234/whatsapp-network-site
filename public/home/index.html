@@ -2948,6 +2948,9 @@
         
         // Exibir mensagens salvas
         function displaySavedMessages(messages) {
+            // ✅ Atualizar cache global para verificação de duplicatas
+            cachedMessages = messages;
+            
             if (messages.length === 0) {
                 savedMessagesContainer.style.display = 'none';
                 return;
@@ -3075,6 +3078,9 @@
                 .catch(err => console.error('Erro:', err));
         };
         
+        // Variável global para armazenar mensagens em memória
+        let cachedMessages = [];
+        
         // Salvar nova mensagem
         if (saveMessageBtn) {
             saveMessageBtn.addEventListener('click', async () => {
@@ -3087,6 +3093,13 @@
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 if (!userData.id) {
                     showMessage('Você precisa estar logado!');
+                    return;
+                }
+                
+                // ✅ VERIFICAR SE MENSAGEM JÁ EXISTE
+                const isDuplicate = cachedMessages.some(msg => msg.message_text === messageText);
+                if (isDuplicate) {
+                    showMessage('⚠️ Esta mensagem já está salva!');
                     return;
                 }
                 
@@ -3113,7 +3126,7 @@
                     
                     const data = await response.json();
                     if (data.success) {
-                        showSuccessNotification('💾 Mensagem salva com sucesso!');
+                        showSuccessNotification('Mensagem salva com sucesso!');
                         loadSavedMessages();
                     } else {
                         showMessage('Erro ao salvar: ' + data.error);
