@@ -1118,9 +1118,13 @@ io.on('connection', (socket) => {
                     // ENVIO REAL PARA O WHATSAPP
                     console.log(`📤 Enviando mensagem real para: ${group.name || group}`);
                     
+                    // Processar variáveis na mensagem ({nome}, {hora}, {data}, etc)
+                    const processedMessage = processMessageVariables(message, group.name || group);
+                    console.log(`🔄 Mensagem processada com variáveis:`, processedMessage.substring(0, 100) + '...');
+                    
                     // Enviar mensagem para o grupo via WhatsApp
                     await sock.sendMessage(group.id, { 
-                        text: message 
+                        text: processedMessage 
                     });
                     
                     console.log(`✅ Mensagem enviada com sucesso para: ${group.name || group}`);
@@ -1196,6 +1200,136 @@ app.get('/', (req, res) => {
 app.get('/home/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'home', 'index.html'));
 });
+
+// ==================== APIs de Mensagens Salvas ====================
+
+// Listar mensagens salvas do usuário
+app.get('/api/messages/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const [messages] = await db.query(
+            `SELECT id, message_title, message_text, use_variables, is_favorite, 
+                    use_count, last_used, created_at
+             FROM user_messages 
+             WHERE user_id = ? 
+             ORDER BY is_favorite DESC, last_used DESC, created_at DESC`,
+            [userId]
+        );
+        
+        res.json({ success: true, messages });
+    } catch (error) {
+        console.error('❌ Erro ao listar mensagens:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Salvar nova mensagem
+app.post('/api/messages', async (req, res) => {
+    try {
+        const { userId, messageTitle, messageText, useVariables, isFavorite } = req.body;
+        
+        if (!userId || !messageTitle || !messageText) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'userId, messageTitle e messageText são obrigatórios' 
+            });
+        }
+        
+        const [result] = await db.query(
+            `INSERT INTO user_messages (user_id, message_title, message_text, use_variables, is_favorite)
+             VALUES (?, ?, ?, ?, ?)`,
+            [userId, messageTitle, messageText, useVariables || true, isFavorite || false]
+        );
+        
+        res.json({ 
+            success: true, 
+            messageId: result.insertId,
+            message: 'Mensagem salva com sucesso!' 
+        });
+    } catch (error) {
+        console.error('❌ Erro ao salvar mensagem:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Atualizar mensagem existente
+app.put('/api/messages/:messageId', async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { messageTitle, messageText, useVariables, isFavorite } = req.body;
+        
+        const [result] = await db.query(
+            `UPDATE user_messages 
+             SET message_title = ?, message_text = ?, use_variables = ?, is_favorite = ?
+             WHERE id = ?`,
+            [messageTitle, messageText, useVariables, isFavorite, messageId]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: 'Mensagem não encontrada' });
+        }
+        
+        res.json({ success: true, message: 'Mensagem atualizada!' });
+    } catch (error) {
+        console.error('❌ Erro ao atualizar mensagem:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Deletar mensagem
+app.delete('/api/messages/:messageId', async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        const [result] = await db.query(
+            'DELETE FROM user_messages WHERE id = ?',
+            [messageId]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: 'Mensagem não encontrada' });
+        }
+        
+        res.json({ success: true, message: 'Mensagem deletada!' });
+    } catch (error) {
+        console.error('❌ Erro ao deletar mensagem:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Marcar mensagem como usada (atualizar contador e data)
+app.post('/api/messages/:messageId/use', async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        await db.query(
+            `UPDATE user_messages 
+             SET use_count = use_count + 1, last_used = NOW()
+             WHERE id = ?`,
+            [messageId]
+        );
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Erro ao marcar mensagem como usada:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Processar variáveis na mensagem
+function processMessageVariables(messageText, groupName) {
+    const now = new Date();
+    const emojis = ['😊', '👋', '🎉', '✨', '💫', '🌟', '💪', '🚀', '🔥', '⭐'];
+    const greetings = ['Olá', 'Oi', 'E aí', 'Salve', 'Fala'];
+    
+    return messageText
+        .replace(/{nome}/g, groupName || 'pessoal')
+        .replace(/{hora}/g, now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }))
+        .replace(/{data}/g, now.toLocaleDateString('pt-BR'))
+        .replace(/{random_emoji}/g, emojis[Math.floor(Math.random() * emojis.length)])
+        .replace(/{random_greeting}/g, greetings[Math.floor(Math.random() * greetings.length)]);
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

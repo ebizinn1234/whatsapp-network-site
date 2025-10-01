@@ -82,9 +82,26 @@ CREATE TABLE activity_logs (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Tabela de mensagens salvas do usuário
+CREATE TABLE user_messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    message_title VARCHAR(100) NOT NULL,
+    message_text TEXT NOT NULL,
+    use_variables BOOLEAN DEFAULT TRUE,
+    is_favorite BOOLEAN DEFAULT FALSE,
+    use_count INT DEFAULT 0,
+    last_used TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Índices para performance
 CREATE INDEX idx_users_phone ON users(phone);
 CREATE INDEX idx_sessions_user ON whatsapp_sessions(user_id);
 CREATE INDEX idx_groups_user ON user_groups(user_id);
 CREATE INDEX idx_logs_user ON activity_logs(user_id);
 CREATE INDEX idx_logs_created ON activity_logs(created_at);
+CREATE INDEX idx_user_messages_user ON user_messages(user_id);
+CREATE INDEX idx_user_messages_favorite ON user_messages(is_favorite);
