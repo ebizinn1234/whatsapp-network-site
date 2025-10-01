@@ -2221,10 +2221,23 @@
                     statusHint.textContent = '';
                 }
                 
-                connectBtn.innerHTML = '<span style="font-size: 18px; margin-right: 8px; font-weight: bold;">✓</span>Conectado';
-                connectBtn.disabled = true;
+                // ✅ BOTÃO CONECTADO - Esconder botão conectar, mostrar desconectar
                 connectBtn.style.display = 'none';
                 disconnectBtn.style.display = 'inline-block';
+                disconnectBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Desconectar WhatsApp';
+                disconnectBtn.disabled = false;
+                
+                // ✅ ADICIONAR EVENT LISTENER NO BOTÃO DESCONECTAR
+                disconnectBtn.onclick = (e) => {
+                    e.preventDefault();
+                    if (confirm('Tem certeza que deseja desconectar do WhatsApp?')) {
+                        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                        socket.emit('disconnect-whatsapp', { 
+                            userId: userData.id,
+                            accountId: 'current'
+                        });
+                    }
+                };
                 
                 // Verificar se qrContainer existe antes de usar
                 const qrContainer = document.getElementById('qrContainer');
@@ -2788,6 +2801,16 @@
             connectBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('🔴 Botão Conectar WhatsApp clicado!');
+                
+                // ✅ VERIFICAR SE JÁ ESTÁ CONECTADO
+                const statusDiv = document.getElementById('status');
+                const isConnected = statusDiv && statusDiv.textContent.includes('Conectado ao WhatsApp');
+                
+                if (isConnected) {
+                    console.log('⚠️ WhatsApp já está conectado! Ignorando clique...');
+                    addLog('⚠️ WhatsApp já está conectado!', 'warning');
+                    return;
+                }
                 
                 // Verificar se o usuário está logado
                 const token = localStorage.getItem('token');
