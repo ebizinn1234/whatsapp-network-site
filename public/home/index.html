@@ -3420,6 +3420,109 @@
             document.getElementById(modalId).style.display = 'none';
         };
         
+        // ============================================
+        // 🔐 VERIFICAR SE USUÁRIO JÁ ESTÁ LOGADO
+        // ============================================
+        if (localStorage.getItem('token')) {
+            // Usuário já está logado - esconder botões de login/cadastro
+            const loginBtn = document.querySelector('.btn-login');
+            const registerBtn = document.querySelector('.btn-register');
+            
+            // Verificar dados do usuário
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            console.log('✅ Usuário logado:', userData);
+                
+            // Esconder botões de login/cadastro
+            if (loginBtn) {
+                loginBtn.style.display = 'none';
+                console.log('✅ Botão Entrar escondido');
+            }
+            
+            if (registerBtn) {
+                registerBtn.style.display = 'none';
+                console.log('✅ Botão Cadastrar escondido');
+            }
+            
+            // Mostrar informações do usuário no header
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                // Formatar telefone com máscara brasileira
+                const formatPhone = (phone) => {
+                    if (!phone) return 'Usuário';
+                    const cleaned = phone.replace(/\D/g, '');
+                    if (cleaned.length === 11) {
+                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                    }
+                    return phone;
+                };
+
+                headerActions.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="color: #24d366; font-weight: 600; font-size: 14px;">${user.name || 'Usuário'}</span>
+                            <span style="color: #666; font-size: 12px;">${formatPhone(user.phone)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Atualizar informações do usuário no sidebar
+            const sidebarUserName = document.getElementById('sidebarUserName');
+            const sidebarUserStatus = document.getElementById('sidebarUserStatus');
+            const sidebarUserAvatar = document.getElementById('sidebarUserAvatar');
+            
+            if (sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
+                // Formatar telefone
+                const formatPhone = (phone) => {
+                    if (!phone) return 'Usuário';
+                    const cleaned = phone.replace(/\D/g, '');
+                    if (cleaned.length === 11) {
+                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                    }
+                    return phone;
+                };
+
+                sidebarUserName.textContent = user.name || 'Usuário';
+                sidebarUserStatus.textContent = formatPhone(user.phone);
+                sidebarUserStatus.className = 'user-status connected';
+                sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
+            }
+
+            // Adicionar botão "Sair" no sidebar
+            const sidebarFooter = document.querySelector('.sidebar-footer');
+            if (sidebarFooter) {
+                const existingLogout = sidebarFooter.querySelector('.logout-item');
+                if (!existingLogout) {
+                    const logoutItem = document.createElement('div');
+                    logoutItem.className = 'logout-item';
+                    logoutItem.innerHTML = `
+                        <div class="sidebar-item" onclick="logout()" style="background: #dc3545; color: white; border-radius: 6px; margin: 8px; cursor: pointer; transition: all 0.3s ease; padding: 8px 12px; font-size: 14px;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </div>
+                    `;
+                    sidebarFooter.appendChild(logoutItem);
+                }
+            }
+        } else {
+            // Usuário não está logado
+            console.log('ℹ️ Usuário não logado - mostrando botões de login');
+        }
+
+        // Função de logout
+        window.logout = function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            showMessage('Logout realizado com sucesso!', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        };
+        
         }); // Fechar DOMContentLoaded
     </script>
         </div>
@@ -3656,107 +3759,6 @@
             }, 500);
         }
 
-        // Verificar se já está logado
-        if (localStorage.getItem('token')) {
-            // Usuário já está logado - esconder botões de login/cadastro
-            const loginBtn = document.querySelector('.btn-login');
-            const registerBtn = document.querySelector('.btn-register');
-            
-        // Verificar se há sessões salvas do WhatsApp - MOVER PARA DENTRO DO SOCKET CONNECT
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        debugLog('🔍 DEBUG: Usuário logado, mas socket ainda não conectado');
-        debugLog('🔍 DEBUG: userData.id:', userData.id);
-        debugLog('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
-            
-            if (loginBtn) loginBtn.style.display = 'none';
-            if (registerBtn) registerBtn.style.display = 'none';
-            
-            // Mostrar informações do usuário no header (sem botão Sair)
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const headerActions = document.querySelector('.header-actions');
-            if (headerActions) {
-                // Formatar telefone com máscara brasileira
-                const formatPhone = (phone) => {
-                    if (!phone) return 'Usuário';
-                    const cleaned = phone.replace(/\D/g, '');
-                    if (cleaned.length === 11) {
-                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
-                    }
-                    return phone;
-                };
-
-                headerActions.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div style="display: flex; flex-direction: column;">
-                            <span style="color: #24d366; font-weight: 600; font-size: 14px;">${user.name || 'Usuário'}</span>
-                            <span style="color: #666; font-size: 12px;">${formatPhone(user.phone)}</span>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Atualizar informações do usuário no sidebar
-            const sidebarUserName = document.getElementById('sidebarUserName');
-            const sidebarUserStatus = document.getElementById('sidebarUserStatus');
-            const sidebarUserAvatar = document.getElementById('sidebarUserAvatar');
-            
-            if (sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
-                // Formatar telefone com máscara brasileira
-                const formatPhone = (phone) => {
-                    if (!phone) return 'Usuário';
-                    const cleaned = phone.replace(/\D/g, '');
-                    if (cleaned.length === 11) {
-                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
-                    }
-                    return phone;
-                };
-
-                // Atualizar informações do usuário
-                sidebarUserName.textContent = user.name || 'Usuário';
-                sidebarUserStatus.textContent = formatPhone(user.phone);
-                sidebarUserStatus.className = 'user-status connected';
-                sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
-            }
-
-            // Adicionar botão "Sair" no sidebar
-            const sidebarFooter = document.querySelector('.sidebar-footer');
-            if (sidebarFooter) {
-                const existingLogout = sidebarFooter.querySelector('.logout-item');
-                if (!existingLogout) {
-                    const logoutItem = document.createElement('div');
-                    logoutItem.className = 'logout-item';
-                    logoutItem.innerHTML = `
-                        <div class="sidebar-item" onclick="logout()" style="background: #dc3545; color: white; border-radius: 6px; margin: 8px; cursor: pointer; transition: all 0.3s ease; padding: 8px 12px; font-size: 14px;">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Sair</span>
-                        </div>
-                    `;
-                    sidebarFooter.appendChild(logoutItem);
-                }
-            }
-            
-            console.log('Usuário logado:', user);
-        } else {
-            // Usuário não está logado
-            console.log('Usuário não logado');
-        }
-
-        // Função de logout
-        window.logout = function() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            
-            // Mostrar notificação de logout
-            showMessage('Logout realizado com sucesso!', 'success');
-            
-            // Recarregar após um pequeno delay para mostrar a notificação
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        };
     </script>
 
     <!-- Modal QR Code -->
