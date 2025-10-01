@@ -1114,6 +1114,32 @@ io.on('connection', (socket) => {
             
             // Processar cada grupo
             for (let i = 0; i < groups.length; i++) {
+                // ✅ VERIFICAR SE FOI CANCELADO
+                if (userSessions[userId] && userSessions[userId].isCancelled) {
+                    console.log('🛑 Envio cancelado pelo usuário');
+                    io.to(`user_${userId}`).emit('send-cancelled', {
+                        success: true,
+                        message: 'Envio cancelado com sucesso'
+                    });
+                    return;
+                }
+                
+                // ✅ VERIFICAR SE ESTÁ PAUSADO
+                while (userSessions[userId] && userSessions[userId].isPaused) {
+                    console.log('⏸️ Envio pausado, aguardando...');
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
+                }
+                
+                // ✅ VERIFICAR NOVAMENTE SE FOI CANCELADO APÓS PAUSA
+                if (userSessions[userId] && userSessions[userId].isCancelled) {
+                    console.log('🛑 Envio cancelado após pausa');
+                    io.to(`user_${userId}`).emit('send-cancelled', {
+                        success: true,
+                        message: 'Envio cancelado com sucesso'
+                    });
+                    return;
+                }
+                
                 const group = groups[i];
                 console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group.name || group}`);
                 
@@ -1187,6 +1213,66 @@ io.on('connection', (socket) => {
             
             // Emitir erro para todos os sockets do usuário
             io.to(`user_${userId}`).emit('send-error', { message: 'Erro interno do servidor' });
+        }
+    });
+
+    // ✅ EVENTOS DE PAUSAR/CANCELAR/RETOMAR ENVIO
+    socket.on('pause-sending', (data) => {
+        console.log('⏸️ Pausar envio solicitado:', data);
+        const { userId } = data;
+        
+        // Marcar envio como pausado na memória
+        if (userSessions[userId]) {
+            userSessions[userId].isPaused = true;
+            console.log('⏸️ Envio pausado para usuário:', userId);
+            
+            // Notificar frontend
+            io.to(`user_${userId}`).emit('send-paused', {
+                success: true,
+                message: 'Envio pausado com sucesso'
+            });
+        } else {
+            console.log('❌ Usuário não encontrado para pausar envio:', userId);
+        }
+    });
+
+    socket.on('cancel-sending', (data) => {
+        console.log('🛑 Cancelar envio solicitado:', data);
+        const { userId } = data;
+        
+        // Marcar envio como cancelado na memória
+        if (userSessions[userId]) {
+            userSessions[userId].isCancelled = true;
+            userSessions[userId].isPaused = false;
+            console.log('🛑 Envio cancelado para usuário:', userId);
+            
+            // Notificar frontend
+            io.to(`user_${userId}`).emit('send-cancelled', {
+                success: true,
+                message: 'Envio cancelado com sucesso'
+            });
+        } else {
+            console.log('❌ Usuário não encontrado para cancelar envio:', userId);
+        }
+    });
+
+    socket.on('resume-sending', (data) => {
+        console.log('▶️ Retomar envio solicitado:', data);
+        const { userId } = data;
+        
+        // Marcar envio como retomado na memória
+        if (userSessions[userId]) {
+            userSessions[userId].isPaused = false;
+            userSessions[userId].isCancelled = false;
+            console.log('▶️ Envio retomado para usuário:', userId);
+            
+            // Notificar frontend
+            io.to(`user_${userId}`).emit('send-resumed', {
+                success: true,
+                message: 'Envio retomado com sucesso'
+            });
+        } else {
+            console.log('❌ Usuário não encontrado para retomar envio:', userId);
         }
     });
 
