@@ -739,6 +739,23 @@ io.on('connection', (socket) => {
                     return;
                 }
                 
+                // ✅ VERIFICAÇÃO ADICIONAL DE ESTABILIDADE
+                console.log('🔍 DEBUG: Verificando estabilidade da conexão...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Verificar novamente se ainda está estável
+                if (!sock.user || !sock.user.id) {
+                    console.log('❌ Conexão perdida após verificação de estabilidade');
+                    socket.emit('groups-loaded', { groups: [] });
+                    socket.emit('connection-status', {
+                        connected: false,
+                        message: 'Conexão instável. Tente conectar novamente.'
+                    });
+                    return;
+                }
+                
+                console.log('✅ Conexão estável confirmada após 7 segundos');
+                
                 console.log('🔍 DEBUG: Conexão estável, tentando buscar grupos...');
                 
                 let groups;
