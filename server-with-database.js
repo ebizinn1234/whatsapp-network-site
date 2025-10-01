@@ -464,17 +464,98 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: EVENTO LOAD-GROUPS PROCESSADO!');
         console.log('🔍 DEBUG: userSessions total:', userSessions.size);
         console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
-        const { userId, sessionId = 'default' } = data || {};
-        console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
-        console.log('🔍 DEBUG: EVENTO LOAD-GROUPS INICIADO!');
+        
+        let { userId, sessionId } = data || {};
+        console.log('🔍 DEBUG: userId recebido:', userId, 'sessionId recebido:', sessionId);
         
         try {
-            console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
+            console.log('🔍 DEBUG: Buscando userSession para userId:', userId);
             const userSession = userSessions.get(userId);
             console.log('🔍 DEBUG: userSession encontrada:', !!userSession);
-            console.log('🔍 DEBUG: userSession content:', userSession);
             
-            if (!userSession || !userSession[sessionId]) {
+            if (!userSession) {
+                console.log('❌ userSession não encontrada para userId:', userId);
+                console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
+                
+                // Tentar encontrar sessão ativa no banco de dados
+                try {
+                    const [activeSessions] = await db.execute(
+                        'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1',
+                        [userId]
+                    );
+                    
+                    if (activeSessions.length > 0) {
+                        const activeSession = activeSessions[0];
+                        console.log('💾 Sessão ativa encontrada no banco:', activeSession.session_id);
+                        
+                        // Tentar reconectar com a sessão salva
+                        try {
+                            const sock = await createWhatsAppSocket(userId, activeSession.session_id);
+                            
+                            if (!userSessions.has(userId)) {
+                                userSessions.set(userId, {});
+                            }
+                            
+                            userSessions.get(userId)[activeSession.session_id] = {
+                                sock,
+                                isConnected: false,
+                                sessionId: activeSession.session_id
+                            };
+                            
+                            console.log('✅ Sessão reconectada com sucesso!');
+                            
+                            // Aguardar um pouco para a conexão se estabelecer
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                            
+                            // Verificar se está conectado
+                            if (sock.user && sock.user.id) {
+                                console.log('✅ WhatsApp conectado, carregando grupos...');
+                                const groups = await sock.groupFetchAllParticipating();
+                                const groupsList = Object.values(groups).map(group => ({
+                                    id: group.id,
+                                    name: group.subject || 'Sem nome',
+                                    description: group.desc || '',
+                                    participantCount: group.participants ? Object.keys(group.participants).length : 0,
+                                    isCommunity: group.endOfHistoryTransparencyDenied || false,
+                                    isPrivate: group.restrict || false
+                                }));
+                                
+                                console.log('📊 Grupos carregados:', groupsList.length);
+                                socket.emit('groups-loaded', { groups: groupsList });
+                                return;
+                            }
+                        } catch (reconnectError) {
+                            console.error('❌ Erro ao reconectar sessão:', reconnectError);
+                        }
+                    }
+                } catch (dbError) {
+                    console.error('❌ Erro ao buscar sessão no banco:', dbError);
+                }
+                
+                // SEGURANÇA: Não usar sessão default para outros usuários
+                console.log('❌ SEGURANÇA: Sessão não encontrada para userId:', userId);
+                console.log('❌ SEGURANÇA: Negando acesso por segurança');
+                socket.emit('groups-loaded', { groups: [] });
+                return;
+            }
+            
+            // Se sessionId não foi fornecido, usar a primeira sessão disponível
+            if (!sessionId) {
+                const availableSessions = Object.keys(userSession);
+                if (availableSessions.length > 0) {
+                    sessionId = availableSessions[0];
+                    console.log('🔍 DEBUG: sessionId não fornecido, usando primeiro disponível:', sessionId);
+                } else {
+                    console.log('❌ Nenhuma sessão disponível para userId:', userId);
+                    socket.emit('groups-loaded', { groups: [] });
+                    return;
+                }
+            }
+            
+            console.log('🔍 DEBUG: userId =', userId, 'sessionId =', sessionId);
+            console.log('🔍 DEBUG: userSession content:', Object.keys(userSession));
+            
+            if (!userSession[sessionId]) {
                 console.log('❌ Sessão não encontrada para userId:', userId);
                 console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
                 
