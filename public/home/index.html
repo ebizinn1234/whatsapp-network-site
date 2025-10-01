@@ -2532,17 +2532,9 @@
                 }, 1000);
                 
                 
-                // Carregar grupos automaticamente quando conectar (apenas uma vez)
-                if (!window.groupsLoaded) {
-                    console.log('🔄 Carregando grupos automaticamente...');
-                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                    debugLog('🔍 DEBUG: Carregamento automático - userId:', userData.id);
-                    debugLog('🔍 DEBUG: Socket status:', socket.connected);
-                    debugLog('🔍 DEBUG: Emitindo load-groups automático...');
-                    socket.emit('load-groups', { userId: userData.id });
-                    debugLog('🔍 DEBUG: Evento load-groups automático emitido!');
-                    window.groupsLoaded = true;
-                }
+                // ✅ NÃO CARREGAR GRUPOS AUTOMATICAMENTE
+                // O usuário deve clicar no botão "Carregar Grupos" para escolher filtros
+                console.log('✅ WhatsApp conectado! Clique em "Carregar Grupos" para ver seus grupos.');
                 
                 // Atualizar sidebar
                 updateSidebarStatus(true, data.whatsappInfo);
