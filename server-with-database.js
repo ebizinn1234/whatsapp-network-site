@@ -89,7 +89,7 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
             if (shouldReconnect) {
                 setTimeout(() => createWhatsAppSocket(userId, sessionId), 3000);
             }
-            } else if (connection === 'open') {
+        } else if (connection === 'open') {
                 // Verificar se já emitimos connection-status para esta sessão
                 const userSession = userSessions.get(userId);
                 const alreadyEmitted = userSession && userSession[sessionId]?.connectionStatusEmitted;
@@ -108,8 +108,8 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 
                 // Salvar sessão no banco de dados APENAS NA PRIMEIRA CONEXÃO
                 if (!alreadyEmitted) {
-                    try {
-                        const userInfo = sock.user;
+            try {
+                const userInfo = sock.user;
                         console.log('🔍 DEBUG: Informações COMPLETAS do WhatsApp:', userInfo);
                         console.log('🔍 DEBUG: userInfo.name:', userInfo?.name);
                         console.log('🔍 DEBUG: userInfo.id:', userInfo?.id);
@@ -118,53 +118,53 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                         
                         // Tentar pegar nome de várias fontes
                         const accountName = userInfo?.verifiedName || userInfo?.notify || userInfo?.name || 'WhatsApp User';
-                        const accountNumber = userInfo?.id?.split(':')[0] || '';
-                        const profilePicture = userInfo?.profilePicture || null;
+                const accountNumber = userInfo?.id?.split(':')[0] || '';
+                const profilePicture = userInfo?.profilePicture || null;
                         
                         console.log('✅ Nome da conta salvo:', accountName);
-                        
-                        // Usar o sessionId que foi passado para a função createWhatsAppSocket
-                        const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;
-                        console.log('🔍 DEBUG: sessionId único gerado para conexão:', uniqueSessionId);
-                        
-                        // Verificar se já existe sessão
-                        const [existingSession] = await db.execute(
-                            'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
-                            [userId, uniqueSessionId]
-                        );
-                        
-                        if (existingSession.length === 0) {
-                            // Criar nova sessão
-                            await db.execute(
-                                'INSERT INTO whatsapp_sessions (user_id, session_id, account_name, account_number, is_active) VALUES (?, ?, ?, ?, 1)',
-                                [userId, uniqueSessionId, accountName, accountNumber]
-                            );
-                            console.log('💾 Sessão salva no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
-                        } else {
-                            // Atualizar sessão existente
-                            await db.execute(
-                                'UPDATE whatsapp_sessions SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND session_id = ?',
-                                [userId, uniqueSessionId]
-                            );
-                            console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
-                        }
-                    } catch (error) {
-                        console.error('❌ Erro ao salvar sessão no banco:', error);
-                    }
-                    
+                
+                // Usar o sessionId que foi passado para a função createWhatsAppSocket
+                const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;
+                console.log('🔍 DEBUG: sessionId único gerado para conexão:', uniqueSessionId);
+                
+                // Verificar se já existe sessão
+                const [existingSession] = await db.execute(
+                    'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
+                    [userId, uniqueSessionId]
+                );
+                
+                if (existingSession.length === 0) {
+                    // Criar nova sessão
+                    await db.execute(
+                        'INSERT INTO whatsapp_sessions (user_id, session_id, account_name, account_number, is_active) VALUES (?, ?, ?, ?, 1)',
+                        [userId, uniqueSessionId, accountName, accountNumber]
+                    );
+                    console.log('💾 Sessão salva no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
+                } else {
+                    // Atualizar sessão existente
+                    await db.execute(
+                        'UPDATE whatsapp_sessions SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND session_id = ?',
+                        [userId, uniqueSessionId]
+                    );
+                    console.log('🔄 Sessão atualizada no banco de dados para usuário:', userId, 'sessionId:', uniqueSessionId);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao salvar sessão no banco:', error);
+            }
+            
                     // Enviar informações do WhatsApp quando conectar APENAS NA PRIMEIRA VEZ
-                    const userInfo = sock.user;
-                    const whatsappInfo = userInfo ? {
-                        name: userInfo.name || 'WhatsApp User',
-                        number: userInfo.id?.split(':')[0] || '',
-                        profilePicture: userInfo.profilePicture || null
-                    } : null;
-                    
+            const userInfo = sock.user;
+            const whatsappInfo = userInfo ? {
+                name: userInfo.name || 'WhatsApp User',
+                number: userInfo.id?.split(':')[0] || '',
+                profilePicture: userInfo.profilePicture || null
+            } : null;
+            
                     console.log('📤 Emitindo connection-status ÚNICA VEZ para usuário:', userId);
-                    io.to(`user_${userId}`).emit('connection-status', { 
-                        connected: true,
-                        whatsappInfo: whatsappInfo
-                    });
+            io.to(`user_${userId}`).emit('connection-status', { 
+                connected: true,
+                whatsappInfo: whatsappInfo
+            });
                     
                     // Marcar como já emitido para evitar múltiplas emissões
                     if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
@@ -172,7 +172,7 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                         console.log('✅ connection-status marcado como emitido (não será emitido novamente)');
                     }
                 }
-            }
+        }
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -693,12 +693,12 @@ io.on('connection', (socket) => {
                         // Verificar novamente
                         if (!sock.user || !sock.user.id) {
                             console.log('❌ WhatsApp definitivamente não conectado após aguardar');
-                            socket.emit('groups-loaded', { groups: [] });
+                    socket.emit('groups-loaded', { groups: [] });
                             socket.emit('connection-status', {
                                 connected: false,
                                 message: 'Conexão perdida. Clique em Conectar novamente.'
                             });
-                            return;
+                    return;
                         }
                     } catch (waitError) {
                         console.error('❌ Erro ao aguardar reconexão:', waitError);
@@ -721,7 +721,7 @@ io.on('connection', (socket) => {
                     // SEGUNDA TENTATIVA: Aguardar e tentar novamente
                     try {
                         console.log('🔄 Aguardando 2s e tentando novamente...');
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 2000));
                         groups = await sock.groupFetchAllParticipating();
                         console.log('✅ Grupos obtidos na segunda tentativa:', Object.keys(groups).length);
                     } catch (retryError) {
@@ -923,7 +923,9 @@ io.on('connection', (socket) => {
                     
                     // Tentar reconectar
                     try {
+                        console.log('🔄 Iniciando reconexão com createWhatsAppSocket...');
                         const sock = await createWhatsAppSocket(userIdentifier, savedSession.session_id);
+                        console.log('✅ createWhatsAppSocket executado com sucesso');
                         
                         if (!userSessions.has(userIdentifier)) {
                             userSessions.set(userIdentifier, {});
@@ -936,13 +938,20 @@ io.on('connection', (socket) => {
                         };
                         
                         console.log('🔄 Reconexão iniciada com sessão salva');
+                        console.log('🔍 DEBUG: sock.user antes do timeout:', sock.user);
                         
                         // Aguardar conexão
                         await new Promise(resolve => setTimeout(resolve, 5000));
                         
+                        console.log('🔍 DEBUG: sock.user após timeout:', sock.user);
+                        console.log('🔍 DEBUG: sock.user.id:', sock.user?.id);
+                        
                         // Verificar se conectou
                         if (sock.user && sock.user.id) {
                             console.log('✅ Reconexão bem-sucedida!');
+                            
+                            // Atualizar status na memória
+                            userSessions.get(userIdentifier)[savedSession.session_id].isConnected = true;
                             
                             const userInfo = sock.user;
                             const whatsappInfo = {
@@ -951,15 +960,19 @@ io.on('connection', (socket) => {
                                 profilePicture: userInfo.profilePicture || null
                             };
                             
+                            console.log('📤 Emitindo connection-status para reconexão bem-sucedida');
                             socket.emit('connection-status', {
                                 connected: true,
                                 whatsappInfo: whatsappInfo
                             });
                         } else {
                             console.log('⚠️ Reconexão falhou - sessão expirada');
+                            console.log('🔍 DEBUG: sock.user é:', sock.user);
+                            console.log('🔍 DEBUG: sock.user.id é:', sock.user?.id);
+                            
                             socket.emit('connection-status', {
                                 connected: false,
-                                message: 'Não conectado ao WhatsApp'
+                                message: 'Sessão expirada - escaneie o QR code novamente'
                             });
                         }
                     } catch (reconnectError) {
@@ -1274,16 +1287,16 @@ io.on('connection', (socket) => {
                     
                     // Aplicar delay APENAS se NÃO for o último grupo
                     if (i < groups.length - 1) {
-                        let actualDelay = delay;
-                        
-                        if (humanMode) {
-                            // Delay humano: variação aleatória entre minDelay e maxDelay
-                            const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                            actualDelay = randomDelay;
+                    let actualDelay = delay;
+                    
+                    if (humanMode) {
+                        // Delay humano: variação aleatória entre minDelay e maxDelay
+                        const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+                        actualDelay = randomDelay;
                             const minutes = Math.floor(actualDelay / 60000);
                             const seconds = Math.floor((actualDelay % 60000) / 1000);
                             console.log(`⏱️ Aguardando ${minutes}min ${seconds}s antes do próximo envio...`);
-                        } else {
+                    } else {
                             const seconds = Math.floor(actualDelay / 1000);
                             console.log(`⏱️ Aguardando ${seconds}s antes do próximo envio...`);
                         }
