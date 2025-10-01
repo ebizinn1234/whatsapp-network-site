@@ -2346,8 +2346,34 @@
             groups = groupsData.groups || [];
             totalGroups.textContent = groups.length;
             console.log('📊 Total de grupos definido:', groups.length);
-            renderGroups();
-            addLog(`📊 ${groups.length} grupos carregados`, 'success');
+            
+            if (groups.length === 0) {
+                console.log('⚠️ Nenhum grupo foi carregado');
+                const groupsContainer = document.getElementById('groupsContainer');
+                if (groupsContainer) {
+                    groupsContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: #666;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 20px;"></i>
+                            <h3 style="margin: 0 0 15px 0; color: #333;">Nenhum grupo encontrado</h3>
+                            <p style="margin: 0 0 20px 0;">Possíveis motivos:</p>
+                            <ul style="text-align: left; max-width: 400px; margin: 0 auto 25px auto; line-height: 1.8;">
+                                <li>Conexão WhatsApp temporariamente instável</li>
+                                <li>Você não participa de nenhum grupo</li>
+                                <li>Aguarde alguns segundos e tente novamente</li>
+                            </ul>
+                            <button onclick="document.getElementById('loadGroupsBtn').click()" 
+                                    style="background: #25d366; color: white; border: none; padding: 12px 30px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                                <i class="fas fa-sync-alt" style="margin-right: 8px;"></i>
+                                Tentar Novamente
+                            </button>
+                        </div>
+                    `;
+                }
+                addLog('⚠️ Nenhum grupo foi carregado. Tente clicar em "Carregar Grupos" novamente.', 'warning');
+            } else {
+                renderGroups();
+                addLog(`📊 ${groups.length} grupos carregados com sucesso!`, 'success');
+            }
         });
 
         socket.on('groups-error', (error) => {

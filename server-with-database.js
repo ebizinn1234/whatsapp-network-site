@@ -552,18 +552,63 @@ io.on('connection', (socket) => {
                 console.log('🔄 Buscando grupos do WhatsApp...');
                 console.log('🔍 DEBUG: Socket WhatsApp status:', sock.user ? 'Conectado' : 'Desconectado');
                 console.log('🔍 DEBUG: Socket WhatsApp user:', sock.user ? sock.user.name : 'N/A');
+                console.log('🔍 DEBUG: Socket authState existe:', !!sock.authState);
+                console.log('🔍 DEBUG: userSession isConnected:', userSession[sessionId].isConnected);
                 
                 // Verificar se a conexão está realmente ativa
                 if (!sock.user || !sock.user.id) {
-                    console.log('❌ WhatsApp não está completamente conectado');
+                    console.log('⚠️ WhatsApp não está completamente conectado, tentando verificar conexão...');
+                    
+                    // Tentar forçar reconexão do socket
+                    try {
+                        // Aguardar um pouco para o socket se estabilizar
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        
+                        // Verificar novamente
+                        if (!sock.user || !sock.user.id) {
+                            console.log('❌ WhatsApp definitivamente não conectado após aguardar');
+                            socket.emit('groups-loaded', { groups: [] });
+                            socket.emit('connection-status', {
+                                connected: false,
+                                message: 'Conexão perdida. Clique em Conectar novamente.'
+                            });
+                            return;
+                        }
+                    } catch (waitError) {
+                        console.error('❌ Erro ao aguardar reconexão:', waitError);
+                        socket.emit('groups-loaded', { groups: [] });
+                        return;
+                    }
+                }
+                
+                console.log('✅ Socket WhatsApp confirmado como conectado');
+                console.log('🔍 DEBUG: Tentando buscar grupos...');
+                
+                let groups;
+                try {
+                    // PRIMEIRA TENTATIVA: groupFetchAllParticipating (método normal)
+                    groups = await sock.groupFetchAllParticipating();
+                    console.log('✅ Grupos obtidos via groupFetchAllParticipating:', Object.keys(groups).length);
+                } catch (fetchError) {
+                    console.error('❌ Erro ao buscar grupos (tentativa 1):', fetchError.message);
+                    
+                    // SEGUNDA TENTATIVA: Aguardar e tentar novamente
+                    try {
+                        console.log('🔄 Aguardando 2s e tentando novamente...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        groups = await sock.groupFetchAllParticipating();
+                        console.log('✅ Grupos obtidos na segunda tentativa:', Object.keys(groups).length);
+                    } catch (retryError) {
+                        console.error('❌ Erro na segunda tentativa:', retryError.message);
+                        throw retryError; // Deixar o catch externo tratar
+                    }
+                }
+                
+                if (!groups || Object.keys(groups).length === 0) {
+                    console.log('⚠️ Nenhum grupo retornado, mas sem erro');
                     socket.emit('groups-loaded', { groups: [] });
                     return;
                 }
-                
-                // Aguardar um pouco para garantir estabilidade
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                const groups = await sock.groupFetchAllParticipating();
             console.log('📊 Grupos encontrados:', Object.keys(groups).length);
             console.log('📊 Primeiros 3 grupos:', Object.keys(groups).slice(0, 3));
             
