@@ -1912,6 +1912,10 @@
         const updateMessageBtn = document.getElementById('updateMessageBtn');
         const loadGroupsBtn = document.getElementById('loadGroupsBtn');
         
+        // MODO PRODUCTION: Desabilitar logs DEBUG
+        const PRODUCTION_MODE = true; // Mudar para false para debug
+        const debugLog = PRODUCTION_MODE ? () => {} : console.log;
+        
         // Função para configurar os botões
         function setupButtons() {
         const selectAllBtn = document.getElementById('selectAllBtn');
@@ -2035,7 +2039,7 @@
 
         // Função para fechar modal QR Code
         function closeQRModal() {
-            console.log('🔍 Fechando modal QR Code');
+            debugLog('🔍 Fechando modal QR Code');
             document.getElementById('qrModal').style.display = 'none';
         }
 
@@ -2046,7 +2050,7 @@
         window.forceCloseQRModal = function() {
             const qrModal = document.getElementById('qrModal');
             if (qrModal) {
-                console.log('🔍 DEBUG: Forçando fechamento do modal QR Code');
+                debugLog('🔍 DEBUG: Forçando fechamento do modal QR Code');
                 qrModal.style.display = 'none';
                 return true;
             }
@@ -2058,7 +2062,7 @@
             const qrCloseBtn = document.getElementById('qrCloseBtn');
             if (qrCloseBtn) {
                 qrCloseBtn.addEventListener('click', function() {
-                    console.log('🔍 Botão X clicado');
+                    debugLog('🔍 Botão X clicado');
                     closeQRModal();
                 });
             }
@@ -2068,7 +2072,7 @@
         window.onclick = function(event) {
             const modal = document.getElementById('qrModal');
             if (event.target === modal) {
-                console.log('🔍 Fechando modal ao clicar fora');
+                debugLog('🔍 Fechando modal ao clicar fora');
                 modal.style.display = 'none';
             }
         }
@@ -2091,23 +2095,23 @@
             if (token) {
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 if (userData.id) {
-                    console.log('🔍 DEBUG: Entrando na sala do usuário:', userData.id);
+                    debugLog('🔍 DEBUG: Entrando na sala do usuário:', userData.id);
                     socket.emit('join-user', { userId: userData.id });
                     
                     // VERIFICAR SESSÕES SALVAS APÓS CONECTAR
-                    console.log('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
-                    console.log('🔍 DEBUG: Socket status:', socket.connected);
-                    console.log('🔍 DEBUG: Emitindo get-saved-sessions...');
+                    debugLog('🔍 DEBUG: Verificando sessões salvas para usuário:', userData.id);
+                    debugLog('🔍 DEBUG: Socket status:', socket.connected);
+                    debugLog('🔍 DEBUG: Emitindo get-saved-sessions...');
                     socket.emit('get-saved-sessions', { userId: userData.id });
                     
                     // SOLUÇÃO RADICAL: NÃO tentar reconectar automaticamente
                     console.log('🔒 NÃO tentando reconectar automaticamente para evitar QR codes infinitos');
                 } else {
-                    console.log('🔍 DEBUG: userData.id não encontrado, entrando na sala default');
+                    debugLog('🔍 DEBUG: userData.id não encontrado, entrando na sala default');
                     socket.emit('join-user', { userId: 'default' });
                 }
             } else {
-                console.log('🔍 DEBUG: Token não encontrado, entrando na sala default');
+                debugLog('🔍 DEBUG: Token não encontrado, entrando na sala default');
                 socket.emit('join-user', { userId: 'default' });
             }
         });
@@ -2163,8 +2167,8 @@
                 // Fechar modal de QR Code automaticamente quando conectar
                 const qrModal = document.getElementById('qrModal');
                 if (qrModal) {
-                    console.log('🔍 DEBUG: Fechando modal QR Code automaticamente');
-                    console.log('🔍 DEBUG: Modal display atual:', qrModal.style.display);
+                    debugLog('🔍 DEBUG: Fechando modal QR Code automaticamente');
+                    debugLog('🔍 DEBUG: Modal display atual:', qrModal.style.display);
                     qrModal.style.display = 'none';
                     // Removido addLog para não poluir o painel
                     console.log('✅ WhatsApp conectado com sucesso!');
@@ -2176,7 +2180,7 @@
                 setTimeout(() => {
                     const qrModalCheck = document.getElementById('qrModal');
                     if (qrModalCheck && qrModalCheck.style.display !== 'none') {
-                        console.log('🔍 DEBUG: Forçando fechamento do modal QR Code');
+                        debugLog('🔍 DEBUG: Forçando fechamento do modal QR Code');
                         qrModalCheck.style.display = 'none';
                     }
                 }, 1000);
@@ -2186,11 +2190,11 @@
                 if (!window.groupsLoaded) {
                     console.log('🔄 Carregando grupos automaticamente...');
                     const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                    console.log('🔍 DEBUG: Carregamento automático - userId:', userData.id);
-                    console.log('🔍 DEBUG: Socket status:', socket.connected);
-                    console.log('🔍 DEBUG: Emitindo load-groups automático...');
+                    debugLog('🔍 DEBUG: Carregamento automático - userId:', userData.id);
+                    debugLog('🔍 DEBUG: Socket status:', socket.connected);
+                    debugLog('🔍 DEBUG: Emitindo load-groups automático...');
                     socket.emit('load-groups', { userId: userData.id });
-                    console.log('🔍 DEBUG: Evento load-groups automático emitido!');
+                    debugLog('🔍 DEBUG: Evento load-groups automático emitido!');
                     window.groupsLoaded = true;
                 }
                 
@@ -2256,21 +2260,21 @@
         });
 
         socket.on('qr-code', (qrDataURL) => {
-            console.log('🔍 DEBUG: QR Code recebido no frontend!');
-            console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
-            console.log('🔍 DEBUG: qrDataURL preview:', qrDataURL ? qrDataURL.substring(0, 50) + '...' : 'undefined');
-            console.log('🔍 DEBUG: Modal element:', document.getElementById('qrModal'));
-            console.log('🔍 DEBUG: QR Code image element:', document.getElementById('qrCode'));
+            debugLog('🔍 DEBUG: QR Code recebido no frontend!');
+            debugLog('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
+            debugLog('🔍 DEBUG: qrDataURL preview:', qrDataURL ? qrDataURL.substring(0, 50) + '...' : 'undefined');
+            debugLog('🔍 DEBUG: Modal element:', document.getElementById('qrModal'));
+            debugLog('🔍 DEBUG: QR Code image element:', document.getElementById('qrCode'));
             
             // Verificar se o usuário está logado antes de exibir QR Code
             const token = localStorage.getItem('token');
-            console.log('🔍 DEBUG: Token encontrado:', !!token);
+            debugLog('🔍 DEBUG: Token encontrado:', !!token);
             if (!token) {
                 console.log('⚠️ QR Code recebido mas usuário não está logado - ignorando');
                 return;
             }
             
-            console.log('🔍 DEBUG: Exibindo QR Code no modal...');
+            debugLog('🔍 DEBUG: Exibindo QR Code no modal...');
             const qrCodeElement = document.getElementById('qrCode');
             const qrModalElement = document.getElementById('qrModal');
             
@@ -2279,7 +2283,7 @@
                 qrModalElement.style.display = 'block';
                 // Removido addLog - apenas console
                 console.log('📱 QR Code gerado! Escaneie com seu WhatsApp');
-                console.log('🔍 DEBUG: QR Code exibido no modal!');
+                debugLog('🔍 DEBUG: QR Code exibido no modal!');
                 
                 // Adicionar listener do botão X quando modal é exibido
                 setTimeout(() => {
@@ -2309,9 +2313,9 @@
 
         // Evento para receber sessões salvas
         socket.on('saved-sessions', (sessions) => {
-            console.log('🔍 DEBUG: Sessões salvas recebidas:', sessions);
-            console.log('🔍 DEBUG: Tipo de sessions:', typeof sessions);
-            console.log('🔍 DEBUG: sessions.length:', sessions ? sessions.length : 'undefined');
+            debugLog('🔍 DEBUG: Sessões salvas recebidas:', sessions);
+            debugLog('🔍 DEBUG: Tipo de sessions:', typeof sessions);
+            debugLog('🔍 DEBUG: sessions.length:', sessions ? sessions.length : 'undefined');
             
             if (sessions && sessions.length > 0) {
                 console.log('✅ Sessões WhatsApp encontradas! Conectando automaticamente...');
@@ -2320,20 +2324,16 @@
                 
                 // Usar a primeira sessão ativa
                 const activeSession = sessions[0];
-                console.log('🔍 DEBUG: Usando sessão:', activeSession);
-                console.log('🔍 DEBUG: activeSession.user_id:', activeSession.user_id);
-                console.log('🔍 DEBUG: activeSession.session_id:', activeSession.session_id);
+                debugLog('🔍 DEBUG: Usando sessão:', activeSession);
+                debugLog('🔍 DEBUG: activeSession.user_id:', activeSession.user_id);
+                debugLog('🔍 DEBUG: activeSession.session_id:', activeSession.session_id);
                 
-                // Verificar status da conexão em vez de reconectar automaticamente
-                console.log('🔍 DEBUG: Verificando status da conexão existente...');
+                // Verificar status da conexão APENAS UMA VEZ
+                debugLog('🔍 DEBUG: Verificando status da conexão existente...');
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 socket.emit('check-connection', { userId: userData.id });
                 
-                // Aguardar um pouco e verificar se conectou
-                setTimeout(() => {
-                    console.log('🔍 DEBUG: Verificando status da reconexão...');
-                    socket.emit('check-connection', { userId: userData.id });
-                }, 3000);
+                // Removido segundo check-connection para evitar reconexões excessivas
             } else {
                 console.log('ℹ️ Nenhuma sessão salva encontrada. Usuário precisa escanear QR Code.');
                 // Removido addLog - apenas console
@@ -2492,8 +2492,31 @@
             }
         }
 
+        // Variável para rastrear tempo médio entre envios
+        let lastMessageTime = null;
+        let averageDelay = null;
+        
         function updateProgress(data) {
             const { current, total, group, status } = data;
+            
+            // Calcular tempo estimado restante
+            const now = Date.now();
+            if (lastMessageTime && current > 1) {
+                const timeSinceLastMessage = now - lastMessageTime;
+                // Calcular média móvel do delay
+                if (!averageDelay) {
+                    averageDelay = timeSinceLastMessage;
+                } else {
+                    averageDelay = (averageDelay * 0.7) + (timeSinceLastMessage * 0.3); // Média ponderada
+                }
+                
+                const remainingGroups = total - current;
+                const estimatedTimeMs = remainingGroups * averageDelay;
+                const estimatedMinutes = Math.ceil(estimatedTimeMs / 60000);
+                
+                debugLog(`⏱️ Tempo estimado restante: ${estimatedMinutes} minutos`);
+            }
+            lastMessageTime = now;
             
             // Mostrar card de progresso
             showProgressCard();
@@ -2501,7 +2524,9 @@
             // Atualizar estatísticas
             const progressStats = document.getElementById('progressStats');
             if (progressStats) {
-                progressStats.textContent = `${current}/${total} grupos`;
+                const remainingGroups = total - current;
+                const estimatedMinutes = averageDelay ? Math.ceil((remainingGroups * averageDelay) / 60000) : '...';
+                progressStats.textContent = `${current}/${total} grupos • Restam ~${estimatedMinutes} min`;
             }
             
             // Atualizar barra de progresso
@@ -2698,14 +2723,14 @@
                 
                 // Verificar se o usuário está logado
                 const token = localStorage.getItem('token');
-                console.log('🔍 DEBUG: Token encontrado:', !!token);
-                console.log('🔍 DEBUG: Token value:', token);
+                debugLog('🔍 DEBUG: Token encontrado:', !!token);
+                debugLog('🔍 DEBUG: Token value:', token);
                 
                 if (!token) {
                     // Se não estiver logado, abrir modal de cadastro
                     console.log('🔐 Usuário não logado, abrindo modal de cadastro');
                     const registerModal = document.getElementById('registerModal');
-                    console.log('🔍 DEBUG: Modal encontrado:', !!registerModal);
+                    debugLog('🔍 DEBUG: Modal encontrado:', !!registerModal);
                     if (registerModal) {
                         registerModal.style.display = 'flex';
                         console.log('✅ Modal de cadastro aberto');
@@ -2717,8 +2742,8 @@
                 
                 console.log('✅ Usuário logado, prosseguindo com conexão WhatsApp');
                 
-                console.log('🔍 Socket status:', socket.connected);
-                console.log('🔍 Socket ID:', socket.id);
+                debugLog('🔍 Socket status:', socket.connected);
+                debugLog('🔍 Socket ID:', socket.id);
                 
                 // Adicionar animação de loading
                 connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
@@ -2726,14 +2751,14 @@
                 connectBtn.style.opacity = '0.7';
                 
                 const selectedAccount = accountSelect.value;
-                console.log('🔍 Selected account:', selectedAccount);
+                debugLog('🔍 Selected account:', selectedAccount);
                 
             if (selectedAccount) {
-                    console.log('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
+                    debugLog('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
                 socket.emit('connect-whatsapp', { accountId: selectedAccount });
                 console.log(`🔄 Conectando ao WhatsApp (${selectedAccount})...`);
             } else {
-                    console.log('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
+                    debugLog('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
                 // Entrar na sala do usuário logado
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 socket.emit('join-user', { userId: userData.id });
@@ -2742,7 +2767,7 @@
             }
             
             // Adicionar log para debug
-            console.log('🔍 DEBUG: Aguardando QR Code...');
+            debugLog('🔍 DEBUG: Aguardando QR Code...');
         });
         } else {
             console.error('❌ connectBtn não encontrado!');
@@ -2805,8 +2830,8 @@
             const selectedAccount = accountSelect?.value;
             
             console.log('🔴 DEBUG: Botão Desconectar clicado!');
-            console.log('🔍 DEBUG: userData.id:', userData.id);
-            console.log('🔍 DEBUG: selectedAccount:', selectedAccount);
+            debugLog('🔍 DEBUG: userData.id:', userData.id);
+            debugLog('🔍 DEBUG: selectedAccount:', selectedAccount);
             
             if (confirm('Tem certeza que deseja desconectar do WhatsApp? Você precisará escanear o QR Code novamente.')) {
                 socket.emit('disconnect-whatsapp', {
@@ -2848,12 +2873,12 @@
             console.log('Load groups button clicked');
             // updateDebugInfo('🔄 Carregando grupos...');
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            console.log('🔍 DEBUG: Enviando load-groups com userId:', userData.id);
-            console.log('🔍 DEBUG: Socket status:', socket.connected);
-            console.log('🔍 DEBUG: Socket ID:', socket.id);
-            console.log('🔍 DEBUG: Emitindo evento load-groups...');
+            debugLog('🔍 DEBUG: Enviando load-groups com userId:', userData.id);
+            debugLog('🔍 DEBUG: Socket status:', socket.connected);
+            debugLog('🔍 DEBUG: Socket ID:', socket.id);
+            debugLog('🔍 DEBUG: Emitindo evento load-groups...');
             socket.emit('load-groups', { userId: userData.id });
-            console.log('🔍 DEBUG: Evento load-groups emitido!');
+            debugLog('🔍 DEBUG: Evento load-groups emitido!');
             // Removido addLog - grupos serão reportados quando carregados
         });
 
@@ -3039,7 +3064,7 @@
             
             groupsContainer.innerHTML = groupsHTML;
             console.log('✅ HTML dos grupos inserido no container');
-            console.log('🔍 Checkboxes criados:', document.querySelectorAll('.group-checkbox').length);
+            debugLog('🔍 Checkboxes criados:', document.querySelectorAll('.group-checkbox').length);
             
             // updateDebugInfo(`✅ ${groups.length} grupos renderizados com sucesso!`);
         }
@@ -3048,7 +3073,7 @@
             console.log('🔄 updateSelectedGroups called');
             const checkboxes = document.querySelectorAll('.group-checkbox:checked');
             console.log('✅ Checked checkboxes:', checkboxes.length);
-            console.log('🔍 Total de checkboxes na página:', document.querySelectorAll('.group-checkbox').length);
+            debugLog('🔍 Total de checkboxes na página:', document.querySelectorAll('.group-checkbox').length);
             
             try {
                 // Limpar lista anterior
@@ -3057,7 +3082,7 @@
                 // Processar apenas checkboxes marcados
                 checkboxes.forEach(checkbox => {
                 const index = parseInt(checkbox.dataset.index);
-                    console.log('🔍 Processando checkbox index:', index, 'checked:', checkbox.checked);
+                    debugLog('🔍 Processando checkbox index:', index, 'checked:', checkbox.checked);
                     if (groups[index]) {
                         selectedGroupsList.push(groups[index]);
                         console.log('✅ Adicionando grupo:', groups[index].name);
@@ -3080,7 +3105,7 @@
                 if (selectedCount) {
                     selectedCount.textContent = selectedGroupsList.length;
                     console.log('📈 Contador do botão atualizado para:', selectedGroupsList.length);
-                    console.log('🔍 Valor atual do selectedCount:', selectedCount.textContent);
+                    debugLog('🔍 Valor atual do selectedCount:', selectedCount.textContent);
                 } else {
                     console.log('❌ Elemento selectedCount não encontrado');
                 }
@@ -3299,7 +3324,7 @@
             localStorage.setItem('current-account', currentAccount);
             
             socket.emit('connect-whatsapp', { accountId: selectedAccount });
-            console.log('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
+            debugLog('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
         }
 
         // Event listeners
@@ -3613,9 +3638,9 @@
             
         // Verificar se há sessões salvas do WhatsApp - MOVER PARA DENTRO DO SOCKET CONNECT
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        console.log('🔍 DEBUG: Usuário logado, mas socket ainda não conectado');
-        console.log('🔍 DEBUG: userData.id:', userData.id);
-        console.log('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
+        debugLog('🔍 DEBUG: Usuário logado, mas socket ainda não conectado');
+        debugLog('🔍 DEBUG: userData.id:', userData.id);
+        debugLog('🔍 DEBUG: socket disponível:', typeof socket !== 'undefined');
             
             if (loginBtn) loginBtn.style.display = 'none';
             if (registerBtn) registerBtn.style.display = 'none';
