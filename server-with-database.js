@@ -456,15 +456,15 @@ io.on('connection', (socket) => {
             console.log('🔍 DEBUG: userIdentifier:', userIdentifier);
             console.log('🔍 DEBUG: uniqueSessionId:', uniqueSessionId);
             
-            const sock = await createWhatsAppSocket(userIdentifier, uniqueSessionId);
+                const sock = await createWhatsAppSocket(userIdentifier, uniqueSessionId);
             console.log('🔍 DEBUG: DEPOIS de createWhatsAppSocket');
             console.log('🔍 DEBUG: sock criado:', !!sock);
             
-            userSessions.get(userIdentifier)[uniqueSessionId] = {
-                sock,
-                isConnected: false,
-                sessionId: uniqueSessionId
-            };
+                userSessions.get(userIdentifier)[uniqueSessionId] = {
+                    sock,
+                    isConnected: false,
+                    sessionId: uniqueSessionId
+                };
             
             console.log(`📱 Conectando WhatsApp para usuário ${userIdentifier}`);
             console.log('🔍 DEBUG: Socket adicionado ao userSessions');
@@ -560,6 +560,14 @@ io.on('connection', (socket) => {
                                         const minParticipants = filters.minParticipants || 10;
                                         const includeKeywords = filters.includeKeywords || [];
                                         const excludeKeywords = filters.excludeKeywords || [];
+                                        
+                                        console.log('🔍 DEBUG FILTROS:', {
+                                            minParticipants,
+                                            includeKeywords,
+                                            excludeKeywords,
+                                            groupName: group.name,
+                                            participantCount: group.participantCount
+                                        });
                                         
                                         // Filtrar por número mínimo de participantes
                                         if (group.participantCount < minParticipants) {
@@ -700,6 +708,14 @@ io.on('connection', (socket) => {
                                         const minParticipants = filters.minParticipants || 10;
                                         const includeKeywords = filters.includeKeywords || [];
                                         const excludeKeywords = filters.excludeKeywords || [];
+                                        
+                                        console.log('🔍 DEBUG FILTROS:', {
+                                            minParticipants,
+                                            includeKeywords,
+                                            excludeKeywords,
+                                            groupName: group.name,
+                                            participantCount: group.participantCount
+                                        });
                                         
                                         // Filtrar por número mínimo de participantes
                                         if (group.participantCount < minParticipants) {
