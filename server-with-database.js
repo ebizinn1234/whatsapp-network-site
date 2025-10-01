@@ -558,24 +558,12 @@ io.on('connection', (socket) => {
                                         
                                         // ✅ APLICAR FILTROS DO USUÁRIO
                                         const minParticipants = filters.minParticipants || 10;
-                                        const groupType = filters.groupType || 'all';
                                         const includeKeywords = filters.includeKeywords || [];
                                         const excludeKeywords = filters.excludeKeywords || [];
                                         
                                         // Filtrar por número mínimo de participantes
                                         if (group.participantCount < minParticipants) {
                                             console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros, mínimo: ${minParticipants})`);
-                                            return false;
-                                        }
-                                        
-                                        // Filtrar por tipo de grupo
-                                        if (groupType === 'public' && group.isPrivate) {
-                                            console.log('🚫 Grupo privado filtrado:', group.name);
-                                            return false;
-                                        }
-                                        
-                                        if (groupType === 'private' && !group.isPrivate) {
-                                            console.log('🚫 Grupo público filtrado:', group.name);
                                             return false;
                                         }
                                         
@@ -710,24 +698,12 @@ io.on('connection', (socket) => {
                                         
                                         // ✅ APLICAR FILTROS DO USUÁRIO
                                         const minParticipants = filters.minParticipants || 10;
-                                        const groupType = filters.groupType || 'all';
                                         const includeKeywords = filters.includeKeywords || [];
                                         const excludeKeywords = filters.excludeKeywords || [];
                                         
                                         // Filtrar por número mínimo de participantes
                                         if (group.participantCount < minParticipants) {
                                             console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros, mínimo: ${minParticipants})`);
-                                            return false;
-                                        }
-                                        
-                                        // Filtrar por tipo de grupo
-                                        if (groupType === 'public' && group.isPrivate) {
-                                            console.log('🚫 Grupo privado filtrado:', group.name);
-                                            return false;
-                                        }
-                                        
-                                        if (groupType === 'private' && !group.isPrivate) {
-                                            console.log('🚫 Grupo público filtrado:', group.name);
                                             return false;
                                         }
                                         
