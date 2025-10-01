@@ -2087,14 +2087,27 @@
             const pauseStatus = document.getElementById('pauseStatus');
             const resumeContainer = document.getElementById('resumeContainer');
             
+            console.log('🔍 DEBUG: Elementos encontrados:', {
+                pauseBtn: !!pauseBtn,
+                cancelBtn: !!cancelBtn,
+                resumeBtn: !!resumeBtn,
+                pauseStatus: !!pauseStatus,
+                resumeContainer: !!resumeContainer
+            });
+            
             if (pauseBtn) {
-                pauseBtn.addEventListener('click', () => {
-                    console.log('Botão Pausar clicado');
+                console.log('✅ Adicionando event listener ao botão Pausar');
+                pauseBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔥 BOTÃO PAUSAR CLICADO!');
                     addLog('Pausando envio...', 'warning');
                     
                     // Emitir evento de pausar para o backend
+                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                    console.log('📤 Emitindo pause-sending para userId:', userData.id);
                     socket.emit('pause-sending', { 
-                        userId: JSON.parse(localStorage.getItem('user') || '{}').id 
+                        userId: userData.id 
                     });
                     
                     // Atualizar UI
@@ -2102,23 +2115,33 @@
                     pauseStatus.classList.remove('hidden');
                     resumeContainer.classList.remove('hidden');
                 });
+            } else {
+                console.error('❌ Botão Pausar não encontrado!');
             }
             
             if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => {
-                    console.log('Botão Cancelar clicado');
+                console.log('✅ Adicionando event listener ao botão Cancelar');
+                cancelBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔥 BOTÃO CANCELAR CLICADO!');
+                    
                     if (confirm('Tem certeza que deseja cancelar o envio? Esta ação não pode ser desfeita.')) {
                         addLog('Cancelando envio...', 'warning');
                         
                         // Emitir evento de cancelar para o backend
+                        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                        console.log('📤 Emitindo cancel-sending para userId:', userData.id);
                         socket.emit('cancel-sending', { 
-                            userId: JSON.parse(localStorage.getItem('user') || '{}').id 
+                            userId: userData.id 
                         });
                         
                         // Resetar interface
                         resetSendingInterface();
                     }
                 });
+            } else {
+                console.error('❌ Botão Cancelar não encontrado!');
             }
             
             if (resumeBtn) {
