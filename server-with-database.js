@@ -432,6 +432,7 @@ io.on('connection', (socket) => {
                                 return;
                             } catch (error) {
                                 console.error('❌ Erro ao reconectar sessão:', error);
+                                console.log('⚠️ Falha na reconexão, continuando para gerar QR code...');
                                 // Se falhar, continuar com nova conexão
                             }
                         }
