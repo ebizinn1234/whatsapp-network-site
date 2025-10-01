@@ -1201,6 +1201,82 @@ app.get('/home/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'home', 'index.html'));
 });
 
+// ==================== API: Buscar Info da Conta WhatsApp ====================
+// Buscar informações da última sessão WhatsApp ativa do usuário
+app.get('/api/whatsapp-info/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Buscar última sessão ativa do banco
+        const [sessions] = await db.query(
+            `SELECT account_name, account_number, profile_picture 
+             FROM whatsapp_sessions 
+             WHERE user_id = ? AND is_active = 1
+             ORDER BY updated_at DESC
+             LIMIT 1`,
+            [userId]
+        );
+        
+        if (sessions.length > 0) {
+            const session = sessions[0];
+            res.json({ 
+                success: true, 
+                whatsappInfo: {
+                    name: session.account_name || 'Usuário WhatsApp',
+                    number: session.account_number || '',
+                    profilePicture: session.profile_picture || null
+                }
+            });
+        } else {
+            res.json({ 
+                success: false, 
+                message: 'Nenhuma sessão WhatsApp encontrada' 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao buscar info WhatsApp:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ==================== API: Buscar Info da Conta WhatsApp ====================
+// Buscar informações da última sessão WhatsApp ativa do usuário
+app.get('/api/whatsapp-info/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Buscar última sessão ativa do banco
+        const [sessions] = await db.query(
+            `SELECT account_name, account_number, profile_picture 
+             FROM whatsapp_sessions 
+             WHERE user_id = ? AND is_active = 1
+             ORDER BY updated_at DESC
+             LIMIT 1`,
+            [userId]
+        );
+        
+        if (sessions.length > 0) {
+            const session = sessions[0];
+            res.json({ 
+                success: true, 
+                whatsappInfo: {
+                    name: session.account_name || 'Usuário WhatsApp',
+                    number: session.account_number || '',
+                    profilePicture: session.profile_picture || null
+                }
+            });
+        } else {
+            res.json({ 
+                success: false, 
+                message: 'Nenhuma sessão WhatsApp encontrada' 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao buscar info WhatsApp:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ==================== APIs de Mensagens Salvas ====================
 
 // Listar mensagens salvas do usuário

@@ -3688,54 +3688,132 @@
                 console.log('✅ Botão Cadastrar escondido');
             }
             
-            // Mostrar informações do usuário no header
+            // ✅ BUSCAR INFORMAÇÕES DA CONTA WHATSAPP DO BANCO
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const headerActions = document.querySelector('.header-actions');
-            if (headerActions) {
-                // Formatar telefone com máscara brasileira
-                const formatPhone = (phone) => {
-                    if (!phone) return 'Usuário';
-                    const cleaned = phone.replace(/\D/g, '');
-                    if (cleaned.length === 11) {
-                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
-                    }
-                    return phone;
-                };
-
-                headerActions.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div style="display: flex; flex-direction: column;">
-                            <span style="color: #24d366; font-weight: 600; font-size: 14px;">${user.name || 'Usuário'}</span>
-                            <span style="color: #666; font-size: 12px;">${formatPhone(user.phone)}</span>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Atualizar informações do usuário no sidebar
-            const sidebarUserName = document.getElementById('sidebarUserName');
-            const sidebarUserStatus = document.getElementById('sidebarUserStatus');
-            const sidebarUserAvatar = document.getElementById('sidebarUserAvatar');
+            const token = localStorage.getItem('token');
             
-            if (sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
-                // Formatar telefone
-                const formatPhone = (phone) => {
-                    if (!phone) return 'Usuário';
-                    const cleaned = phone.replace(/\D/g, '');
-                    if (cleaned.length === 11) {
-                        return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+            // Buscar info da conta WhatsApp salva
+            fetch(`/api/whatsapp-info/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const headerActions = document.querySelector('.header-actions');
+                    if (!headerActions) return;
+                    
+                    // Formatar telefone
+                    const formatPhone = (phone) => {
+                        if (!phone) return 'Usuário';
+                        const cleaned = phone.replace(/\D/g, '');
+                        if (cleaned.length === 11) {
+                            return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                        }
+                        return phone;
+                    };
+                    
+                    if (data.success && data.whatsappInfo) {
+                        // ✅ TEM CONTA WHATSAPP - Mostrar nome e foto da conta
+                        const { name, number, profilePicture } = data.whatsappInfo;
+                        headerActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                ${profilePicture 
+                                    ? `<img src="${profilePicture}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #24d366;">` 
+                                    : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>`
+                                }
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">${name}</span>
+                                    <span style="color: #666; font-size: 12px;">${formatPhone(number)}</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // ❌ SEM CONTA WHATSAPP - Mostrar dados do cadastro
+                        headerActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">Usuário</span>
+                                    <span style="color: #666; font-size: 12px;">${formatPhone(user.phone)}</span>
+                                </div>
+                            </div>
+                        `;
                     }
-                    return phone;
-                };
+                })
+                .catch(err => {
+                    console.error('Erro ao buscar info WhatsApp:', err);
+                    // Fallback: mostrar dados do cadastro
+                    const headerActions = document.querySelector('.header-actions');
+                    if (headerActions) {
+                        const formatPhone = (phone) => {
+                            if (!phone) return 'Usuário';
+                            const cleaned = phone.replace(/\D/g, '');
+                            if (cleaned.length === 11) {
+                                return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                            }
+                            return phone;
+                        };
+                        
+                        headerActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">Usuário</span>
+                                    <span style="color: #666; font-size: 12px;">${formatPhone(user.phone)}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
 
-                sidebarUserName.textContent = user.name || 'Usuário';
-                sidebarUserStatus.textContent = formatPhone(user.phone);
-                sidebarUserStatus.className = 'user-status connected';
-                sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
-            }
+            // ✅ ATUALIZAR SIDEBAR COM INFO DA CONTA WHATSAPP
+            fetch(`/api/whatsapp-info/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const sidebarUserName = document.getElementById('sidebarUserName');
+                    const sidebarUserStatus = document.getElementById('sidebarUserStatus');
+                    const sidebarUserAvatar = document.getElementById('sidebarUserAvatar');
+                    
+                    if (!sidebarUserName || !sidebarUserStatus || !sidebarUserAvatar) return;
+                    
+                    // Formatar telefone
+                    const formatPhone = (phone) => {
+                        if (!phone) return 'Usuário';
+                        const cleaned = phone.replace(/\D/g, '');
+                        if (cleaned.length === 11) {
+                            return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+                        }
+                        return phone;
+                    };
+                    
+                    if (data.success && data.whatsappInfo) {
+                        // ✅ TEM CONTA WHATSAPP - Mostrar nome e foto
+                        const { name, number, profilePicture } = data.whatsappInfo;
+                        sidebarUserName.textContent = name;
+                        sidebarUserStatus.textContent = formatPhone(number);
+                        sidebarUserStatus.className = 'user-status connected';
+                        
+                        if (profilePicture) {
+                            sidebarUserAvatar.innerHTML = `<img src="${profilePicture}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                        } else {
+                            sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                        }
+                    } else {
+                        // ❌ SEM CONTA WHATSAPP - Mostrar "Usuário"
+                        sidebarUserName.textContent = 'Usuário';
+                        sidebarUserStatus.textContent = formatPhone(user.phone);
+                        sidebarUserStatus.className = 'user-status';
+                        sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                    }
+                })
+                .catch(err => console.error('Erro ao atualizar sidebar:', err));
 
             // Adicionar botão "Sair" no sidebar
             const sidebarFooter = document.querySelector('.sidebar-footer');
