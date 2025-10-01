@@ -514,16 +514,37 @@ io.on('connection', (socket) => {
                             if (sock.user && sock.user.id) {
                                 console.log('✅ WhatsApp conectado, carregando grupos...');
                                 const groups = await sock.groupFetchAllParticipating();
-                                const groupsList = Object.values(groups).map(group => ({
-                                    id: group.id,
-                                    name: group.subject || 'Sem nome',
-                                    description: group.desc || '',
-                                    participantCount: group.participants ? Object.keys(group.participants).length : 0,
-                                    isCommunity: group.endOfHistoryTransparencyDenied || false,
-                                    isPrivate: group.restrict || false
-                                }));
+                                const groupsList = Object.values(groups)
+                                    .map(group => ({
+                                        id: group.id,
+                                        name: group.subject || 'Sem nome',
+                                        description: group.desc || '',
+                                        participantCount: group.participants ? Object.keys(group.participants).length : 0,
+                                        isCommunity: group.endOfHistoryTransparencyDenied || false,
+                                        isPrivate: group.restrict || false
+                                    }))
+                                    .filter(group => {
+                                        // ✅ FILTRAR COMUNIDADES E CANAIS DE ANÚNCIO
+                                        const isCommunity = group.isCommunity;
+                                        const isAnnouncement = group.name.includes('📢') || 
+                                                             group.name.includes('ANÚNCIO') || 
+                                                             group.name.includes('ANUNCIO') ||
+                                                             group.name.includes('AVISO');
+                                        
+                                        if (isCommunity) {
+                                            console.log('🚫 Comunidade filtrada:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        if (isAnnouncement) {
+                                            console.log('🚫 Canal de anúncio filtrado:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        return true; // Incluir grupo normal
+                                    });
                                 
-                                console.log('📊 Grupos carregados:', groupsList.length);
+                                console.log('📊 Grupos carregados (após filtro):', groupsList.length);
                                 socket.emit('groups-loaded', { groups: groupsList });
                                 return;
                             }
@@ -596,16 +617,37 @@ io.on('connection', (socket) => {
                             if (sock.user && sock.user.id) {
                                 console.log('✅ WhatsApp conectado, carregando grupos...');
                                 const groups = await sock.groupFetchAllParticipating();
-                                const groupsList = Object.values(groups).map(group => ({
-                                    id: group.id,
-                                    name: group.subject || 'Sem nome',
-                                    description: group.desc || '',
-                                    participantCount: group.participants ? Object.keys(group.participants).length : 0,
-                                    isCommunity: group.endOfHistoryTransparencyDenied || false,
-                                    isPrivate: group.restrict || false
-                                }));
+                                const groupsList = Object.values(groups)
+                                    .map(group => ({
+                                        id: group.id,
+                                        name: group.subject || 'Sem nome',
+                                        description: group.desc || '',
+                                        participantCount: group.participants ? Object.keys(group.participants).length : 0,
+                                        isCommunity: group.endOfHistoryTransparencyDenied || false,
+                                        isPrivate: group.restrict || false
+                                    }))
+                                    .filter(group => {
+                                        // ✅ FILTRAR COMUNIDADES E CANAIS DE ANÚNCIO
+                                        const isCommunity = group.isCommunity;
+                                        const isAnnouncement = group.name.includes('📢') || 
+                                                             group.name.includes('ANÚNCIO') || 
+                                                             group.name.includes('ANUNCIO') ||
+                                                             group.name.includes('AVISO');
+                                        
+                                        if (isCommunity) {
+                                            console.log('🚫 Comunidade filtrada:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        if (isAnnouncement) {
+                                            console.log('🚫 Canal de anúncio filtrado:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        return true; // Incluir grupo normal
+                                    });
                                 
-                                console.log('📊 Grupos carregados:', groupsList.length);
+                                console.log('📊 Grupos carregados (após filtro):', groupsList.length);
                                 socket.emit('groups-loaded', { groups: groupsList });
                                 return;
                             }
