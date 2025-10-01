@@ -757,7 +757,39 @@ io.on('connection', (socket) => {
                         console.log('✅ Grupos obtidos na segunda tentativa:', Object.keys(groups).length);
                     } catch (retryError) {
                         console.error('❌ Erro na segunda tentativa:', retryError.message);
-                        throw retryError; // Deixar o catch externo tratar
+                        
+                        // ✅ DETECTAR SESSÃO CORROMPIDA E LIMPAR
+                        if (retryError.message.includes('Connection Closed') || 
+                            retryError.message.includes('Timed Out')) {
+                            console.log('🚨 SESSÃO CORROMPIDA DETECTADA! Limpando sessão...');
+                            
+                            // Limpar sessão corrompida da memória
+                            if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
+                                delete userSessions.get(userId)[sessionId];
+                                console.log('🗑️ Sessão corrompida removida da memória');
+                            }
+                            
+                            // Marcar sessão como inativa no banco
+                            try {
+                                await db.execute(
+                                    'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id = ?',
+                                    [userId, sessionId]
+                                );
+                                console.log('🗑️ Sessão marcada como inativa no banco');
+                            } catch (dbError) {
+                                console.error('❌ Erro ao marcar sessão como inativa:', dbError);
+                            }
+                            
+                            // Emitir erro específico para sessão corrompida
+                            socket.emit('groups-loaded', { groups: [] });
+                            socket.emit('connection-status', {
+                                connected: false,
+                                message: 'Sessão corrompida detectada. Clique em Conectar para criar nova sessão.'
+                            });
+                            return;
+                        }
+                        
+                        throw retryError; // Deixar o catch externo tratar outros erros
                     }
                 }
                 
