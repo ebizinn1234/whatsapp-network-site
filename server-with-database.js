@@ -1062,6 +1062,21 @@ io.on('connection', (socket) => {
             console.log('🔍 DEBUG: send-messages recebido com data:', data);
             let { groups, message, userId, sessionId, delay = 2000, minDelay = 1000, maxDelay = 5000, humanMode = true } = data || {};
             
+            // ✅ VERIFICAR SE JÁ EXISTE ENVIO ATIVO
+            if (userSessions[userId] && userSessions[userId].isSending) {
+                console.log('⚠️ Já existe um envio ativo para este usuário');
+                socket.emit('send-error', { message: 'Já existe um envio em andamento' });
+                return;
+            }
+            
+            // ✅ MARCAR ENVIO COMO ATIVO
+            if (!userSessions[userId]) {
+                userSessions[userId] = {};
+            }
+            userSessions[userId].isSending = true;
+            userSessions[userId].isPaused = false;
+            userSessions[userId].isCancelled = false;
+            
             console.log('⏱️ DEBUG: Configurações de delay recebidas:', {
                 delay: delay,
                 minDelay: minDelay,
@@ -1144,6 +1159,12 @@ io.on('connection', (socket) => {
                 console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group.name || group}`);
                 
                 try {
+                    // ✅ VERIFICAR NOVAMENTE ANTES DO ENVIO
+                    if (userSessions[userId] && userSessions[userId].isCancelled) {
+                        console.log('Envio cancelado antes do envio');
+                        return;
+                    }
+                    
                     // ENVIO REAL PARA O WHATSAPP
                     console.log(`📤 Enviando mensagem real para: ${group.name || group}`);
                     
@@ -1157,6 +1178,12 @@ io.on('connection', (socket) => {
                     });
                     
                     console.log(`✅ Mensagem enviada com sucesso para: ${group.name || group}`);
+                    
+                    // ✅ VERIFICAR APÓS O ENVIO
+                    if (userSessions[userId] && userSessions[userId].isCancelled) {
+                        console.log('Envio cancelado após envio');
+                        return;
+                    }
                     
                     // Emitir para TODOS os sockets do usuário (não apenas o socket atual)
                     // Isso garante que o progresso seja recebido mesmo se o socket reconectar
@@ -1183,24 +1210,60 @@ io.on('connection', (socket) => {
                             console.log(`⏱️ Aguardando ${seconds}s antes do próximo envio...`);
                         }
                         
-                        await new Promise(resolve => setTimeout(resolve, actualDelay));
+                        // ✅ DELAY INTERROMPÍVEL
+                        const delayStart = Date.now();
+                        while (Date.now() - delayStart < actualDelay) {
+                            // Verificar cancelamento a cada 100ms
+                            if (userSessions[userId] && userSessions[userId].isCancelled) {
+                                console.log('Envio cancelado durante delay');
+                                return;
+                            }
+                            
+                            // Verificar pausa durante delay
+                            while (userSessions[userId] && userSessions[userId].isPaused) {
+                                console.log('Envio pausado durante delay');
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                            
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
                     }
                     
                 } catch (error) {
-                    console.error(`❌ Erro ao enviar para ${group}:`, error);
+                    console.error(`❌ Erro ao enviar para ${group.name || group}:`, error);
+                    
+                    // ✅ TRATAMENTO ESPECÍFICO PARA ERRO "FORBIDDEN"
+                    let errorMessage = error.message || 'Erro desconhecido';
+                    if (error.message && error.message.includes('forbidden')) {
+                        errorMessage = 'Grupo não permite envio de mensagens (forbidden)';
+                        console.log('⚠️ Grupo bloqueado pelo WhatsApp:', group.name || group);
+                    } else if (error.message && error.message.includes('not-authorized')) {
+                        errorMessage = 'Não autorizado a enviar para este grupo';
+                        console.log('⚠️ Grupo não autorizado:', group.name || group);
+                    }
                     
                     // Emitir erro para todos os sockets do usuário
                     io.to(`user_${userId}`).emit('send-progress', { 
                         current: i + 1, 
                         total: groups.length, 
-                        group: group,
+                        group: group.name || group,
                         status: 'error',
-                        error: error.message
+                        error: errorMessage
                     });
+                    
+                    // ✅ CONTINUAR ENVIO MESMO COM ERRO
+                    console.log('Continuando para próximo grupo...');
                 }
             }
             
             console.log('✅ Envio concluído para todos os grupos');
+            
+            // ✅ RESETAR ESTADO DE ENVIO
+            if (userSessions[userId]) {
+                userSessions[userId].isSending = false;
+                userSessions[userId].isPaused = false;
+                userSessions[userId].isCancelled = false;
+            }
             
             // Emitir conclusão para todos os sockets do usuário
             io.to(`user_${userId}`).emit('send-complete', { 
@@ -1210,6 +1273,13 @@ io.on('connection', (socket) => {
             
         } catch (error) {
             console.error('❌ Erro no envio de mensagens:', error);
+            
+            // ✅ RESETAR ESTADO EM CASO DE ERRO
+            if (userSessions[userId]) {
+                userSessions[userId].isSending = false;
+                userSessions[userId].isPaused = false;
+                userSessions[userId].isCancelled = false;
+            }
             
             // Emitir erro para todos os sockets do usuário
             io.to(`user_${userId}`).emit('send-error', { message: 'Erro interno do servidor' });
@@ -1244,6 +1314,7 @@ io.on('connection', (socket) => {
         if (userSessions[userId]) {
             userSessions[userId].isCancelled = true;
             userSessions[userId].isPaused = false;
+            userSessions[userId].isSending = false; // ✅ RESETAR ENVIO
             console.log('Envio cancelado para usuário:', userId);
             
             // Notificar frontend
