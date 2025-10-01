@@ -2095,8 +2095,15 @@
                 resumeContainer: !!resumeContainer
             });
             
+            // ✅ VERIFICAR SE JÁ TEM EVENT LISTENERS
+            if (pauseBtn && pauseBtn.hasAttribute('data-listener-added')) {
+                console.log('⚠️ Event listeners já adicionados, pulando...');
+                return;
+            }
+            
             if (pauseBtn) {
                 console.log('✅ Adicionando event listener ao botão Pausar');
+                pauseBtn.setAttribute('data-listener-added', 'true');
                 pauseBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -2121,6 +2128,7 @@
             
             if (cancelBtn) {
                 console.log('✅ Adicionando event listener ao botão Cancelar');
+                cancelBtn.setAttribute('data-listener-added', 'true');
                 cancelBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -3475,6 +3483,11 @@
             const pauseCancelContainer = document.getElementById('pauseCancelContainer');
             if (pauseCancelContainer) {
                 pauseCancelContainer.classList.remove('hidden');
+                
+                // ✅ ADICIONAR EVENT LISTENERS APÓS MOSTRAR OS BOTÕES
+                setTimeout(() => {
+                    setupPauseCancelButtons();
+                }, 100);
             }
             
             // Adicionar aviso sobre tempo de espera
@@ -4090,8 +4103,7 @@
             }, 1500);
         };
         
-        // ✅ INICIALIZAR BOTÕES DE PAUSAR/CANCELAR
-        setupPauseCancelButtons();
+        // ✅ BOTÕES DE PAUSAR/CANCELAR SERÃO INICIALIZADOS QUANDO NECESSÁRIO
         
         // ✅ EVENT LISTENERS PARA RESPOSTAS DO BACKEND
         socket.on('send-paused', (data) => {
