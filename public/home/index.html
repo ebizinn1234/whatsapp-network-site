@@ -2953,21 +2953,32 @@
             
             // Adicionar aviso sobre tempo de espera no Modo Humano
             if (delayConfig.humanMode) {
-                addLog('⏱️ Modo Humano ativo: Aguarde 1-5 minutos entre cada mensagem', 'info');
-                addLog('⏰ Tempo estimado total: ' + Math.ceil((selectedGroupsList.length * 3) / 60) + ' minutos', 'info');
+                addLog('⏱️ Modo Humano ativo: 1-5 minutos entre mensagens', 'info');
+                addLog('🚀 Primeira mensagem será enviada IMEDIATAMENTE!', 'success');
+                // Tempo estimado: (N-1) grupos * 3 minutos (média)
+                const estimatedMinutes = Math.ceil(((selectedGroupsList.length - 1) * 3));
+                if (estimatedMinutes > 0) {
+                    addLog(`⏰ Tempo estimado total: ~${estimatedMinutes} minutos`, 'info');
+                }
+            } else {
+                addLog('🚀 Primeira mensagem será enviada IMEDIATAMENTE!', 'success');
             }
             
             // Timeout de segurança ajustado baseado no modo e quantidade de grupos
             let timeoutDuration;
             if (delayConfig.humanMode) {
-                // Modo Humano: 5 minutos por grupo + buffer
-                timeoutDuration = (selectedGroupsList.length * 6 * 60 * 1000) + 60000; // 6 min/grupo + 1 min buffer
+                // Modo Humano: 5 minutos médio por intervalo × (N-1) grupos + buffer
+                // Primeira mensagem é imediata, então (N-1) delays
+                timeoutDuration = ((selectedGroupsList.length - 1) * 5 * 60 * 1000) + 60000; // 5 min/intervalo + 1 min buffer
             } else {
-                // Modo Rápido: 20 segundos por grupo + buffer
-                timeoutDuration = (selectedGroupsList.length * 20 * 1000) + 30000; // 20s/grupo + 30s buffer
+                // Modo Rápido: 10 segundos médio por intervalo × (N-1) grupos + buffer
+                timeoutDuration = ((selectedGroupsList.length - 1) * 10 * 1000) + 30000; // 10s/intervalo + 30s buffer
             }
             
-            console.log(`⏱️ Timeout configurado para: ${timeoutDuration}ms (${Math.ceil(timeoutDuration/1000/60)} minutos)`);
+            // Garantir timeout mínimo de 1 minuto
+            timeoutDuration = Math.max(timeoutDuration, 60000);
+            
+            console.log(`⏱️ Timeout configurado para: ${timeoutDuration}ms (~${Math.ceil(timeoutDuration/1000/60)} minutos)`);
             
             setTimeout(() => {
                 if (isSending) {

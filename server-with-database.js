@@ -1076,17 +1076,10 @@ io.on('connection', (socket) => {
             console.log('📤 Iniciando envio para', groups.length, 'grupos');
             console.log('📝 Mensagem:', message);
             
-            // Aplicar delay inicial se humanMode estiver ativo
-            if (humanMode && groups.length > 0) {
-                const initialDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                console.log(`⏱️ Delay inicial: ${initialDelay}ms`);
-                await new Promise(resolve => setTimeout(resolve, initialDelay));
-            }
-            
             // Processar cada grupo
             for (let i = 0; i < groups.length; i++) {
                 const group = groups[i];
-                console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group}`);
+                console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group.name || group}`);
                 
                 try {
                     // ENVIO REAL PARA O WHATSAPP
@@ -1105,19 +1098,24 @@ io.on('connection', (socket) => {
                         status: 'success'
                     });
                     
-                    // Delay entre envios baseado na configuração do usuário
-                    let actualDelay = delay;
-                    
-                    if (humanMode) {
-                        // Delay humano: variação aleatória entre minDelay e maxDelay
-                        const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                        actualDelay = randomDelay;
-                        console.log(`⏱️ Delay humano: ${actualDelay}ms (${minDelay}-${maxDelay}ms)`);
-                    } else {
-                        console.log(`⏱️ Delay fixo: ${actualDelay}ms`);
+                    // Aplicar delay APENAS se NÃO for o último grupo
+                    if (i < groups.length - 1) {
+                        let actualDelay = delay;
+                        
+                        if (humanMode) {
+                            // Delay humano: variação aleatória entre minDelay e maxDelay
+                            const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+                            actualDelay = randomDelay;
+                            const minutes = Math.floor(actualDelay / 60000);
+                            const seconds = Math.floor((actualDelay % 60000) / 1000);
+                            console.log(`⏱️ Aguardando ${minutes}min ${seconds}s antes do próximo envio...`);
+                        } else {
+                            const seconds = Math.floor(actualDelay / 1000);
+                            console.log(`⏱️ Aguardando ${seconds}s antes do próximo envio...`);
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, actualDelay));
                     }
-                    
-                    await new Promise(resolve => setTimeout(resolve, actualDelay));
                     
                 } catch (error) {
                     console.error(`❌ Erro ao enviar para ${group}:`, error);
