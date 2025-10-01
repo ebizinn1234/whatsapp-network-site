@@ -1119,6 +1119,30 @@ io.on('connection', (socket) => {
             userSessions[userId].isPaused = false;
             userSessions[userId].isCancelled = false;
             
+            // ✅ SALVAR HISTÓRICO DE ENVIO NO BANCO
+            try {
+                const [result] = await db.execute(
+                    `INSERT INTO sending_history 
+                     (user_id, session_id, message_text, total_groups, current_group, status, speed_mode, delay_config, groups_list) 
+                     VALUES (?, ?, ?, ?, ?, 'sending', ?, ?, ?)`,
+                    [
+                        userId,
+                        sessionId || `user_${userId}_${Date.now()}`,
+                        message,
+                        groups.length,
+                        0,
+                        humanMode ? 'human' : 'fast',
+                        JSON.stringify({ delay, minDelay, maxDelay, humanMode }),
+                        JSON.stringify(groups.map(g => ({ id: g.id, name: g.name || g })))
+                    ]
+                );
+                
+                userSessions[userId].sendingHistoryId = result.insertId;
+                console.log('📝 Histórico de envio salvo no banco:', result.insertId);
+            } catch (dbError) {
+                console.error('❌ Erro ao salvar histórico:', dbError);
+            }
+            
             console.log('⏱️ DEBUG: Configurações de delay recebidas:', {
                 delay: delay,
                 minDelay: minDelay,
@@ -1225,6 +1249,18 @@ io.on('connection', (socket) => {
                     if (userSessions[userId] && userSessions[userId].isCancelled) {
                         console.log('Envio cancelado após envio');
                         return;
+                    }
+                    
+                    // ✅ ATUALIZAR PROGRESSO NO BANCO
+                    if (userSessions[userId] && userSessions[userId].sendingHistoryId) {
+                        try {
+                            await db.execute(
+                                'UPDATE sending_history SET current_group = ? WHERE id = ?',
+                                [i + 1, userSessions[userId].sendingHistoryId]
+                            );
+                        } catch (dbError) {
+                            console.error('❌ Erro ao atualizar progresso:', dbError);
+                        }
                     }
                     
                     // Emitir para TODOS os sockets do usuário (não apenas o socket atual)
@@ -1338,6 +1374,14 @@ io.on('connection', (socket) => {
             userSessions[userId].isPaused = true;
             console.log('Envio pausado para usuário:', userId);
             
+            // ✅ ATUALIZAR STATUS NO BANCO
+            if (userSessions[userId].sendingHistoryId) {
+                db.execute(
+                    'UPDATE sending_history SET status = ? WHERE id = ?',
+                    ['paused', userSessions[userId].sendingHistoryId]
+                ).catch(err => console.error('❌ Erro ao atualizar status pausado:', err));
+            }
+            
             // Notificar frontend
             io.to(`user_${userId}`).emit('send-paused', {
                 success: true,
@@ -1401,6 +1445,33 @@ app.get('/', (req, res) => {
 
 app.get('/home/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'home', 'index.html'));
+});
+
+// ==================== API: Histórico de Envios ====================
+// Buscar histórico de envios do usuário
+app.get('/api/sending-history/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Buscar histórico de envios
+        const [history] = await db.query(
+            `SELECT id, message_text, total_groups, current_group, status, speed_mode, 
+                    created_at, updated_at, completed_at
+             FROM sending_history 
+             WHERE user_id = ? 
+             ORDER BY created_at DESC 
+             LIMIT 10`,
+            [userId]
+        );
+        
+        res.json({ 
+            success: true, 
+            history: history 
+        });
+    } catch (error) {
+        console.error('❌ Erro ao buscar histórico:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // ==================== API: Buscar Info da Conta WhatsApp ====================
