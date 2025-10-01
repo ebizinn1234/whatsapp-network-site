@@ -2910,10 +2910,37 @@
             console.log('📝 Mensagem:', messageText.value);
             
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const selectedSpeed = document.querySelector('input[name="speedMode"]:checked').value;
+            
+            // Preparar configurações de delay baseado no modo selecionado
+            let delayConfig;
+            if (selectedSpeed === 'human') {
+                // Modo Humano: 1-5 minutos
+                delayConfig = {
+                    delay: 120000, // 2 minutos base
+                    minDelay: 60000, // 1 minuto mínimo
+                    maxDelay: 300000, // 5 minutos máximo
+                    humanMode: true,
+                    randomDelay: true
+                };
+                console.log('⏱️ Usando Modo Humano: 1-5 minutos entre mensagens');
+            } else {
+                // Modo Rápido: 5-15 segundos
+                delayConfig = {
+                    delay: 10000, // 10 segundos base
+                    minDelay: 5000, // 5 segundos
+                    maxDelay: 15000, // 15 segundos
+                    humanMode: false,
+                    randomDelay: true
+                };
+                console.log('⏱️ Usando Modo Rápido: 5-15 segundos entre mensagens');
+            }
+            
             const sendData = {
                 groups: selectedGroupsList,
                 message: messageText.value,
-                userId: userData.id
+                userId: userData.id,
+                ...delayConfig // Adicionar configurações de delay
             };
             
             console.log('📤 Dados enviados:', sendData);

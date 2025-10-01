@@ -1024,7 +1024,7 @@ io.on('connection', (socket) => {
     // Evento para enviar mensagens
         socket.on('send-messages', async (data = {}) => {
             console.log('🔍 DEBUG: send-messages recebido com data:', data);
-            const { groups, message, userId, sessionId = 'default', delay = 2000, minDelay = 1000, maxDelay = 5000, humanMode = true } = data || {};
+            let { groups, message, userId, sessionId, delay = 2000, minDelay = 1000, maxDelay = 5000, humanMode = true } = data || {};
             
             console.log('⏱️ DEBUG: Configurações de delay recebidas:', {
                 delay: delay,
@@ -1032,13 +1032,37 @@ io.on('connection', (socket) => {
                 maxDelay: maxDelay,
                 humanMode: humanMode
             });
+            console.log('🔍 DEBUG: userId recebido:', userId, 'sessionId recebido:', sessionId);
         
         try {
             // Verificar se WhatsApp está conectado
-            const userSession = userSessions.get(userId) || userSessions.get('default');
-            if (!userSession || !userSession[sessionId]) {
-                console.log('❌ Sessão não encontrada para envio');
+            const userSession = userSessions.get(userId);
+            if (!userSession) {
+                console.log('❌ userSession não encontrada para envio - userId:', userId);
+                console.log('❌ userSessions disponíveis:', Array.from(userSessions.keys()));
                 socket.emit('send-error', { message: 'WhatsApp não conectado' });
+                return;
+            }
+            
+            // Se sessionId não foi fornecido, usar primeira sessão disponível
+            if (!sessionId) {
+                const availableSessions = Object.keys(userSession);
+                if (availableSessions.length > 0) {
+                    sessionId = availableSessions[0];
+                    console.log('🔍 DEBUG: sessionId não fornecido, usando primeiro disponível:', sessionId);
+                } else {
+                    console.log('❌ Nenhuma sessão disponível para envio');
+                    socket.emit('send-error', { message: 'Nenhuma sessão WhatsApp disponível' });
+                    return;
+                }
+            }
+            
+            console.log('🔍 DEBUG: Usando sessionId:', sessionId);
+            
+            if (!userSession[sessionId]) {
+                console.log('❌ Sessão específica não encontrada:', sessionId);
+                console.log('❌ Sessões disponíveis:', Object.keys(userSession));
+                socket.emit('send-error', { message: 'Sessão WhatsApp não encontrada' });
                 return;
             }
             
