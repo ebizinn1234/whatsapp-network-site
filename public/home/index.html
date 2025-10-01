@@ -3234,8 +3234,19 @@
         // ✅ EVENT LISTENERS PARA FILTROS
         document.getElementById('applyFiltersBtn').addEventListener('click', function() {
             console.log('🔍 Aplicando filtros...');
-            // Recarregar grupos com filtros aplicados
-            document.getElementById('loadGroupsBtn').click();
+            
+            // ✅ ENVIAR FILTROS DIRETAMENTE
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.id) {
+                const filters = {
+                    minParticipants: parseInt(document.getElementById('minParticipants').value) || 0,
+                    includeKeywords: document.getElementById('includeKeywords').value.split(',').map(k => k.trim()).filter(k => k),
+                    excludeKeywords: document.getElementById('excludeKeywords').value.split(',').map(k => k.trim()).filter(k => k)
+                };
+                
+                console.log('🔍 DEBUG: Filtros aplicados:', filters);
+                socket.emit('load-groups', { userId: userData.id, filters: filters });
+            }
         });
         
         document.getElementById('resetFiltersBtn').addEventListener('click', function() {
@@ -3245,8 +3256,12 @@
             document.getElementById('includeKeywords').value = '';
             document.getElementById('excludeKeywords').value = '';
             
-            // Recarregar grupos com filtros resetados
-            document.getElementById('loadGroupsBtn').click();
+            // ✅ RECARREGAR GRUPOS SEM FILTROS
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.id) {
+                console.log('🔄 Carregando grupos sem filtros...');
+                socket.emit('load-groups', { userId: userData.id, filters: { minParticipants: 0 } });
+            }
         });
 
         // ============================================
