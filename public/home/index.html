@@ -1671,8 +1671,34 @@
             
             <div class="form-group">
                 <label for="messageText"><i class="fas fa-edit" style="margin-right: 8px; color: #000;"></i>Sua Mensagem:</label>
-                <textarea id="messageText" class="form-control" rows="4" placeholder="Digite sua mensagem aqui..."></textarea>
+                <textarea id="messageText" class="form-control" rows="4" placeholder="Digite sua mensagem aqui... Use variáveis: {nome}, {hora}, {data}"></textarea>
+                
+                <!-- Botões de Ação -->
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn" id="saveMessageBtn" style="flex: 1; background: #28a745;">
+                        <i class="fas fa-save" style="margin-right: 8px;"></i>
+                        Salvar Mensagem
+                    </button>
+                    <button class="btn" id="clearMessageBtn" style="flex: 1; background: #6c757d;">
+                        <i class="fas fa-eraser" style="margin-right: 8px;"></i>
+                        Limpar
+                    </button>
                 </div>
+                
+                <!-- Mensagens Salvas -->
+                <div id="savedMessagesContainer" style="margin-top: 15px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label style="font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-bookmark" style="margin-right: 8px; color: #24d366;"></i>
+                            Mensagens Salvas:
+                        </label>
+                        <span id="savedMessagesCount" style="background: #24d366; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
+                    </div>
+                    <div id="savedMessagesList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e1e5e9; border-radius: 8px; padding: 8px; background: #f8f9fa;">
+                        <!-- Mensagens serão inseridas aqui -->
+                    </div>
+                </div>
+            </div>
             
             <div class="form-group" style="margin-top: 25px;">
                 <label><i class="fas fa-tachometer-alt" style="margin-right: 8px; color: #000;"></i>Velocidade de Envio:</label>
@@ -2898,6 +2924,176 @@
             // Removido addLog - grupos serão reportados quando carregados
         });
 
+        // ============================================
+        // 💾 SISTEMA DE MENSAGENS SALVAS
+        // ============================================
+        
+        const saveMessageBtn = document.getElementById('saveMessageBtn');
+        const clearMessageBtn = document.getElementById('clearMessageBtn');
+        const savedMessagesContainer = document.getElementById('savedMessagesContainer');
+        const savedMessagesList = document.getElementById('savedMessagesList');
+        const savedMessagesCount = document.getElementById('savedMessagesCount');
+        
+        // Carregar mensagens salvas ao iniciar
+        function loadSavedMessages() {
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!userData.id) return;
+            
+            fetch(`/api/messages/${userData.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.messages.length > 0) {
+                        displaySavedMessages(data.messages);
+                    }
+                })
+                .catch(err => console.error('Erro ao carregar mensagens:', err));
+        }
+        
+        // Exibir mensagens salvas
+        function displaySavedMessages(messages) {
+            if (messages.length === 0) {
+                savedMessagesContainer.style.display = 'none';
+                return;
+            }
+            
+            savedMessagesContainer.style.display = 'block';
+            savedMessagesCount.textContent = messages.length;
+            
+            savedMessagesList.innerHTML = messages.map(msg => `
+                <div class="saved-message-item" data-id="${msg.id}" style="
+                    background: white;
+                    padding: 10px;
+                    margin-bottom: 8px;
+                    border-radius: 6px;
+                    border-left: 3px solid ${msg.is_favorite ? '#ffc107' : '#24d366'};
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                " onmouseover="this.style.background='#f0f0f0'; this.style.transform='translateX(5px)'" 
+                   onmouseout="this.style.background='white'; this.style.transform='translateX(0)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;" onclick="loadMessage(${msg.id}, '${msg.message_text.replace(/'/g, "\\'")}')">
+                            <div style="font-weight: 600; color: #333; font-size: 13px; margin-bottom: 4px;">
+                                ${msg.is_favorite ? '⭐' : '📝'} ${msg.message_title}
+                            </div>
+                            <div style="color: #666; font-size: 11px; line-height: 1.4;">
+                                ${msg.message_text.substring(0, 80)}${msg.message_text.length > 80 ? '...' : ''}
+                            </div>
+                            <div style="font-size: 10px; color: #999; margin-top: 4px;">
+                                ${msg.use_count > 0 ? `✅ Usado ${msg.use_count}x` : '🆕 Nunca usado'}
+                            </div>
+                        </div>
+                        <button onclick="deleteMessage(${msg.id})" style="
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 12px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        " title="Deletar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Carregar mensagem no textarea
+        window.loadMessage = function(messageId, messageText) {
+            messageText = messageText.replace(/\\'/g, "'").replace(/\\n/g, "\n");
+            document.getElementById('messageText').value = messageText;
+            
+            // Marcar como usada
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            fetch(`/api/messages/${messageId}/use`, { method: 'POST' })
+                .then(() => {
+                    showSuccessNotification('✅ Mensagem carregada!');
+                    loadSavedMessages(); // Recarregar para atualizar contador
+                })
+                .catch(err => console.error('Erro:', err));
+        };
+        
+        // Deletar mensagem
+        window.deleteMessage = function(messageId) {
+            if (!confirm('Tem certeza que deseja deletar esta mensagem?')) return;
+            
+            fetch(`/api/messages/${messageId}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessNotification('🗑️ Mensagem deletada!');
+                        loadSavedMessages();
+                    }
+                })
+                .catch(err => console.error('Erro:', err));
+        };
+        
+        // Salvar nova mensagem
+        if (saveMessageBtn) {
+            saveMessageBtn.addEventListener('click', async () => {
+                const messageText = document.getElementById('messageText').value.trim();
+                if (!messageText) {
+                    showMessage('Digite uma mensagem primeiro!');
+                    return;
+                }
+                
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                if (!userData.id) {
+                    showMessage('Você precisa estar logado!');
+                    return;
+                }
+                
+                // Pedir título da mensagem
+                const messageTitle = prompt('Digite um título para esta mensagem:', 'Minha Mensagem');
+                if (!messageTitle) return;
+                
+                try {
+                    const response = await fetch('/api/messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userData.id,
+                            messageTitle: messageTitle,
+                            messageText: messageText,
+                            useVariables: true,
+                            isFavorite: false
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        showSuccessNotification('💾 Mensagem salva com sucesso!');
+                        loadSavedMessages();
+                    } else {
+                        showMessage('Erro ao salvar: ' + data.error);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    showMessage('Erro ao salvar mensagem');
+                }
+            });
+        }
+        
+        // Limpar textarea
+        if (clearMessageBtn) {
+            clearMessageBtn.addEventListener('click', () => {
+                document.getElementById('messageText').value = '';
+                showSuccessNotification('🧹 Mensagem limpa!');
+            });
+        }
+        
+        // Carregar mensagens ao iniciar
+        setTimeout(() => {
+            if (localStorage.getItem('token')) {
+                loadSavedMessages();
+            }
+        }, 1000);
+        
         updateMessageBtn.addEventListener('click', () => {
             const message = messageText.value;
             const selectedSpeed = document.querySelector('input[name="speedMode"]:checked').value;
