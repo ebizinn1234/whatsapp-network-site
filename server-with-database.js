@@ -212,8 +212,10 @@ io.on('connection', (socket) => {
         if (userSessions.has(userIdentifier)) {
             const existingSessions = userSessions.get(userIdentifier);
             for (const [sessionKey, session] of Object.entries(existingSessions)) {
-                if (session.sock && session.sock.user && session.sock.user.id) {
+                if (session.sock && session.sock.user && session.sock.user.id && session.isConnected) {
                     console.log('✅ WhatsApp já conectado para usuário:', userIdentifier, '- ignorando nova conexão');
+                    console.log('🔍 DEBUG: session.isConnected:', session.isConnected);
+                    console.log('🔍 DEBUG: session.sock.user.id:', session.sock.user.id);
                     return;
                 }
             }
@@ -223,9 +225,11 @@ io.on('connection', (socket) => {
         if (userSessions.has(userIdentifier)) {
             const existingSessions = userSessions.get(userIdentifier);
             for (const [sessionKey, session] of Object.entries(existingSessions)) {
-                if (session.sock && session.sock.user && session.sock.user.id) {
+                if (session.sock && session.sock.user && session.sock.user.id && session.isConnected) {
                     console.log('✅ WhatsApp já conectado para usuário:', userIdentifier);
                     console.log('🔍 DEBUG: Emitindo connection-status para usuário já conectado:', userIdentifier);
+                    console.log('🔍 DEBUG: session.isConnected:', session.isConnected);
+                    console.log('🔍 DEBUG: session.sock.user.id:', session.sock.user.id);
                     
                     const userInfo = session.sock.user;
                     const whatsappInfo = userInfo ? {
