@@ -2446,7 +2446,18 @@
         // Listener para progresso do envio
         socket.on('send-progress', (data) => {
             console.log('📤 Progresso do envio recebido:', data);
-            addLog(`📤 Enviando para ${data.current}/${data.total}: ${data.group}`, 'info');
+            
+            if (data.status === 'success') {
+                addLog(`✅ ${data.current}/${data.total}: ${data.group} - Enviado!`, 'success');
+                
+                // Atualizar contador de mensagens enviadas em tempo real
+                sentMessages.textContent = data.current;
+            } else if (data.status === 'error') {
+                addLog(`❌ ${data.current}/${data.total}: ${data.group} - Erro: ${data.error}`, 'danger');
+            } else {
+                addLog(`📤 Enviando para ${data.current}/${data.total}: ${data.group}`, 'info');
+            }
+            
             updateProgress(data);
         });
 
