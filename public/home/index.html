@@ -2160,6 +2160,8 @@
                 if (data.whatsappInfo) {
                     const { name, number, profilePicture } = data.whatsappInfo;
                     const formattedNumber = formatPhoneNumber(number);
+                    
+                    // ✅ ATUALIZAR STATUS NA ÁREA DE CONEXÃO
                     statusText.innerHTML = `
                         <div style="font-weight: 600; color: #28a745; margin-bottom: 8px;">
                             Conectado ao WhatsApp!
@@ -2175,6 +2177,38 @@
                         </div>
                     `;
                     statusHint.textContent = '';
+                    
+                    // ✅ ATUALIZAR HEADER COM NOME E FOTO DA CONTA WHATSAPP
+                    const headerActions = document.querySelector('.header-actions');
+                    if (headerActions) {
+                        headerActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                ${profilePicture 
+                                    ? `<img src="${profilePicture}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #24d366;">` 
+                                    : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>`
+                                }
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">${name || 'Usuário'}</span>
+                                    <span style="color: #666; font-size: 12px;">${formattedNumber}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // ✅ ATUALIZAR SIDEBAR COM NOME E FOTO DA CONTA WHATSAPP
+                    if (sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
+                        sidebarUserName.textContent = name || 'Usuário';
+                        sidebarUserStatus.textContent = formattedNumber;
+                        sidebarUserStatus.className = 'user-status connected';
+                        
+                        if (profilePicture) {
+                            sidebarUserAvatar.innerHTML = `<img src="${profilePicture}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                        } else {
+                            sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                        }
+                    }
                 } else {
                     statusText.innerHTML = `
                         <div style="font-weight: 600; color: #28a745; margin-bottom: 8px;">
