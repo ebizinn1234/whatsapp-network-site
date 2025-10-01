@@ -2338,6 +2338,17 @@
             console.log('Status da conexão recebido:', data);
             // updateDebugInfo(`📱 Status WhatsApp: ${data.connected ? 'Conectado' : 'Desconectado'}`);
             
+            // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
+            if (data.connected && window.whatsappConnected) {
+                console.log('⚠️ Evento connection-status duplicado ignorado (já conectado)');
+                return;
+            }
+            
+            if (!data.connected && !window.whatsappConnected) {
+                console.log('⚠️ Evento connection-status duplicado ignorado (já desconectado)');
+                return;
+            }
+            
             if (data.connected) {
                 // Mostrar informações do WhatsApp conectado
                 if (data.whatsappInfo) {
@@ -2465,6 +2476,10 @@
                 // Atualizar sidebar
                 updateSidebarStatus(true, data.whatsappInfo);
                 // updateDebugInfo('✅ WhatsApp conectado com sucesso!');
+                
+                // ✅ MARCAR COMO CONECTADO GLOBALMENTE
+                window.whatsappConnected = true;
+                console.log('✅ WhatsApp marcado como conectado globalmente');
             } else {
                 statusText.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2484,6 +2499,10 @@
                 // Atualizar sidebar
                 updateSidebarStatus(false);
                 // updateDebugInfo('❌ WhatsApp desconectado - clique para conectar');
+                
+                // ✅ MARCAR COMO DESCONECTADO GLOBALMENTE
+                window.whatsappConnected = false;
+                console.log('❌ WhatsApp marcado como desconectado globalmente');
             }
         });
 
