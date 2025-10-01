@@ -482,8 +482,9 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: userSessions total:', userSessions.size);
         console.log('🔍 DEBUG: userSessions keys:', Array.from(userSessions.keys()));
         
-        let { userId, sessionId } = data || {};
+        let { userId, sessionId, filters = {} } = data || {};
         console.log('🔍 DEBUG: userId recebido:', userId, 'sessionId recebido:', sessionId);
+        console.log('🔍 DEBUG: filtros recebidos:', filters);
         
         try {
             console.log('🔍 DEBUG: Buscando userSession para userId:', userId);
@@ -555,13 +556,56 @@ io.on('connection', (socket) => {
                                             return false;
                                         }
                                         
-                                        // ✅ FILTRAR GRUPOS COM POUCOS PARTICIPANTES (menos de 10)
-                                        if (group.participantCount < 10) {
-                                            console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros)`);
+                                        // ✅ APLICAR FILTROS DO USUÁRIO
+                                        const minParticipants = filters.minParticipants || 10;
+                                        const groupType = filters.groupType || 'all';
+                                        const includeKeywords = filters.includeKeywords || [];
+                                        const excludeKeywords = filters.excludeKeywords || [];
+                                        
+                                        // Filtrar por número mínimo de participantes
+                                        if (group.participantCount < minParticipants) {
+                                            console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros, mínimo: ${minParticipants})`);
                                             return false;
                                         }
                                         
-                                        return true; // Incluir grupo normal com 10+ participantes
+                                        // Filtrar por tipo de grupo
+                                        if (groupType === 'public' && group.isPrivate) {
+                                            console.log('🚫 Grupo privado filtrado:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        if (groupType === 'private' && !group.isPrivate) {
+                                            console.log('🚫 Grupo público filtrado:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        // Filtrar por palavras-chave de inclusão
+                                        if (includeKeywords.length > 0) {
+                                            const groupName = group.name.toLowerCase();
+                                            const hasIncludeKeyword = includeKeywords.some(keyword => 
+                                                groupName.includes(keyword.toLowerCase())
+                                            );
+                                            
+                                            if (!hasIncludeKeyword) {
+                                                console.log('🚫 Grupo sem palavras-chave de inclusão filtrado:', group.name);
+                                                return false;
+                                            }
+                                        }
+                                        
+                                        // Filtrar por palavras-chave de exclusão
+                                        if (excludeKeywords.length > 0) {
+                                            const groupName = group.name.toLowerCase();
+                                            const hasExcludeKeyword = excludeKeywords.some(keyword => 
+                                                groupName.includes(keyword.toLowerCase())
+                                            );
+                                            
+                                            if (hasExcludeKeyword) {
+                                                console.log('🚫 Grupo com palavras-chave de exclusão filtrado:', group.name);
+                                                return false;
+                                            }
+                                        }
+                                        
+                                        return true; // Incluir grupo que passou em todos os filtros
                                     });
                                 
                                 console.log('📊 Grupos carregados (após filtro):', groupsList.length);
@@ -664,13 +708,56 @@ io.on('connection', (socket) => {
                                             return false;
                                         }
                                         
-                                        // ✅ FILTRAR GRUPOS COM POUCOS PARTICIPANTES (menos de 10)
-                                        if (group.participantCount < 10) {
-                                            console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros)`);
+                                        // ✅ APLICAR FILTROS DO USUÁRIO
+                                        const minParticipants = filters.minParticipants || 10;
+                                        const groupType = filters.groupType || 'all';
+                                        const includeKeywords = filters.includeKeywords || [];
+                                        const excludeKeywords = filters.excludeKeywords || [];
+                                        
+                                        // Filtrar por número mínimo de participantes
+                                        if (group.participantCount < minParticipants) {
+                                            console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros, mínimo: ${minParticipants})`);
                                             return false;
                                         }
                                         
-                                        return true; // Incluir grupo normal com 10+ participantes
+                                        // Filtrar por tipo de grupo
+                                        if (groupType === 'public' && group.isPrivate) {
+                                            console.log('🚫 Grupo privado filtrado:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        if (groupType === 'private' && !group.isPrivate) {
+                                            console.log('🚫 Grupo público filtrado:', group.name);
+                                            return false;
+                                        }
+                                        
+                                        // Filtrar por palavras-chave de inclusão
+                                        if (includeKeywords.length > 0) {
+                                            const groupName = group.name.toLowerCase();
+                                            const hasIncludeKeyword = includeKeywords.some(keyword => 
+                                                groupName.includes(keyword.toLowerCase())
+                                            );
+                                            
+                                            if (!hasIncludeKeyword) {
+                                                console.log('🚫 Grupo sem palavras-chave de inclusão filtrado:', group.name);
+                                                return false;
+                                            }
+                                        }
+                                        
+                                        // Filtrar por palavras-chave de exclusão
+                                        if (excludeKeywords.length > 0) {
+                                            const groupName = group.name.toLowerCase();
+                                            const hasExcludeKeyword = excludeKeywords.some(keyword => 
+                                                groupName.includes(keyword.toLowerCase())
+                                            );
+                                            
+                                            if (hasExcludeKeyword) {
+                                                console.log('🚫 Grupo com palavras-chave de exclusão filtrado:', group.name);
+                                                return false;
+                                            }
+                                        }
+                                        
+                                        return true; // Incluir grupo que passou em todos os filtros
                                     });
                                 
                                 console.log('📊 Grupos carregados (após filtro):', groupsList.length);

@@ -1801,6 +1801,69 @@
                 Carregue e selecione os grupos para envio
             </p>
             
+            <!-- Filtros de Grupos -->
+            <div class="filters-container" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px;">
+                    <i class="fas fa-filter"></i> Filtros de Grupos
+                </h4>
+                
+                <!-- Filtro de Participantes -->
+                <div class="filter-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;">
+                        <i class="fas fa-users"></i> Mínimo de Participantes:
+                    </label>
+                    <select id="minParticipants" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background: white;">
+                        <option value="0">Todos os grupos</option>
+                        <option value="10" selected>10+ participantes</option>
+                        <option value="20">20+ participantes</option>
+                        <option value="50">50+ participantes</option>
+                        <option value="100">100+ participantes</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro de Tipo -->
+                <div class="filter-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;">
+                        <i class="fas fa-lock"></i> Tipo de Grupo:
+                    </label>
+                    <select id="groupType" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background: white;">
+                        <option value="all" selected>Todos os grupos</option>
+                        <option value="public">Apenas públicos</option>
+                        <option value="private">Apenas privados</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro de Palavras-chave -->
+                <div class="filter-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;">
+                        <i class="fas fa-search"></i> Incluir grupos com palavras:
+                    </label>
+                    <input type="text" id="includeKeywords" placeholder="Ex: NETWORK, MÉTODOS, NEGÓCIOS" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                    <small style="color: #6c757d; font-size: 12px;">Separar múltiplas palavras com vírgula</small>
+                </div>
+                
+                <!-- Filtro de Exclusão -->
+                <div class="filter-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;">
+                        <i class="fas fa-ban"></i> Excluir grupos com palavras:
+                    </label>
+                    <input type="text" id="excludeKeywords" placeholder="Ex: SPAM, TESTE, PESSOAL" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                    <small style="color: #6c757d; font-size: 12px;">Separar múltiplas palavras com vírgula</small>
+                </div>
+                
+                <!-- Botões de Ação -->
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="applyFiltersBtn" class="btn" style="flex: 1; background: #007bff;">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                    <button id="resetFiltersBtn" class="btn" style="flex: 1; background: #6c757d;">
+                        <i class="fas fa-undo"></i> Resetar
+                    </button>
+                </div>
+            </div>
+            
             <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn" id="loadGroupsBtn">
                     <i class="fas fa-list" style="margin-right: 8px; color: #fff;"></i>
@@ -3159,10 +3222,39 @@
             debugLog('🔍 DEBUG: Enviando load-groups com userId:', userData.id);
             debugLog('🔍 DEBUG: Socket status:', socket.connected);
             debugLog('🔍 DEBUG: Socket ID:', socket.id);
+            
+            // ✅ ENVIAR FILTROS COM A REQUISIÇÃO
+            const filters = {
+                minParticipants: parseInt(document.getElementById('minParticipants').value) || 0,
+                groupType: document.getElementById('groupType').value,
+                includeKeywords: document.getElementById('includeKeywords').value.split(',').map(k => k.trim()).filter(k => k),
+                excludeKeywords: document.getElementById('excludeKeywords').value.split(',').map(k => k.trim()).filter(k => k)
+            };
+            
+            debugLog('🔍 DEBUG: Filtros aplicados:', filters);
             debugLog('🔍 DEBUG: Emitindo evento load-groups...');
-            socket.emit('load-groups', { userId: userData.id });
+            socket.emit('load-groups', { userId: userData.id, filters: filters });
             debugLog('🔍 DEBUG: Evento load-groups emitido!');
             // Removido addLog - grupos serão reportados quando carregados
+        });
+
+        // ✅ EVENT LISTENERS PARA FILTROS
+        document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+            console.log('🔍 Aplicando filtros...');
+            // Recarregar grupos com filtros aplicados
+            document.getElementById('loadGroupsBtn').click();
+        });
+        
+        document.getElementById('resetFiltersBtn').addEventListener('click', function() {
+            console.log('🔄 Resetando filtros...');
+            // Resetar todos os filtros para valores padrão
+            document.getElementById('minParticipants').value = '10';
+            document.getElementById('groupType').value = 'all';
+            document.getElementById('includeKeywords').value = '';
+            document.getElementById('excludeKeywords').value = '';
+            
+            // Recarregar grupos com filtros resetados
+            document.getElementById('loadGroupsBtn').click();
         });
 
         // ============================================
