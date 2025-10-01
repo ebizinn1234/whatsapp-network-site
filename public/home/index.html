@@ -1849,6 +1849,69 @@
             </div>
         </div>
 
+        <!-- Aba de Progresso -->
+        <div class="card" id="progressCard" style="display: none;">
+            <div class="card-header">
+                <h3><i class="fas fa-paper-plane"></i> Progresso do Envio</h3>
+                <div class="progress-stats">
+                    <span id="progressStats">0/0 grupos</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progressText">Aguardando...</span>
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                    
+                    <!-- ✅ BOTÃO DE PAUSAR/CANCELAR ENVIO -->
+                    <div id="pauseCancelContainer" class="pause-cancel-container hidden">
+                        <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
+                            <button id="pauseBtn" class="btn btn-warning" style="background: #ffc107; color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
+                                <i class="fas fa-pause"></i> Pausar Envio
+                            </button>
+                            <button id="cancelBtn" class="btn btn-danger" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
+                                <i class="fas fa-times"></i> Cancelar Envio
+                            </button>
+                        </div>
+                        <div id="pauseStatus" class="pause-status hidden" style="text-align: center; margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; color: #856404;">
+                            <i class="fas fa-pause-circle"></i> Envio pausado - Clique em "Retomar" para continuar
+                        </div>
+                        <div id="resumeContainer" class="resume-container hidden" style="text-align: center; margin-top: 10px;">
+                            <button id="resumeBtn" class="btn btn-success" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
+                                <i class="fas fa-play"></i> Retomar Envio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de Grupos -->
+                <div class="groups-progress">
+                    <h4>Grupos sendo processados:</h4>
+                    <div id="groupsList" class="groups-list">
+                        <!-- Grupos serão adicionados aqui dinamicamente -->
+                    </div>
+                </div>
+                
+                <!-- Botões de Controle -->
+                <div class="progress-controls">
+                    <button id="legacyPauseBtn" class="btn btn-warning" style="display: none;">
+                        <i class="fas fa-pause"></i> Pausar
+                    </button>
+                    <button id="legacyResumeBtn" class="btn btn-success" style="display: none;">
+                        <i class="fas fa-play"></i> Continuar
+                    </button>
+                    <button id="legacyCancelBtn" class="btn btn-danger" style="display: none;">
+                        <i class="fas fa-stop"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Estatísticas -->
         <div class="card">
             <h2><i class="fas fa-chart-bar" style="margin-right: 8px; color: #24d366;"></i>Estatísticas do Sistema</h2>
@@ -1910,69 +1973,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Aba de Progresso -->
-        <div class="card" id="progressCard" style="display: none;">
-            <div class="card-header">
-                <h3><i class="fas fa-paper-plane"></i> Progresso do Envio</h3>
-                <div class="progress-stats">
-                    <span id="progressStats">0/0 grupos</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Barra de Progresso -->
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div id="progressBar" class="progress-fill" style="width: 0%"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span id="progressText">Aguardando...</span>
-                        <span id="progressPercentage">0%</span>
-                    </div>
-                    
-                    <!-- ✅ BOTÃO DE PAUSAR/CANCELAR ENVIO -->
-                    <div id="pauseCancelContainer" class="pause-cancel-container hidden">
-                        <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-                            <button id="pauseBtn" class="btn btn-warning" style="background: #ffc107; color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
-                                <i class="fas fa-pause"></i> Pausar Envio
-                            </button>
-                            <button id="cancelBtn" class="btn btn-danger" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
-                                <i class="fas fa-times"></i> Cancelar Envio
-                            </button>
-                        </div>
-                        <div id="pauseStatus" class="pause-status hidden" style="text-align: center; margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; color: #856404;">
-                            <i class="fas fa-pause-circle"></i> Envio pausado - Clique em "Retomar" para continuar
-                        </div>
-                        <div id="resumeContainer" class="resume-container hidden" style="text-align: center; margin-top: 10px;">
-                            <button id="resumeBtn" class="btn btn-success" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
-                                <i class="fas fa-play"></i> Retomar Envio
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Lista de Grupos -->
-                <div class="groups-progress">
-                    <h4>Grupos sendo processados:</h4>
-                    <div id="groupsList" class="groups-list">
-                        <!-- Grupos serão adicionados aqui dinamicamente -->
-                    </div>
-                </div>
-                
-                <!-- Botões de Controle -->
-                <div class="progress-controls">
-                    <button id="legacyPauseBtn" class="btn btn-warning" style="display: none;">
-                        <i class="fas fa-pause"></i> Pausar
-                    </button>
-                    <button id="legacyResumeBtn" class="btn btn-success" style="display: none;">
-                        <i class="fas fa-play"></i> Continuar
-                    </button>
-                    <button id="legacyCancelBtn" class="btn btn-danger" style="display: none;">
-                        <i class="fas fa-stop"></i> Cancelar
-                    </button>
                 </div>
             </div>
         </div>
