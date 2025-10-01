@@ -2951,16 +2951,33 @@
             sendMessagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             addLog(`📤 Enviando para ${selectedGroupsList.length} grupos...`, 'info');
             
-            // Timeout de segurança para evitar spinner infinito
+            // Adicionar aviso sobre tempo de espera no Modo Humano
+            if (delayConfig.humanMode) {
+                addLog('⏱️ Modo Humano ativo: Aguarde 1-5 minutos entre cada mensagem', 'info');
+                addLog('⏰ Tempo estimado total: ' + Math.ceil((selectedGroupsList.length * 3) / 60) + ' minutos', 'info');
+            }
+            
+            // Timeout de segurança ajustado baseado no modo e quantidade de grupos
+            let timeoutDuration;
+            if (delayConfig.humanMode) {
+                // Modo Humano: 5 minutos por grupo + buffer
+                timeoutDuration = (selectedGroupsList.length * 6 * 60 * 1000) + 60000; // 6 min/grupo + 1 min buffer
+            } else {
+                // Modo Rápido: 20 segundos por grupo + buffer
+                timeoutDuration = (selectedGroupsList.length * 20 * 1000) + 30000; // 20s/grupo + 30s buffer
+            }
+            
+            console.log(`⏱️ Timeout configurado para: ${timeoutDuration}ms (${Math.ceil(timeoutDuration/1000/60)} minutos)`);
+            
             setTimeout(() => {
                 if (isSending) {
-                    console.log('⚠️ Timeout: Servidor não respondeu em 30 segundos');
-                    addLog('⚠️ Timeout: Servidor não respondeu. Verifique a conexão.', 'warning');
+                    console.log('⚠️ Timeout: Servidor não respondeu no tempo esperado');
+                    addLog('⚠️ Timeout: O envio pode ter travado. Verifique os logs do servidor.', 'warning');
                     isSending = false;
                     sendMessagesBtn.disabled = false;
                     sendMessagesBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar Mensagens';
                 }
-            }, 30000);
+            }, timeoutDuration);
         });
 
         // Functions
