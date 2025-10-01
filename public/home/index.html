@@ -3040,9 +3040,9 @@
                     return;
                 }
                 
-                // Pedir título da mensagem
-                const messageTitle = prompt('Digite um título para esta mensagem:', 'Minha Mensagem');
-                if (!messageTitle) return;
+                // Gerar título automático baseado no conteúdo (primeiras palavras)
+                const words = messageText.replace(/\n/g, ' ').trim().split(' ');
+                const messageTitle = words.slice(0, 5).join(' ') + (words.length > 5 ? '...' : '');
                 
                 try {
                     const response = await fetch('/api/messages', {
@@ -3050,7 +3050,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             userId: userData.id,
-                            messageTitle: messageTitle,
+                            messageTitle: messageTitle || 'Mensagem sem título',
                             messageText: messageText,
                             useVariables: true,
                             isFavorite: false
