@@ -2166,7 +2166,8 @@
                     console.log('🔍 DEBUG: Fechando modal QR Code automaticamente');
                     console.log('🔍 DEBUG: Modal display atual:', qrModal.style.display);
                     qrModal.style.display = 'none';
-                    addLog('✅ WhatsApp conectado com sucesso!', 'success');
+                    // Removido addLog para não poluir o painel
+                    console.log('✅ WhatsApp conectado com sucesso!');
                 } else {
                     console.log('❌ Modal QR Code não encontrado');
                 }
@@ -2276,7 +2277,8 @@
             if (qrCodeElement && qrModalElement) {
                 qrCodeElement.src = qrDataURL;
                 qrModalElement.style.display = 'block';
-                addLog('📱 QR Code gerado! Escaneie com seu WhatsApp', 'info');
+                // Removido addLog - apenas console
+                console.log('📱 QR Code gerado! Escaneie com seu WhatsApp');
                 console.log('🔍 DEBUG: QR Code exibido no modal!');
                 
                 // Adicionar listener do botão X quando modal é exibido
@@ -2313,7 +2315,8 @@
             
             if (sessions && sessions.length > 0) {
                 console.log('✅ Sessões WhatsApp encontradas! Conectando automaticamente...');
-                addLog('🔄 Reconectando com sessão salva...', 'info');
+                // Removido addLog - apenas console
+                console.log('🔄 Reconectando com sessão salva...');
                 
                 // Usar a primeira sessão ativa
                 const activeSession = sessions[0];
@@ -2333,7 +2336,7 @@
                 }, 3000);
             } else {
                 console.log('ℹ️ Nenhuma sessão salva encontrada. Usuário precisa escanear QR Code.');
-                addLog('ℹ️ Nenhuma sessão salva encontrada', 'info');
+                // Removido addLog - apenas console
             }
         });
 
@@ -2369,10 +2372,12 @@
                         </div>
                     `;
                 }
-                addLog('⚠️ Nenhum grupo foi carregado. Tente clicar em "Carregar Grupos" novamente.', 'warning');
+                // Apenas console, sem addLog
+                console.log('⚠️ Nenhum grupo foi carregado');
             } else {
                 renderGroups();
-                addLog(`📊 ${groups.length} grupos carregados com sucesso!`, 'success');
+                // Log útil: mostrar quantos grupos foram carregados
+                addLog(`📊 ${groups.length} grupos carregados`, 'success');
             }
         });
 
@@ -2726,14 +2731,14 @@
             if (selectedAccount) {
                     console.log('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
                 socket.emit('connect-whatsapp', { accountId: selectedAccount });
-                addLog(`🔄 Conectando ao WhatsApp (${selectedAccount})...`, 'info');
+                console.log(`🔄 Conectando ao WhatsApp (${selectedAccount})...`);
             } else {
                     console.log('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
                 // Entrar na sala do usuário logado
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 socket.emit('join-user', { userId: userData.id });
                 socket.emit('connect-whatsapp', { userId: userData.id });
-                addLog('🔄 Conectando ao WhatsApp...', 'info');
+                console.log('🔄 Conectando ao WhatsApp...');
             }
             
             // Adicionar log para debug
@@ -2808,7 +2813,7 @@
                     userId: userData.id,
                     accountId: selectedAccount
                 });
-                addLog('🔄 Desconectando do WhatsApp...', 'info');
+                console.log('🔄 Desconectando do WhatsApp...');
             }
         });
         } else {
@@ -2849,7 +2854,7 @@
             console.log('🔍 DEBUG: Emitindo evento load-groups...');
             socket.emit('load-groups', { userId: userData.id });
             console.log('🔍 DEBUG: Evento load-groups emitido!');
-            addLog('📋 Carregando grupos...', 'info');
+            // Removido addLog - grupos serão reportados quando carregados
         });
 
         updateMessageBtn.addEventListener('click', () => {
