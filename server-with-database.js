@@ -353,6 +353,7 @@ io.on('connection', (socket) => {
         }
         
         console.log('🔍 DEBUG: userIdentifier =', userIdentifier);
+        console.log('🔍 DEBUG: Chegou na parte de criar nova conexão');
         
         try {
             // Verificar se já existe sessão salva no banco
@@ -447,14 +448,22 @@ io.on('connection', (socket) => {
                 userSessions.set(userIdentifier, {});
             }
             
-                const sock = await createWhatsAppSocket(userIdentifier, uniqueSessionId);
-                userSessions.get(userIdentifier)[uniqueSessionId] = {
-                    sock,
-                    isConnected: false,
-                    sessionId: uniqueSessionId
-                };
+            console.log('🔍 DEBUG: ANTES de createWhatsAppSocket');
+            console.log('🔍 DEBUG: userIdentifier:', userIdentifier);
+            console.log('🔍 DEBUG: uniqueSessionId:', uniqueSessionId);
+            
+            const sock = await createWhatsAppSocket(userIdentifier, uniqueSessionId);
+            console.log('🔍 DEBUG: DEPOIS de createWhatsAppSocket');
+            console.log('🔍 DEBUG: sock criado:', !!sock);
+            
+            userSessions.get(userIdentifier)[uniqueSessionId] = {
+                sock,
+                isConnected: false,
+                sessionId: uniqueSessionId
+            };
             
             console.log(`📱 Conectando WhatsApp para usuário ${userIdentifier}`);
+            console.log('🔍 DEBUG: Socket adicionado ao userSessions');
         } catch (error) {
             console.error('Erro ao conectar WhatsApp:', error);
             socket.emit('connection-error', { message: 'Erro ao conectar WhatsApp' });
