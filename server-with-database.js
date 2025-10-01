@@ -722,7 +722,24 @@ io.on('connection', (socket) => {
                 }
                 
                 console.log('✅ Socket WhatsApp confirmado como conectado');
-                console.log('🔍 DEBUG: Tentando buscar grupos...');
+                console.log('🔍 DEBUG: Aguardando conexão estabilizar antes de buscar grupos...');
+                
+                // ✅ AGUARDAR CONEXÃO ESTABILIZAR COMPLETAMENTE
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                console.log('🔍 DEBUG: Aguardou 5s, verificando conexão novamente...');
+                
+                // Verificar se ainda está conectado após aguardar
+                if (!sock.user || !sock.user.id) {
+                    console.log('❌ Conexão perdida durante estabilização');
+                    socket.emit('groups-loaded', { groups: [] });
+                    socket.emit('connection-status', {
+                        connected: false,
+                        message: 'Conexão instável. Tente conectar novamente.'
+                    });
+                    return;
+                }
+                
+                console.log('🔍 DEBUG: Conexão estável, tentando buscar grupos...');
                 
                 let groups;
                 try {
