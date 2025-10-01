@@ -2217,6 +2217,42 @@
             }
         });
 
+        // Listener para o resultado da desconexão
+        socket.on('disconnect-status', (data) => {
+            console.log('🔴 Resultado da desconexão:', data);
+            
+            if (data.success) {
+                addLog('✅ ' + data.message, 'success');
+                
+                // Resetar interface
+                statusText.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-times-circle" style="color: #dc3545; font-size: 16px;"></i>
+                        <span>Desconectado do WhatsApp</span>
+                    </div>
+                `;
+                
+                connectBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Conectar WhatsApp';
+                connectBtn.disabled = false;
+                connectBtn.style.display = 'inline-block';
+                disconnectBtn.style.display = 'none';
+                
+                // Limpar lista de grupos
+                const groupsContainer = document.getElementById('groupsContainer');
+                if (groupsContainer) {
+                    groupsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Conecte-se ao WhatsApp para ver seus grupos</p>';
+                }
+                
+                // Reset da flag
+                window.groupsLoaded = false;
+                
+                // Atualizar sidebar
+                updateSidebarStatus(false);
+            } else {
+                addLog('❌ Erro ao desconectar: ' + (data.error || 'Erro desconhecido'), 'error');
+            }
+        });
+
         socket.on('qr-code', (qrDataURL) => {
             console.log('🔍 DEBUG: QR Code recebido no frontend!');
             console.log('🔍 DEBUG: qrDataURL length:', qrDataURL ? qrDataURL.length : 'undefined');
@@ -2721,8 +2757,20 @@
 
         if (disconnectBtn) {
         disconnectBtn.addEventListener('click', () => {
-            socket.emit('disconnect-whatsapp');
-            addLog('🔄 Desconectando do WhatsApp...', 'info');
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            const selectedAccount = accountSelect?.value;
+            
+            console.log('🔴 DEBUG: Botão Desconectar clicado!');
+            console.log('🔍 DEBUG: userData.id:', userData.id);
+            console.log('🔍 DEBUG: selectedAccount:', selectedAccount);
+            
+            if (confirm('Tem certeza que deseja desconectar do WhatsApp? Você precisará escanear o QR Code novamente.')) {
+                socket.emit('disconnect-whatsapp', {
+                    userId: userData.id,
+                    accountId: selectedAccount
+                });
+                addLog('🔄 Desconectando do WhatsApp...', 'info');
+            }
         });
         } else {
             console.log('⚠️ disconnectBtn não encontrado (opcional)');

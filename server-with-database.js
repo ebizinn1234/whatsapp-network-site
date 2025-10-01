@@ -651,6 +651,113 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Rota para desconectar WhatsApp e deletar sessão
+    socket.on('disconnect-whatsapp', async (data = {}) => {
+        const { userId, accountId } = data || {};
+        console.log('🔴 DEBUG: disconnect-whatsapp recebido para userId:', userId, 'accountId:', accountId);
+        
+        try {
+            const userIdentifier = accountId || userId;
+            
+            if (!userIdentifier) {
+                console.error('❌ Erro: userId ou accountId não fornecido');
+                socket.emit('disconnect-status', { success: false, error: 'Usuário não identificado' });
+                return;
+            }
+            
+            console.log('🔍 Procurando sessão para desconectar - userIdentifier:', userIdentifier);
+            
+            // Buscar sessão ativa no banco de dados
+            const [sessions] = await db.execute(
+                'SELECT * FROM whatsapp_sessions WHERE user_id = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1',
+                [userIdentifier]
+            );
+            
+            if (sessions.length === 0) {
+                console.log('⚠️ Nenhuma sessão ativa encontrada no banco para desconectar');
+                socket.emit('disconnect-status', { success: false, error: 'Nenhuma sessão ativa encontrada' });
+                return;
+            }
+            
+            const sessionToDelete = sessions[0];
+            const sessionId = sessionToDelete.session_id;
+            console.log('📋 Sessão encontrada para desconectar:', sessionId);
+            
+            // 1. Fechar socket do WhatsApp se existir na memória
+            if (userSessions.has(userIdentifier) && userSessions.get(userIdentifier)[sessionId]) {
+                const sessionData = userSessions.get(userIdentifier)[sessionId];
+                
+                if (sessionData.sock) {
+                    try {
+                        await sessionData.sock.logout();
+                        console.log('✅ Socket do WhatsApp desconectado (logout)');
+                    } catch (logoutError) {
+                        console.log('⚠️ Erro ao fazer logout:', logoutError.message);
+                        // Continuar mesmo com erro de logout
+                    }
+                    
+                    try {
+                        sessionData.sock.end();
+                        console.log('✅ Socket do WhatsApp fechado (end)');
+                    } catch (endError) {
+                        console.log('⚠️ Erro ao fechar socket:', endError.message);
+                    }
+                }
+                
+                // Remover da memória
+                delete userSessions.get(userIdentifier)[sessionId];
+                console.log('🗑️ Sessão removida da memória');
+                
+                // Se não houver mais sessões para este usuário, remover o Map inteiro
+                if (Object.keys(userSessions.get(userIdentifier)).length === 0) {
+                    userSessions.delete(userIdentifier);
+                    console.log('🗑️ Map do usuário removido (sem mais sessões)');
+                }
+            }
+            
+            // 2. Deletar sessão do banco de dados
+            await db.execute(
+                'DELETE FROM whatsapp_sessions WHERE id = ?',
+                [sessionToDelete.id]
+            );
+            console.log('✅ Sessão deletada do banco de dados - ID:', sessionToDelete.id);
+            
+            // 3. Remover arquivos de autenticação (auth_info_*)
+            const authDir = `./auth_info_${sessionId}`;
+            try {
+                if (fs.existsSync(authDir)) {
+                    fs.rmSync(authDir, { recursive: true, force: true });
+                    console.log('🗑️ Pasta de autenticação removida:', authDir);
+                } else {
+                    console.log('⚠️ Pasta de autenticação não encontrada:', authDir);
+                }
+            } catch (fsError) {
+                console.error('❌ Erro ao remover pasta de autenticação:', fsError);
+            }
+            
+            // 4. Notificar o frontend
+            socket.emit('disconnect-status', { 
+                success: true, 
+                message: 'WhatsApp desconectado com sucesso!' 
+            });
+            
+            // 5. Atualizar status de conexão
+            socket.emit('connection-status', { 
+                connected: false,
+                whatsappInfo: null
+            });
+            
+            console.log('✅ WhatsApp desconectado com sucesso para usuário:', userIdentifier);
+            
+        } catch (error) {
+            console.error('❌ Erro ao desconectar WhatsApp:', error);
+            socket.emit('disconnect-status', { 
+                success: false, 
+                error: error.message || 'Erro ao desconectar' 
+            });
+        }
+    });
+
     // Evento para enviar mensagens
         socket.on('send-messages', async (data = {}) => {
             console.log('🔍 DEBUG: send-messages recebido com data:', data);
