@@ -555,7 +555,13 @@ io.on('connection', (socket) => {
                                             return false;
                                         }
                                         
-                                        return true; // Incluir grupo normal
+                                        // ✅ FILTRAR GRUPOS COM POUCOS PARTICIPANTES (menos de 10)
+                                        if (group.participantCount < 10) {
+                                            console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros)`);
+                                            return false;
+                                        }
+                                        
+                                        return true; // Incluir grupo normal com 10+ participantes
                                     });
                                 
                                 console.log('📊 Grupos carregados (após filtro):', groupsList.length);
@@ -658,7 +664,13 @@ io.on('connection', (socket) => {
                                             return false;
                                         }
                                         
-                                        return true; // Incluir grupo normal
+                                        // ✅ FILTRAR GRUPOS COM POUCOS PARTICIPANTES (menos de 10)
+                                        if (group.participantCount < 10) {
+                                            console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros)`);
+                                            return false;
+                                        }
+                                        
+                                        return true; // Incluir grupo normal com 10+ participantes
                                     });
                                 
                                 console.log('📊 Grupos carregados (após filtro):', groupsList.length);
