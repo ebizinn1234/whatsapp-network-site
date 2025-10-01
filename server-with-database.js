@@ -693,30 +693,53 @@ io.on('connection', (socket) => {
             console.log('📊 Grupos encontrados:', Object.keys(groups).length);
             console.log('📊 Primeiros 3 grupos:', Object.keys(groups).slice(0, 3));
             
-            // TESTE: Retornar TODOS os grupos sem filtros para debug
-            const groupsList = Object.values(groups).map(group => {
-                console.log('🔍 DEBUG: Processando grupo:', group.subject, 'ID:', group.id);
-                console.log('🔍 DEBUG: Grupo details:', {
-                    subject: group.subject,
-                    participants: group.participants ? Object.keys(group.participants).length : 0,
-                    endOfHistoryTransparencyDenied: group.endOfHistoryTransparencyDenied,
-                    restrict: group.restrict
-                });
+            // Processar e filtrar grupos (excluir comunidades e anúncios)
+            const allGroupsList = Object.values(groups).map(group => {
+                // Verificar se é comunidade
+                const isCommunity = group.id.includes('@newsletter') || // Canais de anúncio
+                                   group.isParentGroup ||                // Grupo pai de comunidade
+                                   group.linkedParent ||                 // Vinculado a comunidade
+                                   (group.participants && Object.keys(group.participants).length === 0); // Sem participantes
                 
                 return {
                     id: group.id,
                     name: group.subject || 'Sem nome',
                     description: group.desc || '',
                     participantCount: group.participants ? Object.keys(group.participants).length : 0,
-                    isCommunity: group.endOfHistoryTransparencyDenied || false,
-                    isPrivate: group.restrict || false
+                    isCommunity: isCommunity,
+                    isPrivate: group.restrict || false,
+                    announce: group.announce || false
                 };
             });
             
-            console.log('🔍 DEBUG: TODOS os grupos (sem filtros):', groupsList.length);
-            console.log('🔍 DEBUG: Primeiros 3 grupos:', groupsList.slice(0, 3));
+            console.log('📊 Total de grupos retornados pela API:', allGroupsList.length);
             
-            console.log('📊 Grupos filtrados (sem comunidades/privados):', groupsList.length);
+            // FILTRAR: Apenas grupos normais (sem comunidades, sem canais de anúncio)
+            const groupsList = allGroupsList.filter(group => {
+                // Excluir se for comunidade
+                if (group.isCommunity) {
+                    console.log('🚫 Excluindo comunidade/canal:', group.name);
+                    return false;
+                }
+                
+                // Excluir se ID contém @newsletter (canais de anúncio)
+                if (group.id.includes('@newsletter')) {
+                    console.log('🚫 Excluindo canal de anúncio:', group.name);
+                    return false;
+                }
+                
+                // Incluir apenas grupos normais (@g.us)
+                if (group.id.includes('@g.us')) {
+                    console.log('✅ Incluindo grupo:', group.name);
+                    return true;
+                }
+                
+                console.log('🚫 Excluindo (ID desconhecido):', group.name, group.id);
+                return false;
+            });
+            
+            console.log('📊 Total ANTES do filtro:', allGroupsList.length);
+            console.log('📊 Total APÓS filtro (apenas grupos):', groupsList.length);
             console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM SUCESSO!');
             socket.emit('groups-loaded', { groups: groupsList });
             } catch (error) {
