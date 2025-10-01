@@ -1116,7 +1116,7 @@ io.on('connection', (socket) => {
             for (let i = 0; i < groups.length; i++) {
                 // ✅ VERIFICAR SE FOI CANCELADO
                 if (userSessions[userId] && userSessions[userId].isCancelled) {
-                    console.log('🛑 Envio cancelado pelo usuário');
+                    console.log('Envio cancelado pelo usuário');
                     io.to(`user_${userId}`).emit('send-cancelled', {
                         success: true,
                         message: 'Envio cancelado com sucesso'
@@ -1126,13 +1126,13 @@ io.on('connection', (socket) => {
                 
                 // ✅ VERIFICAR SE ESTÁ PAUSADO
                 while (userSessions[userId] && userSessions[userId].isPaused) {
-                    console.log('⏸️ Envio pausado, aguardando...');
+                    console.log('Envio pausado, aguardando...');
                     await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
                 }
                 
                 // ✅ VERIFICAR NOVAMENTE SE FOI CANCELADO APÓS PAUSA
                 if (userSessions[userId] && userSessions[userId].isCancelled) {
-                    console.log('🛑 Envio cancelado após pausa');
+                    console.log('Envio cancelado após pausa');
                     io.to(`user_${userId}`).emit('send-cancelled', {
                         success: true,
                         message: 'Envio cancelado com sucesso'
@@ -1218,13 +1218,13 @@ io.on('connection', (socket) => {
 
     // ✅ EVENTOS DE PAUSAR/CANCELAR/RETOMAR ENVIO
     socket.on('pause-sending', (data) => {
-        console.log('⏸️ Pausar envio solicitado:', data);
+        console.log('Pausar envio solicitado:', data);
         const { userId } = data;
         
         // Marcar envio como pausado na memória
         if (userSessions[userId]) {
             userSessions[userId].isPaused = true;
-            console.log('⏸️ Envio pausado para usuário:', userId);
+            console.log('Envio pausado para usuário:', userId);
             
             // Notificar frontend
             io.to(`user_${userId}`).emit('send-paused', {
@@ -1232,19 +1232,19 @@ io.on('connection', (socket) => {
                 message: 'Envio pausado com sucesso'
             });
         } else {
-            console.log('❌ Usuário não encontrado para pausar envio:', userId);
+            console.log('Usuário não encontrado para pausar envio:', userId);
         }
     });
 
     socket.on('cancel-sending', (data) => {
-        console.log('🛑 Cancelar envio solicitado:', data);
+        console.log('Cancelar envio solicitado:', data);
         const { userId } = data;
         
         // Marcar envio como cancelado na memória
         if (userSessions[userId]) {
             userSessions[userId].isCancelled = true;
             userSessions[userId].isPaused = false;
-            console.log('🛑 Envio cancelado para usuário:', userId);
+            console.log('Envio cancelado para usuário:', userId);
             
             // Notificar frontend
             io.to(`user_${userId}`).emit('send-cancelled', {
@@ -1252,19 +1252,19 @@ io.on('connection', (socket) => {
                 message: 'Envio cancelado com sucesso'
             });
         } else {
-            console.log('❌ Usuário não encontrado para cancelar envio:', userId);
+            console.log('Usuário não encontrado para cancelar envio:', userId);
         }
     });
 
     socket.on('resume-sending', (data) => {
-        console.log('▶️ Retomar envio solicitado:', data);
+        console.log('Retomar envio solicitado:', data);
         const { userId } = data;
         
         // Marcar envio como retomado na memória
         if (userSessions[userId]) {
             userSessions[userId].isPaused = false;
             userSessions[userId].isCancelled = false;
-            console.log('▶️ Envio retomado para usuário:', userId);
+            console.log('Envio retomado para usuário:', userId);
             
             // Notificar frontend
             io.to(`user_${userId}`).emit('send-resumed', {
@@ -1272,7 +1272,7 @@ io.on('connection', (socket) => {
                 message: 'Envio retomado com sucesso'
             });
         } else {
-            console.log('❌ Usuário não encontrado para retomar envio:', userId);
+            console.log('Usuário não encontrado para retomar envio:', userId);
         }
     });
 

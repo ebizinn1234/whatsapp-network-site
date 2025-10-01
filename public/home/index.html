@@ -1940,7 +1940,7 @@
                                 <i class="fas fa-pause"></i> Pausar Envio
                             </button>
                             <button id="cancelBtn" class="btn btn-danger" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600;">
-                                <i class="fas fa-stop"></i> Cancelar Envio
+                                <i class="fas fa-times"></i> Cancelar Envio
                             </button>
                         </div>
                         <div id="pauseStatus" class="pause-status hidden" style="text-align: center; margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; color: #856404;">
@@ -2089,8 +2089,8 @@
             
             if (pauseBtn) {
                 pauseBtn.addEventListener('click', () => {
-                    console.log('⏸️ Botão Pausar clicado');
-                    addLog('⏸️ Pausando envio...', 'warning');
+                    console.log('Botão Pausar clicado');
+                    addLog('Pausando envio...', 'warning');
                     
                     // Emitir evento de pausar para o backend
                     socket.emit('pause-sending', { 
@@ -2106,9 +2106,9 @@
             
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', () => {
-                    console.log('🛑 Botão Cancelar clicado');
+                    console.log('Botão Cancelar clicado');
                     if (confirm('Tem certeza que deseja cancelar o envio? Esta ação não pode ser desfeita.')) {
-                        addLog('🛑 Cancelando envio...', 'warning');
+                        addLog('Cancelando envio...', 'warning');
                         
                         // Emitir evento de cancelar para o backend
                         socket.emit('cancel-sending', { 
@@ -2123,8 +2123,8 @@
             
             if (resumeBtn) {
                 resumeBtn.addEventListener('click', () => {
-                    console.log('▶️ Botão Retomar clicado');
-                    addLog('▶️ Retomando envio...', 'success');
+                    console.log('Botão Retomar clicado');
+                    addLog('Retomando envio...', 'success');
                     
                     // Emitir evento de retomar para o backend
                     socket.emit('resume-sending', { 
@@ -4072,19 +4072,19 @@
         
         // ✅ EVENT LISTENERS PARA RESPOSTAS DO BACKEND
         socket.on('send-paused', (data) => {
-            console.log('⏸️ Envio pausado:', data);
-            addLog('⏸️ ' + data.message, 'warning');
+            console.log('Envio pausado:', data);
+            addLog(data.message, 'warning');
         });
         
         socket.on('send-cancelled', (data) => {
-            console.log('🛑 Envio cancelado:', data);
-            addLog('🛑 ' + data.message, 'warning');
+            console.log('Envio cancelado:', data);
+            addLog(data.message, 'warning');
             resetSendingInterface();
         });
         
         socket.on('send-resumed', (data) => {
-            console.log('▶️ Envio retomado:', data);
-            addLog('▶️ ' + data.message, 'success');
+            console.log('Envio retomado:', data);
+            addLog(data.message, 'success');
         });
         
         }); // Fechar DOMContentLoaded
