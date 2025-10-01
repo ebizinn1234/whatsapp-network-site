@@ -110,15 +110,18 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 if (!alreadyEmitted) {
                     try {
                         const userInfo = sock.user;
-                        console.log('🔍 DEBUG: Informações do WhatsApp:', {
-                            name: userInfo?.name,
-                            id: userInfo?.id,
-                            profilePicture: userInfo?.profilePicture
-                        });
+                        console.log('🔍 DEBUG: Informações COMPLETAS do WhatsApp:', userInfo);
+                        console.log('🔍 DEBUG: userInfo.name:', userInfo?.name);
+                        console.log('🔍 DEBUG: userInfo.id:', userInfo?.id);
+                        console.log('🔍 DEBUG: userInfo.verifiedName:', userInfo?.verifiedName);
+                        console.log('🔍 DEBUG: userInfo.notify:', userInfo?.notify);
                         
-                        const accountName = userInfo?.name || 'WhatsApp User';
+                        // Tentar pegar nome de várias fontes
+                        const accountName = userInfo?.verifiedName || userInfo?.notify || userInfo?.name || 'WhatsApp User';
                         const accountNumber = userInfo?.id?.split(':')[0] || '';
                         const profilePicture = userInfo?.profilePicture || null;
+                        
+                        console.log('✅ Nome da conta salvo:', accountName);
                         
                         // Usar o sessionId que foi passado para a função createWhatsAppSocket
                         const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;

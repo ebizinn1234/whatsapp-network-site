@@ -3701,11 +3701,17 @@
                     const headerActions = document.querySelector('.header-actions');
                     if (!headerActions) return;
                     
-                    // Formatar telefone
+                    // Formatar telefone (suporta 11 ou 13 dígitos)
                     const formatPhone = (phone) => {
-                        if (!phone) return 'Usuário';
+                        if (!phone) return '';
                         const cleaned = phone.replace(/\D/g, '');
-                        if (cleaned.length === 11) {
+                        
+                        // Se tem 13 dígitos (55 + DDD + número)
+                        if (cleaned.length === 13) {
+                            return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
+                        }
+                        // Se tem 11 dígitos (DDD + número)
+                        else if (cleaned.length === 11) {
                             return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
                         }
                         return phone;
@@ -3714,6 +3720,8 @@
                     if (data.success && data.whatsappInfo) {
                         // ✅ TEM CONTA WHATSAPP - Mostrar nome e foto da conta
                         const { name, number, profilePicture } = data.whatsappInfo;
+                        const displayName = name && name !== 'WhatsApp User' ? name : 'Usuário WhatsApp';
+                        
                         headerActions.innerHTML = `
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 ${profilePicture 
@@ -3723,7 +3731,7 @@
                                     </div>`
                                 }
                                 <div style="display: flex; flex-direction: column;">
-                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">${name}</span>
+                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">${displayName}</span>
                                     <span style="color: #666; font-size: 12px;">${formatPhone(number)}</span>
                                 </div>
                             </div>
@@ -3783,11 +3791,17 @@
                     
                     if (!sidebarUserName || !sidebarUserStatus || !sidebarUserAvatar) return;
                     
-                    // Formatar telefone
+                    // Formatar telefone (suporta 11 ou 13 dígitos)
                     const formatPhone = (phone) => {
-                        if (!phone) return 'Usuário';
+                        if (!phone) return '';
                         const cleaned = phone.replace(/\D/g, '');
-                        if (cleaned.length === 11) {
+                        
+                        // 13 dígitos (55 + DDD + número)
+                        if (cleaned.length === 13) {
+                            return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
+                        }
+                        // 11 dígitos (DDD + número)
+                        else if (cleaned.length === 11) {
                             return `+55 (${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
                         }
                         return phone;
@@ -3796,7 +3810,9 @@
                     if (data.success && data.whatsappInfo) {
                         // ✅ TEM CONTA WHATSAPP - Mostrar nome e foto
                         const { name, number, profilePicture } = data.whatsappInfo;
-                        sidebarUserName.textContent = name;
+                        const displayName = name && name !== 'WhatsApp User' ? name : 'Usuário WhatsApp';
+                        
+                        sidebarUserName.textContent = displayName;
                         sidebarUserStatus.textContent = formatPhone(number);
                         sidebarUserStatus.className = 'user-status connected';
                         
