@@ -2957,7 +2957,10 @@
             savedMessagesCount.textContent = messages.length;
             
             savedMessagesList.innerHTML = messages.map(msg => `
-                <div class="saved-message-item" data-id="${msg.id}" style="
+                <div class="saved-message-item" 
+                     data-id="${msg.id}" 
+                     data-message="${encodeURIComponent(msg.message_text)}"
+                     style="
                     background: white;
                     padding: 10px;
                     margin-bottom: 8px;
@@ -2969,7 +2972,7 @@
                 " onmouseover="this.style.background='#f0f0f0'; this.style.transform='translateX(5px)'" 
                    onmouseout="this.style.background='white'; this.style.transform='translateX(0)'">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;" onclick="loadMessage(${msg.id}, '${msg.message_text.replace(/'/g, "\\'")}')">
+                        <div style="flex: 1;" onclick="loadMessageById(${msg.id})">
                             <div style="font-weight: 600; color: #333; font-size: 13px; margin-bottom: 4px;">
                                 ${msg.is_favorite ? '⭐' : '📝'} ${msg.message_title}
                             </div>
@@ -3000,7 +3003,38 @@
             `).join('');
         }
         
-        // Carregar mensagem no textarea
+        // Carregar mensagem no textarea (NOVO - usa data-attribute)
+        window.loadMessageById = function(messageId) {
+            // Buscar elemento pelo data-id
+            const messageItem = document.querySelector(`.saved-message-item[data-id="${messageId}"]`);
+            if (!messageItem) {
+                console.error('Mensagem não encontrada:', messageId);
+                return;
+            }
+            
+            // Decodificar mensagem do data-attribute
+            const encodedMessage = messageItem.getAttribute('data-message');
+            const messageText = decodeURIComponent(encodedMessage);
+            
+            // Preencher textarea
+            document.getElementById('messageText').value = messageText;
+            
+            // Marcar como usada
+            const token = localStorage.getItem('token');
+            fetch(`/api/messages/${messageId}/use`, { 
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(() => {
+                    showSuccessNotification('✅ Mensagem carregada!');
+                    loadSavedMessages(); // Recarregar para atualizar contador
+                })
+                .catch(err => console.error('Erro:', err));
+        };
+        
+        // Função antiga (manter para compatibilidade)
         window.loadMessage = function(messageId, messageText) {
             messageText = messageText.replace(/\\'/g, "'").replace(/\\n/g, "\n");
             document.getElementById('messageText').value = messageText;
