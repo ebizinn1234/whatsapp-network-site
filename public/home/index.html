@@ -2349,6 +2349,12 @@
                 return;
             }
             
+            // ✅ PROTEÇÃO ESPECIAL: Se já tem grupos carregados, ignorar desconexão
+            if (!data.connected && window.whatsappConnected && window.groupsLoaded) {
+                console.log('⚠️ Evento de desconexão ignorado - grupos já carregados, mantendo conexão');
+                return;
+            }
+            
             if (data.connected) {
                 // Mostrar informações do WhatsApp conectado
                 if (data.whatsappInfo) {
