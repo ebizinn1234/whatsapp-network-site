@@ -1872,15 +1872,15 @@
 
                 
                 <div id="controlButtons" class="hidden" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                    <button class="btn btn-warning" id="pauseBtn" style="display: none; background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                    <button class="btn btn-warning" id="oldPauseBtn" style="display: none; background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
                         <i class="fas fa-pause" style="margin-right: 8px;"></i>
                         Pausar
                     </button>
-                    <button class="btn btn-info" id="resumeBtn" style="display: none; background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                    <button class="btn btn-info" id="oldResumeBtn" style="display: none; background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
                         <i class="fas fa-play" style="margin-right: 8px;"></i>
                         Retomar
                     </button>
-                    <button class="btn btn-danger" id="cancelBtn" style="display: none; background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
+                    <button class="btn btn-danger" id="oldCancelBtn" style="display: none; background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: all 0.3s ease;">
                         <i class="fas fa-stop" style="margin-right: 8px;"></i>
                         Cancelar
                     </button>
@@ -1964,13 +1964,13 @@
                 
                 <!-- Botões de Controle -->
                 <div class="progress-controls">
-                    <button id="pauseBtn" class="btn btn-warning" style="display: none;">
+                    <button id="legacyPauseBtn" class="btn btn-warning" style="display: none;">
                         <i class="fas fa-pause"></i> Pausar
                     </button>
-                    <button id="resumeBtn" class="btn btn-success" style="display: none;">
+                    <button id="legacyResumeBtn" class="btn btn-success" style="display: none;">
                         <i class="fas fa-play"></i> Continuar
                     </button>
-                    <button id="cancelBtn" class="btn btn-danger" style="display: none;">
+                    <button id="legacyCancelBtn" class="btn btn-danger" style="display: none;">
                         <i class="fas fa-stop"></i> Cancelar
                     </button>
                 </div>
@@ -2187,8 +2187,8 @@
             if (resumeContainer) {
                 resumeContainer.classList.add('hidden');
             }
-            if (pauseBtn) {
-                pauseBtn.style.display = 'inline-block';
+            if (oldPauseBtn) {
+                oldPauseBtn.style.display = 'inline-block';
             }
             if (sendMessagesBtn) {
                 sendMessagesBtn.disabled = false;
@@ -2236,9 +2236,9 @@
         const nextDelay = document.getElementById('nextDelay');
         const activityLog = document.getElementById('activityLog');
         const controlButtons = document.getElementById('controlButtons');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resumeBtn = document.getElementById('resumeBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
+        const oldPauseBtn = document.getElementById('oldPauseBtn');
+        const oldResumeBtn = document.getElementById('oldResumeBtn');
+        const oldCancelBtn = document.getElementById('oldCancelBtn');
         const newSendBtn = document.getElementById('newSendBtn');
         const accountSelect = document.getElementById('accountSelect');
         const refreshAccountsBtn = document.getElementById('refreshAccountsBtn');
@@ -2866,17 +2866,17 @@
         // Funções de controle
         function showControls() {
             controlButtons.classList.remove('hidden');
-            pauseBtn.style.display = 'inline-block';
-            resumeBtn.style.display = 'none';
-            cancelBtn.style.display = 'inline-block';
+            oldPauseBtn.style.display = 'inline-block';
+            oldResumeBtn.style.display = 'none';
+            oldCancelBtn.style.display = 'inline-block';
             newSendBtn.style.display = 'inline-block';
         }
 
         function hideControls() {
             controlButtons.classList.add('hidden');
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
+            oldPauseBtn.style.display = 'none';
+            oldResumeBtn.style.display = 'none';
+            oldCancelBtn.style.display = 'none';
             newSendBtn.style.display = 'none';
         }
 
@@ -3120,23 +3120,7 @@
         }
 
 
-        // Controles de envio
-        pauseBtn.addEventListener('click', () => {
-            socket.emit('pause-sending');
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'inline-block';
-        });
-
-        resumeBtn.addEventListener('click', () => {
-            socket.emit('resume-sending');
-            resumeBtn.style.display = 'none';
-            pauseBtn.style.display = 'inline-block';
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            socket.emit('cancel-sending');
-            hideControls();
-        });
+        // ✅ CONTROLES DE ENVIO REMOVIDOS - USANDO setupPauseCancelButtons() AGORA
 
         newSendBtn.addEventListener('click', () => {
             socket.emit('new-sending');
