@@ -784,6 +784,16 @@ io.on('connection', (socket) => {
         
         console.log('🔍 DEBUG: check-connection recebido para userId:', userIdentifier);
         
+        // VALIDAÇÃO: userId é obrigatório
+        if (!userIdentifier) {
+            console.error('❌ check-connection: userId não fornecido');
+            socket.emit('connection-status', {
+                connected: false,
+                message: 'Erro: Usuário não identificado'
+            });
+            return;
+        }
+        
         // PROTEÇÃO: Verificar se já foi emitido recentemente (throttle de 2 segundos)
         const now = Date.now();
         if (!socket.lastCheckConnection) {
@@ -1091,7 +1101,10 @@ io.on('connection', (socket) => {
                     });
                     
                     console.log(`✅ Mensagem enviada com sucesso para: ${group.name || group}`);
-                    socket.emit('send-progress', { 
+                    
+                    // Emitir para TODOS os sockets do usuário (não apenas o socket atual)
+                    // Isso garante que o progresso seja recebido mesmo se o socket reconectar
+                    io.to(`user_${userId}`).emit('send-progress', { 
                         current: i + 1, 
                         total: groups.length, 
                         group: group.name || group,
@@ -1119,7 +1132,9 @@ io.on('connection', (socket) => {
                     
                 } catch (error) {
                     console.error(`❌ Erro ao enviar para ${group}:`, error);
-                    socket.emit('send-progress', { 
+                    
+                    // Emitir erro para todos os sockets do usuário
+                    io.to(`user_${userId}`).emit('send-progress', { 
                         current: i + 1, 
                         total: groups.length, 
                         group: group,
@@ -1130,14 +1145,18 @@ io.on('connection', (socket) => {
             }
             
             console.log('✅ Envio concluído para todos os grupos');
-            socket.emit('send-complete', { 
+            
+            // Emitir conclusão para todos os sockets do usuário
+            io.to(`user_${userId}`).emit('send-complete', { 
                 total: groups.length,
                 message: 'Todas as mensagens foram enviadas com sucesso!'
             });
             
         } catch (error) {
             console.error('❌ Erro no envio de mensagens:', error);
-            socket.emit('send-error', { message: 'Erro interno do servidor' });
+            
+            // Emitir erro para todos os sockets do usuário
+            io.to(`user_${userId}`).emit('send-error', { message: 'Erro interno do servidor' });
         }
     });
 
