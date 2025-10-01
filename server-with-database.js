@@ -703,6 +703,22 @@ io.on('connection', (socket) => {
         
         console.log('🔍 DEBUG: check-connection recebido para userId:', userIdentifier);
         
+        // PROTEÇÃO: Verificar se já foi emitido recentemente (throttle de 2 segundos)
+        const now = Date.now();
+        if (!socket.lastCheckConnection) {
+            socket.lastCheckConnection = {};
+        }
+        
+        if (socket.lastCheckConnection[userIdentifier]) {
+            const timeSinceLastCheck = now - socket.lastCheckConnection[userIdentifier];
+            if (timeSinceLastCheck < 2000) {
+                console.log(`⏱️ check-connection ignorado (throttle): ${timeSinceLastCheck}ms desde última verificação`);
+                return;
+            }
+        }
+        
+        socket.lastCheckConnection[userIdentifier] = now;
+        
         try {
             // Verificar se já existe conexão ativa na memória
             if (userSessions.has(userIdentifier)) {
@@ -721,6 +737,7 @@ io.on('connection', (socket) => {
                             profilePicture: userInfo.profilePicture || null
                         };
                         
+                        console.log('📤 Emitindo connection-status (sessão em memória)');
                         socket.emit('connection-status', {
                             connected: true,
                             whatsappInfo: whatsappInfo
