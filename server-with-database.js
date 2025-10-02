@@ -12,7 +12,7 @@ import fs from 'fs';
 import authRoutes from './routes/auth.js';
 import { authenticateToken } from './routes/auth.js';
 import db from './config/database.js';
-import SessionCleanup from './auto-cleanup-sessions.js';
+// import SessionCleanup from './auto-cleanup-sessions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1971,24 +1971,24 @@ function processMessageVariables(messageText, groupName) {
 }
 
 // ============================================
-// 🧹 INICIALIZAR SISTEMA DE LIMPEZA AUTOMÁTICA
+// 🧹 SISTEMA DE LIMPEZA AUTOMÁTICA (TEMPORARIAMENTE DESABILITADO)
 // ============================================
-const sessionCleanup = new SessionCleanup();
-sessionCleanup.init().catch(console.error);
+// const sessionCleanup = new SessionCleanup();
+// sessionCleanup.init().catch(console.error);
 
 // ============================================
-// 🧹 ENDPOINT PARA LIMPEZA MANUAL
+// 🧹 ENDPOINT PARA LIMPEZA MANUAL (TEMPORARIAMENTE DESABILITADO)
 // ============================================
-app.post('/api/cleanup-sessions', authenticateToken, async (req, res) => {
-    try {
-        console.log('🧹 Limpeza manual solicitada por:', req.user.id);
-        await sessionCleanup.forceCleanup();
-        res.json({ success: true, message: 'Limpeza manual concluída' });
-    } catch (error) {
-        console.error('❌ Erro na limpeza manual:', error);
-        res.status(500).json({ success: false, message: 'Erro na limpeza manual' });
-    }
-});
+// app.post('/api/cleanup-sessions', authenticateToken, async (req, res) => {
+//     try {
+//         console.log('🧹 Limpeza manual solicitada por:', req.user.id);
+//         await sessionCleanup.forceCleanup();
+//         res.json({ success: true, message: 'Limpeza manual concluída' });
+//     } catch (error) {
+//         console.error('❌ Erro na limpeza manual:', error);
+//         res.status(500).json({ success: false, message: 'Erro na limpeza manual' });
+//     }
+// });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
