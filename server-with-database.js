@@ -138,6 +138,31 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 const uniqueSessionId = sessionId || `user_${userId}_${Date.now()}`;
                 console.log('🔍 DEBUG: sessionId único gerado para conexão:', uniqueSessionId);
                 
+                // ✅ LIMPAR SESSÕES ANTIGAS DO MESMO USUÁRIO
+                try {
+                    await db.execute(
+                        'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id != ?',
+                        [userId, uniqueSessionId]
+                    );
+                    console.log('🧹 Sessões antigas marcadas como inativas para usuário:', userId);
+                    
+                    // ✅ LIMPAR ARQUIVOS DE AUTENTICAÇÃO ANTIGOS
+                    const oldAuthDirs = fs.readdirSync('./').filter(dir => 
+                        dir.startsWith(`auth_info_${userId}_`) && dir !== `auth_info_${userId}_${uniqueSessionId}`
+                    );
+                    
+                    for (const oldDir of oldAuthDirs) {
+                        try {
+                            fs.rmSync(oldDir, { recursive: true, force: true });
+                            console.log('🗑️ Arquivos antigos removidos:', oldDir);
+                        } catch (rmError) {
+                            console.error('❌ Erro ao remover arquivos antigos:', rmError);
+                        }
+                    }
+                } catch (cleanupError) {
+                    console.error('❌ Erro ao limpar sessões antigas:', cleanupError);
+                }
+                
                 // Verificar se já existe sessão
                 const [existingSession] = await db.execute(
                     'SELECT id FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?',
