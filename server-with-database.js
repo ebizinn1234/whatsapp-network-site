@@ -1148,7 +1148,8 @@ io.on('connection', (socket) => {
                 console.log('💾 Sessão encontrada no banco, tentando reconectar:', savedSession.session_id);
                 
                 // Verificar se os arquivos de autenticação existem
-                const authDir = `./auth_info_${savedSession.session_id}`;
+                const authDir = `./auth_info_${userIdentifier}_${savedSession.session_id}`;
+                console.log('🔍 DEBUG: Procurando arquivos em:', authDir);
                 if (fs.existsSync(authDir)) {
                     console.log('✅ Arquivos de autenticação encontrados, reconectando...');
                     
