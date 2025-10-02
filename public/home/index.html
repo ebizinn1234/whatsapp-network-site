@@ -3356,7 +3356,12 @@
                 showResumeButton();
             } else if (data.isSending && !data.isPaused) {
                 console.log('▶️ Envio em andamento detectado - mostrando progresso');
-                showProgress(data.current, data.total);
+                // ✅ VERIFICAR SE FUNÇÃO EXISTE ANTES DE CHAMAR
+                if (typeof showProgress === 'function') {
+                    showProgress(data.current, data.total);
+                } else {
+                    console.log('⚠️ Função showProgress não encontrada, ignorando');
+                }
             }
         });
         
