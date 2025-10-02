@@ -146,19 +146,8 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                     );
                     console.log('🧹 Sessões antigas marcadas como inativas para usuário:', userId);
                     
-                    // ✅ LIMPAR ARQUIVOS DE AUTENTICAÇÃO ANTIGOS
-                    const oldAuthDirs = fs.readdirSync('./').filter(dir => 
-                        dir.startsWith(`auth_info_${userId}_`) && dir !== `auth_info_${userId}_${uniqueSessionId}`
-                    );
-                    
-                    for (const oldDir of oldAuthDirs) {
-                        try {
-                            fs.rmSync(oldDir, { recursive: true, force: true });
-                            console.log('🗑️ Arquivos antigos removidos:', oldDir);
-                        } catch (rmError) {
-                            console.error('❌ Erro ao remover arquivos antigos:', rmError);
-                        }
-                    }
+                    // ✅ LIMPEZA DE ARQUIVOS SERÁ FEITA APÓS CONEXÃO BEM-SUCEDIDA
+                    console.log('🧹 Limpeza de arquivos antigos será feita após conexão');
                 } catch (cleanupError) {
                     console.error('❌ Erro ao limpar sessões antigas:', cleanupError);
                 }
@@ -206,6 +195,24 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                     if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
                         userSessions.get(userId)[sessionId].connectionStatusEmitted = true;
                         console.log('✅ connection-status marcado como emitido (não será emitido novamente)');
+                    }
+                    
+                    // ✅ LIMPAR ARQUIVOS ANTIGOS APÓS CONEXÃO BEM-SUCEDIDA
+                    try {
+                        const oldAuthDirs = fs.readdirSync('./').filter(dir => 
+                            dir.startsWith(`auth_info_${userId}_`) && dir !== `auth_info_${userId}_${sessionId}`
+                        );
+                        
+                        for (const oldDir of oldAuthDirs) {
+                            try {
+                                fs.rmSync(oldDir, { recursive: true, force: true });
+                                console.log('🗑️ Arquivos antigos removidos:', oldDir);
+                            } catch (rmError) {
+                                console.error('❌ Erro ao remover arquivos antigos:', rmError);
+                            }
+                        }
+                    } catch (cleanupError) {
+                        console.error('❌ Erro na limpeza de arquivos antigos:', cleanupError);
                     }
                 }
         }
