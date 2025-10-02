@@ -2377,8 +2377,8 @@
                     debugLog('🔍 DEBUG: Emitindo get-saved-sessions...');
                     socket.emit('get-saved-sessions', { userId: userData.id });
                     
-                    // SOLUÇÃO RADICAL: NÃO tentar reconectar automaticamente
-                    console.log('🔒 NÃO tentando reconectar automaticamente para evitar QR codes infinitos');
+                    // ✅ PERMITIR RECONEXÃO AUTOMÁTICA
+                    console.log('🔄 Verificando sessões salvas para reconexão automática...');
                 } else {
                     debugLog('🔍 DEBUG: userData.id não encontrado, entrando na sala default');
                     socket.emit('join-user', { userId: 'default' });
