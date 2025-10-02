@@ -1617,6 +1617,79 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ============================================
+    // 🔄 VERIFICAR STATUS DO ENVIO
+    // ============================================
+    
+    socket.on('check-sending-status', async (data) => {
+        const { userId } = data;
+        console.log('🔍 Verificando status do envio para usuário:', userId);
+        
+        try {
+            // Verificar se há envio em andamento na memória
+            const userSession = userSessions[userId];
+            if (userSession && userSession.isSending) {
+                console.log('📊 Envio em andamento na memória:', {
+                    isSending: userSession.isSending,
+                    isPaused: userSession.isPaused,
+                    isCancelled: userSession.isCancelled
+                });
+                
+                // Enviar status atual
+                io.to(`user_${userId}`).emit('sending-status', {
+                    isSending: userSession.isSending,
+                    isPaused: userSession.isPaused,
+                    isCancelled: userSession.isCancelled,
+                    current: userSession.currentGroup || 0,
+                    total: userSession.totalGroups || 0
+                });
+            } else {
+                // Verificar no banco de dados
+                const [sendingHistory] = await pool.execute(
+                    'SELECT * FROM sending_history WHERE user_id = ? AND status IN ("sending", "paused") ORDER BY created_at DESC LIMIT 1',
+                    [userId]
+                );
+                
+                if (sendingHistory.length > 0) {
+                    const history = sendingHistory[0];
+                    console.log('📊 Envio encontrado no banco:', {
+                        id: history.id,
+                        status: history.status,
+                        current: history.current_group,
+                        total: history.total_groups
+                    });
+                    
+                    // Enviar status do banco
+                    io.to(`user_${userId}`).emit('sending-status', {
+                        isSending: history.status === 'sending',
+                        isPaused: history.status === 'paused',
+                        isCancelled: false,
+                        current: history.current_group,
+                        total: history.total_groups
+                    });
+                } else {
+                    console.log('📊 Nenhum envio em andamento encontrado');
+                    io.to(`user_${userId}`).emit('sending-status', {
+                        isSending: false,
+                        isPaused: false,
+                        isCancelled: false,
+                        current: 0,
+                        total: 0
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('❌ Erro ao verificar status do envio:', error);
+            io.to(`user_${userId}`).emit('sending-status', {
+                isSending: false,
+                isPaused: false,
+                isCancelled: false,
+                current: 0,
+                total: 0
+            });
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`👤 Cliente desconectado: ${socket.id}`);
     });
