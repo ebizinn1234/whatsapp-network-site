@@ -42,6 +42,16 @@ const userSessions = new Map();
 // Função para criar socket WhatsApp
 async function createWhatsAppSocket(userId, sessionId = 'default') {
     const authDir = `auth_info_${userId}_${sessionId}`;
+    
+    // ✅ VERIFICAR SE O DIRETÓRIO DE AUTENTICAÇÃO EXISTE
+    if (!fs.existsSync(authDir)) {
+        console.log('⚠️ Diretório de autenticação não encontrado:', authDir);
+        console.log('🔄 Criando nova sessão...');
+        
+        // Criar diretório se não existir
+        fs.mkdirSync(authDir, { recursive: true });
+    }
+    
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
     
     const sock = makeWASocket({
@@ -1173,10 +1183,36 @@ io.on('connection', (socket) => {
                     }
                 } else {
                     console.log('⚠️ Arquivos de autenticação não encontrados');
-                    socket.emit('connection-status', {
-                        connected: false,
-                        message: 'Sessão expirada'
-                    });
+                    console.log('🔄 Tentando criar nova sessão...');
+                    
+                    // ✅ TENTAR CRIAR NOVA SESSÃO QUANDO ARQUIVOS NÃO EXISTEM
+                    try {
+                        const newSessionId = `user_${userIdentifier}_${Date.now()}`;
+                        const sock = await createWhatsAppSocket(userIdentifier, newSessionId);
+                        
+                        if (!userSessions.has(userIdentifier)) {
+                            userSessions.set(userIdentifier, {});
+                        }
+                        
+                        userSessions.get(userIdentifier)[newSessionId] = {
+                            sock,
+                            isConnected: false,
+                            sessionId: newSessionId
+                        };
+                        
+                        console.log('✅ Nova sessão criada com sucesso!');
+                        console.log('📱 Aguarde o QR Code para conectar...');
+                        
+                        // Não emitir connection-status aqui, aguardar o QR code
+                        return;
+                        
+                    } catch (newSessionError) {
+                        console.error('❌ Erro ao criar nova sessão:', newSessionError);
+                        socket.emit('connection-status', {
+                            connected: false,
+                            message: 'Erro ao criar nova sessão'
+                        });
+                    }
                 }
             } else {
                 console.log('ℹ️ Nenhuma sessão encontrada no banco');
