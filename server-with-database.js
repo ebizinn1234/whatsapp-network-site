@@ -884,8 +884,9 @@ io.on('connection', (socket) => {
                 console.log('🔍 DEBUG: Aguardando conexão estabilizar antes de buscar grupos...');
                 
                 // ✅ AGUARDAR CONEXÃO ESTABILIZAR COMPLETAMENTE (MAIS TEMPO PARA NÚMEROS INSTÁVEIS)
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                console.log('🔍 DEBUG: Aguardou 5s, verificando conexão novamente...');
+                console.log('🔍 DEBUG: Aguardando conexão estabilizar (10s para números instáveis)...');
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                console.log('🔍 DEBUG: Aguardou 10s, verificando conexão novamente...');
                 
                 // ✅ VERIFICAR SE A CONEXÃO AINDA ESTÁ ESTÁVEL
                 if (!sock.user || !sock.user.id) {
@@ -894,18 +895,34 @@ io.on('connection', (socket) => {
                     return;
                 }
                 
-                console.log('✅ Conexão estável confirmada após 5 segundos');
+                console.log('✅ Conexão estável confirmada após 10 segundos');
                 
                 // ✅ VERIFICAÇÃO ADICIONAL DE ESTABILIDADE
-                console.log('🔍 DEBUG: Conexão estável, tentando buscar grupos...');
+                console.log('🔍 DEBUG: Conexão estável, testando operações básicas...');
                 
                 // ✅ VERIFICAÇÃO FINAL ANTES DE BUSCAR GRUPOS
+                let connectionStable = false;
                 try {
                     // Testar a conexão com uma operação simples
                     const testResult = await sock.query({ json: ["query", "getStatus"] });
                     console.log('✅ Teste de conexão bem-sucedido');
+                    connectionStable = true;
                 } catch (testError) {
-                    console.log('⚠️ Teste de conexão falhou, mas continuando...');
+                    console.log('⚠️ Teste de conexão falhou, tentando novamente em 3s...');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    try {
+                        const retryTest = await sock.query({ json: ["query", "getStatus"] });
+                        console.log('✅ Teste de conexão bem-sucedido na segunda tentativa');
+                        connectionStable = true;
+                    } catch (retryTestError) {
+                        console.log('❌ Teste de conexão falhou mesmo na segunda tentativa');
+                        connectionStable = false;
+                    }
+                }
+                
+                if (!connectionStable) {
+                    console.log('⚠️ Conexão instável detectada, mas tentando buscar grupos mesmo assim...');
                 }
                 
                 let groups;
@@ -921,34 +938,38 @@ io.on('connection', (socket) => {
                         fetchError.message.includes('Timed Out') ||
                         fetchError.message.includes('Connection lost')) {
                         console.log('🔄 Erro de conexão detectado, aguardando mais tempo...');
-                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        await new Promise(resolve => setTimeout(resolve, 5000));
                     }
                     
                     // SEGUNDA TENTATIVA: Aguardar e tentar novamente
                     try {
-                        console.log('🔄 Aguardando 3s e tentando novamente...');
-                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        console.log('🔄 Segunda tentativa com 5s de espera...');
+                        await new Promise(resolve => setTimeout(resolve, 5000));
                         groups = await sock.groupFetchAllParticipating();
                         console.log('✅ Grupos obtidos na segunda tentativa:', Object.keys(groups).length);
                     } catch (retryError) {
                         console.error('❌ Erro na segunda tentativa:', retryError.message);
                         
-                        // ✅ DETECTAR SESSÃO CORROMPIDA E LIMPAR (APENAS EM CASOS EXTREMOS)
-                        if (retryError.message.includes('Connection Closed') || 
-                            retryError.message.includes('Timed Out')) {
-                            console.log('⚠️ Problema de conexão detectado, tentando abordagem mais suave...');
+                        // ✅ TENTAR UMA TERCEIRA TENTATIVA COM MAIS TEMPO
+                        try {
+                            console.log('🔄 Terceira tentativa com 10s de espera...');
+                            await new Promise(resolve => setTimeout(resolve, 10000));
+                            groups = await sock.groupFetchAllParticipating();
+                            console.log('✅ Grupos obtidos na terceira tentativa:', Object.keys(groups).length);
+                        } catch (thirdError) {
+                            console.error('❌ Erro na terceira tentativa:', thirdError.message);
                             
-                            // ✅ TENTAR UMA TERCEIRA TENTATIVA COM MAIS TEMPO
+                            // ✅ TENTAR UMA QUARTA TENTATIVA (ÚLTIMA CHANCE)
                             try {
-                                console.log('🔄 Terceira tentativa com 5s de espera...');
-                                await new Promise(resolve => setTimeout(resolve, 5000));
+                                console.log('🔄 Quarta tentativa (última chance) com 15s de espera...');
+                                await new Promise(resolve => setTimeout(resolve, 15000));
                                 groups = await sock.groupFetchAllParticipating();
-                                console.log('✅ Grupos obtidos na terceira tentativa:', Object.keys(groups).length);
-                            } catch (thirdError) {
-                                console.error('❌ Erro na terceira tentativa:', thirdError.message);
+                                console.log('✅ Grupos obtidos na quarta tentativa:', Object.keys(groups).length);
+                            } catch (fourthError) {
+                                console.error('❌ Erro na quarta tentativa:', fourthError.message);
                                 
-                                // ✅ APENAS AGORA MARCAR COMO CORROMPIDA SE FALHAR 3 VEZES
-                                console.log('🚨 SESSÃO REALMENTE CORROMPIDA! Limpando sessão...');
+                                // ✅ APENAS AGORA MARCAR COMO CORROMPIDA SE FALHAR 4 VEZES
+                                console.log('🚨 SESSÃO REALMENTE CORROMPIDA APÓS 4 TENTATIVAS! Limpando sessão...');
                                 
                                 // Limpar sessão corrompida da memória
                                 if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
@@ -976,8 +997,6 @@ io.on('connection', (socket) => {
                                 return;
                             }
                         }
-                        
-                        throw retryError; // Deixar o catch externo tratar outros erros
                     }
                 }
                 
@@ -994,7 +1013,26 @@ io.on('connection', (socket) => {
                         return;
                     }
                     
-                    console.log('✅ Conexão ainda ativa, mas sem grupos. Isso pode ser normal para contas novas.');
+                    // ✅ VERIFICAÇÃO ADICIONAL: Tentar uma operação simples para confirmar que a conexão está realmente ativa
+                    try {
+                        console.log('🔍 DEBUG: Testando conexão com operação simples...');
+                        const testConnection = await sock.query({ json: ["query", "getStatus"] });
+                        console.log('✅ Conexão confirmada como ativa');
+                        
+                        // ✅ TENTAR BUSCAR CONTATOS PARA VERIFICAR SE É PROBLEMA ESPECÍFICO DE GRUPOS
+                        try {
+                            const contacts = await sock.query({ json: ["query", "getContacts"] });
+                            console.log('✅ Contatos obtidos:', contacts ? 'sim' : 'não');
+                        } catch (contactError) {
+                            console.log('⚠️ Erro ao buscar contatos:', contactError.message);
+                        }
+                        
+                    } catch (connectionTestError) {
+                        console.log('❌ Teste de conexão falhou:', connectionTestError.message);
+                        console.log('⚠️ Possível problema de conexão, mas enviando resultado vazio mesmo assim');
+                    }
+                    
+                    console.log('✅ Conexão ainda ativa, mas sem grupos. Isso pode ser normal para contas novas ou números sem grupos.');
                     socket.emit('groups-loaded', { groups: [] });
                     return;
                 }
