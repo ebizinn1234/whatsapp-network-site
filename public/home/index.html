@@ -2397,12 +2397,12 @@
             // updateDebugInfo(`📱 Status WhatsApp: ${data.connected ? 'Conectado' : 'Desconectado'}`);
             
             // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
-            if (data.connected && window.whatsappConnected) {
+            if (data.connected && window.whatsappConnected === true) {
                 console.log('⚠️ Evento connection-status duplicado ignorado (já conectado)');
                 return;
             }
             
-            if (!data.connected && !window.whatsappConnected) {
+            if (!data.connected && window.whatsappConnected === false) {
                 console.log('⚠️ Evento connection-status duplicado ignorado (já desconectado)');
                 return;
             }
@@ -2535,6 +2535,7 @@
                 
                 // ✅ MARCAR COMO CONECTADO GLOBALMENTE
                 window.whatsappConnected = true;
+                window.isConnecting = false; // ✅ RESETAR FLAG DE CONECTANDO
                 console.log('✅ WhatsApp marcado como conectado globalmente');
             } else {
                 statusText.innerHTML = `
@@ -2558,6 +2559,7 @@
                 
                 // ✅ MARCAR COMO DESCONECTADO GLOBALMENTE
                 window.whatsappConnected = false;
+                window.isConnecting = false; // ✅ RESETAR FLAG DE CONECTANDO
                 console.log('❌ WhatsApp marcado como desconectado globalmente');
             }
         });
@@ -3067,8 +3069,22 @@
             connectBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('🔴 Botão Conectar WhatsApp clicado!');
+                console.log('🔍 DEBUG: window.whatsappConnected =', window.whatsappConnected);
                 
                 // ✅ VERIFICAR SE JÁ ESTÁ CONECTADO
+                if (window.whatsappConnected === true) {
+                    console.log('⚠️ WhatsApp já está conectado! Ignorando clique...');
+                    addLog('⚠️ WhatsApp já está conectado!', 'warning');
+                    return;
+                }
+                
+                // ✅ VERIFICAR SE JÁ ESTÁ CONECTANDO
+                if (window.isConnecting === true) {
+                    console.log('⚠️ WhatsApp já está conectando! Ignorando clique...');
+                    addLog('⚠️ WhatsApp já está conectando! Aguarde...', 'warning');
+                    return;
+                }
+                
                 const statusDiv = document.getElementById('status');
                 const isConnected = statusDiv && statusDiv.textContent.includes('Conectado ao WhatsApp');
                 
@@ -3114,6 +3130,8 @@
                     debugLog('🔍 DEBUG: Emitindo connect-whatsapp com accountId:', selectedAccount);
                 socket.emit('connect-whatsapp', { accountId: selectedAccount });
                 console.log(`🔄 Conectando ao WhatsApp (${selectedAccount})...`);
+                // ✅ MARCAR COMO CONECTANDO
+                window.isConnecting = true;
             } else {
                     debugLog('🔍 DEBUG: Emitindo connect-whatsapp sem accountId');
                 // Entrar na sala do usuário logado
@@ -3121,6 +3139,8 @@
                 socket.emit('join-user', { userId: userData.id });
                 socket.emit('connect-whatsapp', { userId: userData.id });
                 console.log('🔄 Conectando ao WhatsApp...');
+                // ✅ MARCAR COMO CONECTANDO
+                window.isConnecting = true;
             }
             
             // Adicionar log para debug
@@ -3278,6 +3298,11 @@
         // ============================================
         // 🔄 DETECÇÃO DE SUSPENSÃO E RETOMADA
         // ============================================
+        
+        // ✅ INICIALIZAR VARIÁVEIS GLOBAIS
+        window.whatsappConnected = false;
+        window.groupsLoaded = false;
+        window.isConnecting = false;
         
         // Detectar quando o PC suspende/retoma
         let lastActivity = Date.now();
