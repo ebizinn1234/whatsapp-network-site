@@ -529,13 +529,21 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: userId recebido:', userId, 'sessionId recebido:', sessionId);
         console.log('🔍 DEBUG: filtros recebidos:', filters);
         
-        // ✅ THROTTLE PARA EVITAR MÚLTIPLAS REQUISIÇÕES
+        // ✅ THROTTLE PARA EVITAR MÚLTIPLAS REQUISIÇÕES (30 segundos)
         const throttleKey = `load-groups-${userId}`;
+        const now = Date.now();
+        const throttleTime = 30000; // 30 segundos
+        
         if (userSessions.has(throttleKey)) {
-            console.log('⏱️ load-groups ignorado (throttle):', Date.now() - userSessions.get(throttleKey), 'ms desde última requisição');
-            return;
+            const lastRequest = userSessions.get(throttleKey);
+            const timeSinceLastRequest = now - lastRequest;
+            
+            if (timeSinceLastRequest < throttleTime) {
+                console.log('⏱️ load-groups ignorado (throttle):', timeSinceLastRequest, 'ms desde última requisição (mínimo:', throttleTime, 'ms)');
+                return;
+            }
         }
-        userSessions.set(throttleKey, Date.now());
+        userSessions.set(throttleKey, now);
         
         try {
             console.log('🔍 DEBUG: Buscando userSession para userId:', userId);
