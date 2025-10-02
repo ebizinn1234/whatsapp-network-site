@@ -983,6 +983,7 @@ io.on('connection', (socket) => {
             });
             
             console.log('📊 Grupos ordenados por participantes (decrescente):', sortedGroupsList.slice(0, 5).map(g => `${g.name} (${g.participantCount} participantes)`));
+            console.log('📊 Últimos 5 grupos (menos participantes):', sortedGroupsList.slice(-5).map(g => `${g.name} (${g.participantCount} participantes)`));
             console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM SUCESSO!');
             socket.emit('groups-loaded', { groups: sortedGroupsList });
             } catch (error) {

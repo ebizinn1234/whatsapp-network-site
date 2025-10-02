@@ -2691,6 +2691,10 @@
             totalGroups.textContent = groups.length;
             console.log('📊 Total de grupos definido:', groups.length);
             
+            // ✅ VERIFICAR ORDENAÇÃO DOS GRUPOS
+            console.log('📊 Primeiros 5 grupos (devem ter MAIS participantes):', groups.slice(0, 5).map(g => `${g.name} (${g.participantCount} participantes)`));
+            console.log('📊 Últimos 5 grupos (devem ter MENOS participantes):', groups.slice(-5).map(g => `${g.name} (${g.participantCount} participantes)`));
+            
             if (groups.length === 0) {
                 console.log('⚠️ Nenhum grupo foi carregado');
                 const groupsContainer = document.getElementById('groupsContainer');
