@@ -903,6 +903,8 @@ io.on('connection', (socket) => {
                 
                 if (!groups || Object.keys(groups).length === 0) {
                     console.log('⚠️ Nenhum grupo retornado, mas sem erro');
+                    console.log('🔍 DEBUG: groups =', groups);
+                    console.log('🔍 DEBUG: Object.keys(groups) =', Object.keys(groups));
                     socket.emit('groups-loaded', { groups: [] });
                     return;
                 }
@@ -929,6 +931,7 @@ io.on('connection', (socket) => {
             });
             
             console.log('📊 Total de grupos retornados pela API:', allGroupsList.length);
+            console.log('📊 Primeiros 5 grupos ANTES do filtro:', allGroupsList.slice(0, 5).map(g => `${g.name} (${g.participantCount} participantes, ID: ${g.id})`));
             
             // FILTRAR: Apenas grupos normais (sem comunidades, sem canais de anúncio)
             const groupsList = allGroupsList.filter(group => {
@@ -956,6 +959,7 @@ io.on('connection', (socket) => {
             
             console.log('📊 Total ANTES do filtro:', allGroupsList.length);
             console.log('📊 Total APÓS filtro (apenas grupos):', groupsList.length);
+            console.log('📊 Primeiros 5 grupos APÓS filtro:', groupsList.slice(0, 5).map(g => `${g.name} (${g.participantCount} participantes)`));
             
             // ✅ APLICAR FILTROS DO USUÁRIO SE FORNECIDOS
             let finalGroupsList = groupsList;
