@@ -2392,6 +2392,8 @@
         socket.on('connection-status', (data) => {
             const statusHint = document.getElementById('statusHint');
             console.log('Status da conexão recebido:', data);
+            console.log('🔍 DEBUG: window.whatsappConnected =', window.whatsappConnected);
+            console.log('🔍 DEBUG: window.groupsLoaded =', window.groupsLoaded);
             // updateDebugInfo(`📱 Status WhatsApp: ${data.connected ? 'Conectado' : 'Desconectado'}`);
             
             // ✅ PROTEÇÃO CONTRA EVENTOS DUPLICADOS
