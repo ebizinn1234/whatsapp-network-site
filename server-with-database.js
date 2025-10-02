@@ -1488,18 +1488,18 @@ io.on('connection', (socket) => {
                         status: 'success'
                     });
                     
-                    // Aplicar delay APENAS se NÃO for o último grupo
+                    // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
                     if (i < groups.length - 1) {
-                    let actualDelay = delay;
-                    
-                    if (humanMode) {
-                        // Delay humano: variação aleatória entre minDelay e maxDelay
-                        const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                        actualDelay = randomDelay;
+                        let actualDelay = delay;
+                        
+                        if (humanMode) {
+                            // Delay humano: variação aleatória entre minDelay e maxDelay
+                            const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+                            actualDelay = randomDelay;
                             const minutes = Math.floor(actualDelay / 60000);
                             const seconds = Math.floor((actualDelay % 60000) / 1000);
                             console.log(`⏱️ Aguardando ${minutes}min ${seconds}s antes do próximo envio...`);
-                    } else {
+                        } else {
                             const seconds = Math.floor(actualDelay / 1000);
                             console.log(`⏱️ Aguardando ${seconds}s antes do próximo envio...`);
                         }
