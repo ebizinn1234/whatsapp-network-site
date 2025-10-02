@@ -2272,13 +2272,13 @@
         // Verificação inicial de conexão
         // updateDebugInfo('🚀 Página carregada, verificando conexão...');
         
-        // Forçar verificação de conexão após carregar a página
-        setTimeout(() => {
-            if (socket.connected) {
-                // updateDebugInfo('🔄 Forçando verificação de conexão...');
-                socket.emit('check-connection');
-            }
-        }, 2000);
+        // ❌ EVENTO CONFLITANTE REMOVIDO - estava causando erro "Usuário não identificado"
+        // setTimeout(() => {
+        //     if (socket.connected) {
+        //         // updateDebugInfo('🔄 Forçando verificação de conexão...');
+        //         socket.emit('check-connection');
+        //     }
+        // }, 2000);
         const groupsContainer = document.getElementById('groupsContainer');
         const searchContainer = document.getElementById('searchContainer');
         const groupSearch = document.getElementById('groupSearch');
