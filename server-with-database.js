@@ -956,8 +956,17 @@ io.on('connection', (socket) => {
             
             console.log('📊 Total ANTES do filtro:', allGroupsList.length);
             console.log('📊 Total APÓS filtro (apenas grupos):', groupsList.length);
+            
+            // ✅ ORDENAR GRUPOS POR NÚMERO DE PARTICIPANTES (DECRESCENTE)
+            const sortedGroupsList = groupsList.sort((a, b) => {
+                const participantsA = a.participantCount || 0;
+                const participantsB = b.participantCount || 0;
+                return participantsB - participantsA; // Decrescente: mais participantes primeiro
+            });
+            
+            console.log('📊 Grupos ordenados por participantes (decrescente):', sortedGroupsList.slice(0, 5).map(g => `${g.name} (${g.participantCount} participantes)`));
             console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM SUCESSO!');
-            socket.emit('groups-loaded', { groups: groupsList });
+            socket.emit('groups-loaded', { groups: sortedGroupsList });
             } catch (error) {
                 console.error('❌ Erro ao carregar grupos:', error);
                 console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM ERRO!');
