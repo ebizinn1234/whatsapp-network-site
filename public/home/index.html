@@ -2360,7 +2360,9 @@
             // Aguardar um pouco antes de verificar a conexão
             setTimeout(() => {
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                socket.emit('check-connection', { userId: userData.id });
+                if (userData.id) {
+                    socket.emit('check-connection', { userId: userData.id });
+                }
             }, 1000);
             
             // Entrar na sala do usuário se estiver logado, senão entrar na sala default
@@ -2672,7 +2674,9 @@
                 // Verificar status da conexão APENAS UMA VEZ
                 debugLog('🔍 DEBUG: Verificando status da conexão existente...');
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                socket.emit('check-connection', { userId: userData.id });
+                if (userData.id) {
+                    socket.emit('check-connection', { userId: userData.id });
+                }
                 
                 // Removido segundo check-connection para evitar reconexões excessivas
             } else {
@@ -2686,6 +2690,15 @@
             console.log('📊 Tipo de groupsData:', typeof groupsData);
             console.log('📊 groupsData.groups:', groupsData.groups);
             console.log('📊 Quantidade de grupos:', groupsData.groups ? groupsData.groups.length : 'undefined');
+            
+            // ✅ VERIFICAR SE É UMA MENSAGEM DE THROTTLE
+            if (groupsData.throttle && groupsData.message) {
+                console.log('⏱️ Throttle ativo:', groupsData.message);
+                addLog(groupsData.message, 'warning');
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('groupsContainer').style.display = 'block';
+                return;
+            }
             
             // ✅ ESCONDER SPINNER E MOSTRAR GRUPOS
             document.getElementById('loadingSpinner').style.display = 'none';

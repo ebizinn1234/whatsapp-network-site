@@ -539,7 +539,16 @@ io.on('connection', (socket) => {
             const timeSinceLastRequest = now - lastRequest;
             
             if (timeSinceLastRequest < throttleTime) {
+                const remainingTime = Math.ceil((throttleTime - timeSinceLastRequest) / 1000);
                 console.log('⏱️ load-groups ignorado (throttle):', timeSinceLastRequest, 'ms desde última requisição (mínimo:', throttleTime, 'ms)');
+                console.log('⏱️ Aguarde', remainingTime, 'segundos antes de tentar novamente');
+                
+                // ✅ ENVIAR MENSAGEM PARA O FRONTEND
+                socket.emit('groups-loaded', { 
+                    groups: [], 
+                    message: `Aguarde ${remainingTime} segundos antes de filtrar novamente`,
+                    throttle: true 
+                });
                 return;
             }
         }
@@ -874,9 +883,9 @@ io.on('connection', (socket) => {
                 console.log('✅ Socket WhatsApp confirmado como conectado');
                 console.log('🔍 DEBUG: Aguardando conexão estabilizar antes de buscar grupos...');
                 
-                // ✅ AGUARDAR CONEXÃO ESTABILIZAR COMPLETAMENTE
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                console.log('🔍 DEBUG: Aguardou 3s, verificando conexão novamente...');
+                // ✅ AGUARDAR CONEXÃO ESTABILIZAR COMPLETAMENTE (MAIS TEMPO PARA NÚMEROS INSTÁVEIS)
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                console.log('🔍 DEBUG: Aguardou 5s, verificando conexão novamente...');
                 
                 // ✅ VERIFICAR SE A CONEXÃO AINDA ESTÁ ESTÁVEL
                 if (!sock.user || !sock.user.id) {
@@ -885,10 +894,19 @@ io.on('connection', (socket) => {
                     return;
                 }
                 
-                console.log('✅ Conexão estável confirmada após 3 segundos');
+                console.log('✅ Conexão estável confirmada após 5 segundos');
                 
                 // ✅ VERIFICAÇÃO ADICIONAL DE ESTABILIDADE
                 console.log('🔍 DEBUG: Conexão estável, tentando buscar grupos...');
+                
+                // ✅ VERIFICAÇÃO FINAL ANTES DE BUSCAR GRUPOS
+                try {
+                    // Testar a conexão com uma operação simples
+                    const testResult = await sock.query({ json: ["query", "getStatus"] });
+                    console.log('✅ Teste de conexão bem-sucedido');
+                } catch (testError) {
+                    console.log('⚠️ Teste de conexão falhou, mas continuando...');
+                }
                 
                 let groups;
                 try {
@@ -898,44 +916,65 @@ io.on('connection', (socket) => {
                 } catch (fetchError) {
                     console.error('❌ Erro ao buscar grupos (tentativa 1):', fetchError.message);
                     
+                    // ✅ VERIFICAR SE É UM ERRO RECUPERÁVEL
+                    if (fetchError.message.includes('Connection Closed') || 
+                        fetchError.message.includes('Timed Out') ||
+                        fetchError.message.includes('Connection lost')) {
+                        console.log('🔄 Erro de conexão detectado, aguardando mais tempo...');
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    }
+                    
                     // SEGUNDA TENTATIVA: Aguardar e tentar novamente
                     try {
-                        console.log('🔄 Aguardando 2s e tentando novamente...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                        console.log('🔄 Aguardando 3s e tentando novamente...');
+                        await new Promise(resolve => setTimeout(resolve, 3000));
                         groups = await sock.groupFetchAllParticipating();
                         console.log('✅ Grupos obtidos na segunda tentativa:', Object.keys(groups).length);
                     } catch (retryError) {
                         console.error('❌ Erro na segunda tentativa:', retryError.message);
                         
-                        // ✅ DETECTAR SESSÃO CORROMPIDA E LIMPAR
+                        // ✅ DETECTAR SESSÃO CORROMPIDA E LIMPAR (APENAS EM CASOS EXTREMOS)
                         if (retryError.message.includes('Connection Closed') || 
                             retryError.message.includes('Timed Out')) {
-                            console.log('🚨 SESSÃO CORROMPIDA DETECTADA! Limpando sessão...');
+                            console.log('⚠️ Problema de conexão detectado, tentando abordagem mais suave...');
                             
-                            // Limpar sessão corrompida da memória
-                            if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
-                                delete userSessions.get(userId)[sessionId];
-                                console.log('🗑️ Sessão corrompida removida da memória');
-                            }
-                            
-                            // Marcar sessão como inativa no banco
+                            // ✅ TENTAR UMA TERCEIRA TENTATIVA COM MAIS TEMPO
                             try {
-                                await db.execute(
-                                    'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id = ?',
-                                    [userId, sessionId]
-                                );
-                                console.log('🗑️ Sessão marcada como inativa no banco');
-                            } catch (dbError) {
-                                console.error('❌ Erro ao marcar sessão como inativa:', dbError);
+                                console.log('🔄 Terceira tentativa com 5s de espera...');
+                                await new Promise(resolve => setTimeout(resolve, 5000));
+                                groups = await sock.groupFetchAllParticipating();
+                                console.log('✅ Grupos obtidos na terceira tentativa:', Object.keys(groups).length);
+                            } catch (thirdError) {
+                                console.error('❌ Erro na terceira tentativa:', thirdError.message);
+                                
+                                // ✅ APENAS AGORA MARCAR COMO CORROMPIDA SE FALHAR 3 VEZES
+                                console.log('🚨 SESSÃO REALMENTE CORROMPIDA! Limpando sessão...');
+                                
+                                // Limpar sessão corrompida da memória
+                                if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
+                                    delete userSessions.get(userId)[sessionId];
+                                    console.log('🗑️ Sessão corrompida removida da memória');
+                                }
+                                
+                                // Marcar sessão como inativa no banco
+                                try {
+                                    await db.execute(
+                                        'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id = ?',
+                                        [userId, sessionId]
+                                    );
+                                    console.log('🗑️ Sessão marcada como inativa no banco');
+                                } catch (dbError) {
+                                    console.error('❌ Erro ao marcar sessão como inativa:', dbError);
+                                }
+                                
+                                // Emitir erro específico para sessão corrompida
+                                socket.emit('groups-loaded', { groups: [] });
+                                socket.emit('connection-status', {
+                                    connected: false,
+                                    message: 'Sessão corrompida detectada. Clique em Conectar para criar nova sessão.'
+                                });
+                                return;
                             }
-                            
-                            // Emitir erro específico para sessão corrompida
-                            socket.emit('groups-loaded', { groups: [] });
-                            socket.emit('connection-status', {
-                                connected: false,
-                                message: 'Sessão corrompida detectada. Clique em Conectar para criar nova sessão.'
-                            });
-                            return;
                         }
                         
                         throw retryError; // Deixar o catch externo tratar outros erros
@@ -946,6 +985,16 @@ io.on('connection', (socket) => {
                     console.log('⚠️ Nenhum grupo retornado, mas sem erro');
                     console.log('🔍 DEBUG: groups =', groups);
                     console.log('🔍 DEBUG: Object.keys(groups) =', Object.keys(groups));
+                    console.log('🔍 DEBUG: Verificando se a conexão ainda está ativa...');
+                    
+                    // ✅ VERIFICAR SE A CONEXÃO AINDA ESTÁ ATIVA
+                    if (!sock.user || !sock.user.id) {
+                        console.log('❌ Conexão perdida - sock.user não existe');
+                        socket.emit('groups-loaded', { groups: [] });
+                        return;
+                    }
+                    
+                    console.log('✅ Conexão ainda ativa, mas sem grupos. Isso pode ser normal para contas novas.');
                     socket.emit('groups-loaded', { groups: [] });
                     return;
                 }
@@ -1747,7 +1796,7 @@ io.on('connection', (socket) => {
                 });
             } else {
                 // Verificar no banco de dados
-                const [sendingHistory] = await pool.execute(
+                const [sendingHistory] = await db.execute(
                     'SELECT * FROM sending_history WHERE user_id = ? AND status IN ("sending", "paused") ORDER BY created_at DESC LIMIT 1',
                     [userId]
                 );
