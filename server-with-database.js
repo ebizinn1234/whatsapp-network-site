@@ -1127,13 +1127,18 @@ io.on('connection', (socket) => {
                             profilePicture: userInfo.profilePicture || null
                         };
                         
-                        // ❌ EVENTO CONFLITANTE REMOVIDO - estava causando duplicação
-                        // console.log('📤 Emitindo connection-status (sessão em memória)');
-                        // socket.emit('connection-status', {
-                        //     connected: true,
-                        //     whatsappInfo: whatsappInfo
-                        // });
-                        console.log('✅ Sessão ativa encontrada na memória - não emitindo evento duplicado');
+                        // ✅ EMITIR EVENTO APENAS SE NÃO FOI EMITIDO RECENTEMENTE
+                        const now = Date.now();
+                        if (!socket.lastConnectionStatus || (now - socket.lastConnectionStatus) > 5000) {
+                            console.log('📤 Emitindo connection-status (sessão em memória)');
+                            socket.emit('connection-status', {
+                                connected: true,
+                                whatsappInfo: whatsappInfo
+                            });
+                            socket.lastConnectionStatus = now;
+                        } else {
+                            console.log('✅ Sessão ativa encontrada na memória - evento recente ignorado');
+                        }
                         return;
                     }
                 }
