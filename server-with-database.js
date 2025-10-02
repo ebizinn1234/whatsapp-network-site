@@ -959,46 +959,20 @@ io.on('connection', (socket) => {
             
             // ✅ APLICAR FILTROS DO USUÁRIO SE FORNECIDOS
             let finalGroupsList = groupsList;
-            if (filters && (filters.minParticipants > 0 || filters.includeKeywords.length > 0 || filters.excludeKeywords.length > 0)) {
-                console.log('🔍 APLICANDO FILTROS DO USUÁRIO:', filters);
+            if (filters && filters.minParticipants > 0) {
+                console.log('🔍 APLICANDO FILTRO DE PARTICIPANTES:', filters.minParticipants);
                 
                 finalGroupsList = groupsList.filter(group => {
                     // Filtrar por número mínimo de participantes
-                    if (filters.minParticipants > 0 && group.participantCount < filters.minParticipants) {
+                    if (group.participantCount < filters.minParticipants) {
                         console.log('🚫 Grupo com poucos participantes filtrado:', group.name, `(${group.participantCount} membros, mínimo: ${filters.minParticipants})`);
                         return false;
                     }
                     
-                    // Filtrar por palavras-chave de inclusão
-                    if (filters.includeKeywords.length > 0) {
-                        const groupName = group.name.toLowerCase();
-                        const hasIncludeKeyword = filters.includeKeywords.some(keyword => 
-                            groupName.includes(keyword.toLowerCase())
-                        );
-                        
-                        if (!hasIncludeKeyword) {
-                            console.log('🚫 Grupo sem palavras-chave de inclusão filtrado:', group.name);
-                            return false;
-                        }
-                    }
-                    
-                    // Filtrar por palavras-chave de exclusão
-                    if (filters.excludeKeywords.length > 0) {
-                        const groupName = group.name.toLowerCase();
-                        const hasExcludeKeyword = filters.excludeKeywords.some(keyword => 
-                            groupName.includes(keyword.toLowerCase())
-                        );
-                        
-                        if (hasExcludeKeyword) {
-                            console.log('🚫 Grupo com palavras-chave de exclusão filtrado:', group.name);
-                            return false;
-                        }
-                    }
-                    
-                    return true; // Incluir grupo que passou em todos os filtros
+                    return true; // Incluir grupo que passou no filtro
                 });
                 
-                console.log('📊 Total APÓS filtros do usuário:', finalGroupsList.length);
+                console.log('📊 Total APÓS filtro de participantes:', finalGroupsList.length);
             }
             
             // ✅ ORDENAR GRUPOS POR NÚMERO DE PARTICIPANTES (DECRESCENTE)
