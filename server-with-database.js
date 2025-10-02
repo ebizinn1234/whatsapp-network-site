@@ -1034,7 +1034,7 @@ io.on('connection', (socket) => {
                     
                     // Limpar sessão corrompida
                     if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
-                        delete userSessions.get(userId)[sessionId];
+                            delete userSessions.get(userId)[sessionId];
                         console.log('🗑️ Sessão corrompida removida da memória');
                     }
                     
@@ -1127,11 +1127,13 @@ io.on('connection', (socket) => {
                             profilePicture: userInfo.profilePicture || null
                         };
                         
-                        console.log('📤 Emitindo connection-status (sessão em memória)');
-                        socket.emit('connection-status', {
-                            connected: true,
-                            whatsappInfo: whatsappInfo
-                        });
+                        // ❌ EVENTO CONFLITANTE REMOVIDO - estava causando duplicação
+                        // console.log('📤 Emitindo connection-status (sessão em memória)');
+                        // socket.emit('connection-status', {
+                        //     connected: true,
+                        //     whatsappInfo: whatsappInfo
+                        // });
+                        console.log('✅ Sessão ativa encontrada na memória - não emitindo evento duplicado');
                         return;
                     }
                 }
@@ -1545,16 +1547,16 @@ io.on('connection', (socket) => {
                     
                     // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
                     if (i < groups.length - 1) {
-                        let actualDelay = delay;
-                        
-                        if (humanMode) {
-                            // Delay humano: variação aleatória entre minDelay e maxDelay
-                            const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                            actualDelay = randomDelay;
+                    let actualDelay = delay;
+                    
+                    if (humanMode) {
+                        // Delay humano: variação aleatória entre minDelay e maxDelay
+                        const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+                        actualDelay = randomDelay;
                             const minutes = Math.floor(actualDelay / 60000);
                             const seconds = Math.floor((actualDelay % 60000) / 1000);
                             console.log(`⏱️ Aguardando ${minutes}min ${seconds}s antes do próximo envio...`);
-                        } else {
+                    } else {
                             const seconds = Math.floor(actualDelay / 1000);
                             console.log(`⏱️ Aguardando ${seconds}s antes do próximo envio...`);
                         }
