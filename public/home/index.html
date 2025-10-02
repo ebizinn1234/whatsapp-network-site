@@ -3253,6 +3253,15 @@
             debugLog('🔍 DEBUG: Emitindo evento load-groups...');
             socket.emit('load-groups', { userId: userData.id, filters: filters });
             debugLog('🔍 DEBUG: Evento load-groups emitido!');
+            
+            // ✅ TIMEOUT DE FALLBACK PARA THROTTLE
+            setTimeout(() => {
+                const spinner = document.getElementById('loadingSpinner');
+                if (spinner && spinner.style.display !== 'none') {
+                    console.log('⏱️ Aguardando throttle (5s) - filtro será aplicado em breve...');
+                    addLog('⏱️ Aguardando 5 segundos entre filtros...', 'info');
+                }
+            }, 2000);
             // Removido addLog - grupos serão reportados quando carregados
         });
 
@@ -3275,6 +3284,15 @@
                 
                 console.log('🔍 DEBUG: Filtros aplicados:', filters);
                 socket.emit('load-groups', { userId: userData.id, filters: filters });
+                
+                // ✅ TIMEOUT DE FALLBACK PARA THROTTLE
+                setTimeout(() => {
+                    const spinner = document.getElementById('loadingSpinner');
+                    if (spinner && spinner.style.display !== 'none') {
+                        console.log('⏱️ Aguardando throttle (5s) - filtro será aplicado em breve...');
+                        addLog('⏱️ Aguardando 5 segundos entre filtros...', 'info');
+                    }
+                }, 2000);
             }
         });
         
@@ -3359,7 +3377,7 @@
                 // ✅ VERIFICAR SE FUNÇÃO EXISTE ANTES DE CHAMAR
                 if (typeof showProgress === 'function') {
                     showProgress(data.current, data.total);
-                } else {
+            } else {
                     console.log('⚠️ Função showProgress não encontrada, ignorando');
                 }
             }

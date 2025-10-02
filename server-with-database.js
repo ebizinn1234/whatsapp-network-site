@@ -529,10 +529,10 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: userId recebido:', userId, 'sessionId recebido:', sessionId);
         console.log('🔍 DEBUG: filtros recebidos:', filters);
         
-        // ✅ THROTTLE PARA EVITAR MÚLTIPLAS REQUISIÇÕES (30 segundos)
+        // ✅ THROTTLE PARA EVITAR MÚLTIPLAS REQUISIÇÕES (5 segundos)
         const throttleKey = `load-groups-${userId}`;
         const now = Date.now();
-        const throttleTime = 30000; // 30 segundos
+        const throttleTime = 5000; // 5 segundos
         
         if (userSessions.has(throttleKey)) {
             const lastRequest = userSessions.get(throttleKey);
