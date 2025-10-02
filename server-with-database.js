@@ -197,23 +197,23 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                         console.log('✅ connection-status marcado como emitido (não será emitido novamente)');
                     }
                     
-                    // ✅ LIMPAR ARQUIVOS ANTIGOS APÓS CONEXÃO BEM-SUCEDIDA
-                    try {
-                        const oldAuthDirs = fs.readdirSync('./').filter(dir => 
-                            dir.startsWith(`auth_info_${userId}_`) && dir !== `auth_info_${userId}_${sessionId}`
-                        );
-                        
-                        for (const oldDir of oldAuthDirs) {
-                            try {
-                                fs.rmSync(oldDir, { recursive: true, force: true });
-                                console.log('🗑️ Arquivos antigos removidos:', oldDir);
-                            } catch (rmError) {
-                                console.error('❌ Erro ao remover arquivos antigos:', rmError);
-                            }
-                        }
-                    } catch (cleanupError) {
-                        console.error('❌ Erro na limpeza de arquivos antigos:', cleanupError);
-                    }
+                    // ❌ LIMPEZA AUTOMÁTICA DESABILITADA - ESTAVA DELETANDO ARQUIVOS NECESSÁRIOS
+                    // try {
+                    //     const oldAuthDirs = fs.readdirSync('./').filter(dir => 
+                    //         dir.startsWith(`auth_info_${userId}_`) && dir !== `auth_info_${userId}_${sessionId}`
+                    //     );
+                    //     
+                    //     for (const oldDir of oldAuthDirs) {
+                    //         try {
+                    //             fs.rmSync(oldDir, { recursive: true, force: true });
+                    //             console.log('🗑️ Arquivos antigos removidos:', oldDir);
+                    //         } catch (rmError) {
+                    //             console.error('❌ Erro ao remover arquivos antigos:', rmError);
+                    //         }
+                    //     }
+                    // } catch (cleanupError) {
+                    //     console.error('❌ Erro na limpeza de arquivos antigos:', cleanupError);
+                    // }
                 }
         }
     });
