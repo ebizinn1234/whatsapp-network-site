@@ -487,6 +487,14 @@ io.on('connection', (socket) => {
         console.log('🔍 DEBUG: userId recebido:', userId, 'sessionId recebido:', sessionId);
         console.log('🔍 DEBUG: filtros recebidos:', filters);
         
+        // ✅ THROTTLE PARA EVITAR MÚLTIPLAS REQUISIÇÕES
+        const throttleKey = `load-groups-${userId}`;
+        if (userSessions.has(throttleKey)) {
+            console.log('⏱️ load-groups ignorado (throttle):', Date.now() - userSessions.get(throttleKey), 'ms desde última requisição');
+            return;
+        }
+        userSessions.set(throttleKey, Date.now());
+        
         try {
             console.log('🔍 DEBUG: Buscando userSession para userId:', userId);
             const userSession = userSessions.get(userId);
@@ -817,37 +825,19 @@ io.on('connection', (socket) => {
                 console.log('🔍 DEBUG: Aguardando conexão estabilizar antes de buscar grupos...');
                 
                 // ✅ AGUARDAR CONEXÃO ESTABILIZAR COMPLETAMENTE
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                console.log('🔍 DEBUG: Aguardou 5s, verificando conexão novamente...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                console.log('🔍 DEBUG: Aguardou 3s, verificando conexão novamente...');
                 
-                // Verificar se ainda está conectado após aguardar
+                // ✅ VERIFICAR SE A CONEXÃO AINDA ESTÁ ESTÁVEL
                 if (!sock.user || !sock.user.id) {
                     console.log('❌ Conexão perdida durante estabilização');
                     socket.emit('groups-loaded', { groups: [] });
-                    socket.emit('connection-status', {
-                        connected: false,
-                        message: 'Conexão instável. Tente conectar novamente.'
-                    });
                     return;
                 }
+                
+                console.log('✅ Conexão estável confirmada após 3 segundos');
                 
                 // ✅ VERIFICAÇÃO ADICIONAL DE ESTABILIDADE
-                console.log('🔍 DEBUG: Verificando estabilidade da conexão...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Verificar novamente se ainda está estável
-                if (!sock.user || !sock.user.id) {
-                    console.log('❌ Conexão perdida após verificação de estabilidade');
-                    socket.emit('groups-loaded', { groups: [] });
-                    socket.emit('connection-status', {
-                        connected: false,
-                        message: 'Conexão instável. Tente conectar novamente.'
-                    });
-                    return;
-                }
-                
-                console.log('✅ Conexão estável confirmada após 7 segundos');
-                
                 console.log('🔍 DEBUG: Conexão estável, tentando buscar grupos...');
                 
                 let groups;
@@ -995,31 +985,26 @@ io.on('connection', (socket) => {
                 console.error('❌ Erro ao carregar grupos:', error);
                 console.log('🔍 DEBUG: EVENTO LOAD-GROUPS FINALIZADO COM ERRO!');
                 
-                // Se for erro de conexão, tentar reconectar
+                // ✅ NÃO RECONECTAR AUTOMATICAMENTE - EVITAR LOOP INFINITO
                 if (error.message.includes('Connection Closed') || error.message.includes('Timed Out')) {
-                    console.log('🔄 Tentando reconectar WhatsApp...');
+                    console.log('🚨 SESSÃO CORROMPIDA - NÃO RECONECTANDO AUTOMATICAMENTE');
+                    console.log('🛑 Usuário deve reconectar manualmente para evitar loop');
+                    
+                    // Limpar sessão corrompida
+                    if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
+                        delete userSessions.get(userId)[sessionId];
+                        console.log('🗑️ Sessão corrompida removida da memória');
+                    }
+                    
+                    // Marcar como inativa no banco
                     try {
-                        // Limpar sessão atual
-                        if (userSessions.has(userId)) {
-                            delete userSessions.get(userId)[sessionId];
-                        }
-                        
-                        // Tentar reconectar
-                        setTimeout(async () => {
-                            try {
-                                const newSock = await createWhatsAppSocket(userId, sessionId);
-                                userSessions.get(userId)[sessionId] = {
-                                    sock: newSock,
-                                    isConnected: false,
-                                    sessionId
-                                };
-                                console.log('✅ Reconexão iniciada');
-                            } catch (reconnectError) {
-                                console.error('❌ Erro na reconexão:', reconnectError);
-                            }
-                        }, 5000);
-                    } catch (reconnectError) {
-                        console.error('❌ Erro ao tentar reconectar:', reconnectError);
+                        await db.execute(
+                            'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id = ?',
+                            [userId, sessionId]
+                        );
+                        console.log('🗑️ Sessão marcada como inativa no banco');
+                    } catch (dbError) {
+                        console.error('❌ Erro ao marcar sessão como inativa:', dbError);
                     }
                 }
                 
