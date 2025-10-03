@@ -706,6 +706,9 @@ setInterval(async () => {
     }
 }, 6 * 60 * 60 * 1000); // 6 horas
 
+// Controle de throttling global para cofre
+const vaultThrottle = new Map();
+
 // Função para criar socket WhatsApp
 async function createWhatsAppSocket(userId, sessionId = 'default') {
     const authDir = `auth_info_${userId}_${sessionId}`;
@@ -885,16 +888,16 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         }
     });
 
-    // Controle de throttling para cofre
-    let lastVaultSave = 0;
-    
     sock.ev.on('creds.update', async () => {
         // Salvar credenciais normalmente
         saveCreds();
         
-        // 🏦 SALVAR NO COFRE COM THROTTLING (máximo 1x por minuto)
+        // 🏦 SALVAR NO COFRE COM THROTTLING GLOBAL (máximo 1x por minuto por usuário)
+        const throttleKey = `${userId}_${sessionId}`;
         const now = Date.now();
-        if (now - lastVaultSave > 60000) { // 1 minuto
+        const lastSave = vaultThrottle.get(throttleKey) || 0;
+        
+        if (now - lastSave > 60000) { // 1 minuto
             try {
                 const sessionData = {
                     userId,
@@ -912,7 +915,7 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 
                 await sessionVault.saveSessionToVault(userId, sessionId, sessionData);
                 console.log(`🏦 Sessão salva no cofre: ${userId}_${sessionId}`);
-                lastVaultSave = now;
+                vaultThrottle.set(throttleKey, now);
             } catch (error) {
                 console.error('❌ Erro ao salvar sessão no cofre:', error);
             }
