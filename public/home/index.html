@@ -1352,6 +1352,34 @@
                 margin: 5px 0 10px 0;  /* reduzir margem superior */
                 border-radius: 0;
             }
+
+            /* Ajustar banner promocional para mobile */
+            .promo-banner {
+                margin: 0 0 15px 0;
+                border-radius: 0;
+            }
+
+            .promo-content {
+                padding: 15px 20px;
+            }
+
+            .promo-icon {
+                font-size: 24px;
+                margin-right: 15px;
+            }
+
+            .promo-text h3 {
+                font-size: 16px;
+            }
+
+            .promo-text p {
+                font-size: 13px;
+            }
+
+            .promo-badge {
+                padding: 6px 12px;
+                font-size: 10px;
+            }
         }
 
         /* Telas muito pequenas (≤ 480px) */
@@ -1414,6 +1442,29 @@
             .mobile-whatsapp-card {
                 margin: 3px 0 8px 0 !important;  /* ainda mais próximo */
             }
+
+            /* Ajustar banner para telas muito pequenas */
+            .promo-content {
+                padding: 12px 15px !important;
+            }
+
+            .promo-icon {
+                font-size: 20px !important;
+                margin-right: 12px !important;
+            }
+
+            .promo-text h3 {
+                font-size: 14px !important;
+            }
+
+            .promo-text p {
+                font-size: 12px !important;
+            }
+
+            .promo-badge {
+                padding: 5px 10px !important;
+                font-size: 9px !important;
+            }
         }
 
         /* Telas extra pequenas (≤ 360px) */
@@ -1466,6 +1517,34 @@
 
             .mobile-whatsapp-card {
                 margin: 2px 0 6px 0 !important;  /* máximo próximo */
+            }
+
+            /* Ajustar banner para telas extra pequenas */
+            .promo-content {
+                padding: 10px 12px !important;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .promo-icon {
+                font-size: 18px !important;
+                margin-right: 0 !important;
+                margin-bottom: 8px !important;
+            }
+
+            .promo-text h3 {
+                font-size: 13px !important;
+                margin-bottom: 5px !important;
+            }
+
+            .promo-text p {
+                font-size: 11px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .promo-badge {
+                padding: 4px 8px !important;
+                font-size: 8px !important;
             }
         }
 
@@ -1816,6 +1895,92 @@
             font-size: 13px;
             line-height: 1.4;
         }
+
+        /* Banner Promocional */
+        .promo-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 0 20px 0;
+            border-radius: 15px;
+            padding: 0;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .promo-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            pointer-events: none;
+        }
+
+        .promo-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            padding: 20px 25px;
+            color: white;
+        }
+
+        .promo-icon {
+            font-size: 32px;
+            margin-right: 20px;
+            color: #ffd700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .promo-text {
+            flex: 1;
+        }
+
+        .promo-text h3 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .promo-text p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        .promo-text strong {
+            color: #ffd700;
+            font-weight: 800;
+        }
+
+        .promo-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
     </style>
 </head>
 <body>
@@ -1898,6 +2063,22 @@
     <!-- Conteúdo Principal -->
     <div class="main-content">
         <div class="container">
+
+        <!-- Banner Promocional -->
+        <div class="promo-banner">
+            <div class="promo-content">
+                <div class="promo-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="promo-text">
+                    <h3>Sistema de Disparos em Massa para Grupos</h3>
+                    <p>Totalmente <strong>GRÁTIS</strong> • Envie para milhares de grupos • Sem limites</p>
+                </div>
+                <div class="promo-badge">
+                    <span>100% GRÁTIS</span>
+                </div>
+            </div>
+        </div>
 
         <!-- Mobile: Conecte sua Conta WhatsApp (próximo ao header) -->
         <div class="mobile-whatsapp-card" id="mobileWhatsappCard">
