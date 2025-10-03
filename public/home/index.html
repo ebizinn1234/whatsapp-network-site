@@ -1288,6 +1288,39 @@
                 display: block;
             }
 
+            /* Responsivo para header mobile */
+            .header-content {
+                padding: 8px 15px;
+            }
+
+            .logo {
+                gap: 4px;
+            }
+
+            .logo svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .logo span {
+                font-size: 18px;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .btn-header {
+                padding: 6px 12px;
+                font-size: 13px;
+                border-radius: 6px;
+            }
+
+            .btn-header i {
+                margin-right: 4px !important;
+                font-size: 12px;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
@@ -1300,6 +1333,99 @@
 
             .main-content {
                 left: 0;            /* volta pro zero no mobile */
+            }
+        }
+
+        /* Telas muito pequenas (≤ 480px) */
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 6px 12px;
+            }
+
+            .logo {
+                gap: 3px;
+            }
+
+            .logo svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .logo span {
+                font-size: 16px;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .btn-header {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-radius: 5px;
+            }
+
+            .btn-header i {
+                margin-right: 3px !important;
+                font-size: 11px;
+            }
+
+            /* Ajustar card mobile para telas muito pequenas */
+            .mobile-card-content {
+                padding: 12px 16px;
+            }
+
+            .mobile-card-content h3 {
+                font-size: 14px;
+            }
+
+            .mobile-card-content p {
+                font-size: 12px;
+            }
+        }
+
+        /* Telas extra pequenas (≤ 360px) */
+        @media (max-width: 360px) {
+            .header-content {
+                padding: 5px 10px;
+            }
+
+            .logo svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .logo span {
+                font-size: 15px;
+            }
+
+            .header-actions {
+                gap: 4px;
+            }
+
+            .btn-header {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .btn-header i {
+                margin-right: 2px !important;
+                font-size: 10px;
+            }
+
+            /* Esconder texto dos botões em telas muito pequenas */
+            .btn-header span {
+                display: none;
+            }
+
+            .btn-header i {
+                margin-right: 0 !important;
+            }
+        }
+
+        /* Estilos adicionais para mobile */
+        @media (max-width: 768px) {
+            .main-content {
                 max-width: 100%;
                 padding-top: 70px;
             }

@@ -274,6 +274,115 @@
             box-shadow: 0 5px 15px rgba(36, 211, 102, 0.3);
         }
 
+        /* Responsivo para mobile */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 8px 15px;
+            }
+
+            .logo {
+                gap: 4px;
+            }
+
+            .logo-icon {
+                width: 20px !important;
+                height: 20px !important;
+            }
+
+            .logo-text {
+                font-size: 18px !important;
+            }
+
+            .header-actions {
+                gap: 8px !important;
+            }
+
+            .btn-login, .btn-register {
+                padding: 6px 12px !important;
+                font-size: 13px !important;
+                border-radius: 6px !important;
+            }
+
+            .btn-login i, .btn-register i {
+                margin-right: 4px !important;
+                font-size: 12px !important;
+            }
+        }
+
+        /* Telas muito pequenas (≤ 480px) */
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 6px 12px;
+            }
+
+            .logo {
+                gap: 3px;
+            }
+
+            .logo-icon {
+                width: 18px !important;
+                height: 18px !important;
+            }
+
+            .logo-text {
+                font-size: 16px !important;
+            }
+
+            .header-actions {
+                gap: 6px !important;
+            }
+
+            .btn-login, .btn-register {
+                padding: 5px 10px !important;
+                font-size: 12px !important;
+                border-radius: 5px !important;
+            }
+
+            .btn-login i, .btn-register i {
+                margin-right: 3px !important;
+                font-size: 11px !important;
+            }
+        }
+
+        /* Telas extra pequenas (≤ 360px) */
+        @media (max-width: 360px) {
+            .header-content {
+                padding: 5px 10px;
+            }
+
+            .logo-icon {
+                width: 16px !important;
+                height: 16px !important;
+            }
+
+            .logo-text {
+                font-size: 15px !important;
+            }
+
+            .header-actions {
+                gap: 4px !important;
+            }
+
+            .btn-login, .btn-register {
+                padding: 4px 8px !important;
+                font-size: 11px !important;
+            }
+
+            .btn-login i, .btn-register i {
+                margin-right: 2px !important;
+                font-size: 10px !important;
+            }
+
+            /* Esconder texto dos botões em telas muito pequenas */
+            .btn-login span, .btn-register span {
+                display: none;
+            }
+
+            .btn-login i, .btn-register i {
+                margin-right: 0 !important;
+            }
+        }
+
         @media (max-width: 480px) {
             .auth-container {
                 margin: 10px;
