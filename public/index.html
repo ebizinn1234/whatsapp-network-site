@@ -403,8 +403,12 @@
                 <span class="logo-text" style="font-size: 24px; font-weight: 700; color: #24d366;">DisparoZap</span>
         </div>
             <div class="header-actions" style="display: flex; gap: 15px;">
-                <button class="btn-login" onclick="showForm('login')" style="padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: #f8f9fa; color: #6c757d; border: 2px solid #e1e5e9;">Entrar</button>
-                <button class="btn-register" onclick="showForm('register')" style="padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: linear-gradient(135deg, #24d366 0%, #128c7e 100%); color: white;">Cadastrar</button>
+                <button class="btn-login" onclick="showForm('login')" style="padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: #f8f9fa; color: #6c757d; border: 2px solid #e1e5e9;">
+                    <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Entrar
+                </button>
+                <button class="btn-register" onclick="showForm('register')" style="padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: linear-gradient(135deg, #24d366 0%, #128c7e 100%); color: white;">
+                    <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Cadastrar
+                </button>
             </div>
         </div>
     </div>
@@ -416,8 +420,12 @@
                 <h1><i class="fab fa-whatsapp"></i> DisparoZap</h1>
                 <p>Envio de mensagens em massa para WhatsApp</p>
                 <div class="hero-actions">
-                    <button class="btn-hero" onclick="showForm('login')">Entrar</button>
-                    <button class="btn-hero btn-primary" onclick="showForm('register')">Cadastrar</button>
+                    <button class="btn-hero" onclick="showForm('login')">
+                        <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Entrar
+                    </button>
+                    <button class="btn-hero btn-primary" onclick="showForm('register')">
+                        <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Cadastrar
+                    </button>
                 </div>
             </div>
         </div>
@@ -466,6 +474,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>
                     <span id="loginBtnText">Entrar</span>
                     <div id="loginLoading" class="loading hidden"></div>
                 </button>
