@@ -1333,6 +1333,24 @@
 
             .main-content {
                 left: 0;            /* volta pro zero no mobile */
+                padding: 10px 0;    /* reduzir padding lateral */
+            }
+
+            .container {
+                max-width: 100% !important;
+                padding: 0 10px;    /* padding mínimo lateral */
+                margin: 0;
+            }
+
+            .card {
+                margin: 0 0 15px 0; /* remover margens laterais */
+                border-radius: 0;   /* bordas retas no mobile */
+                padding: 20px 15px; /* padding interno reduzido */
+            }
+
+            .mobile-whatsapp-card {
+                margin: 10px 0 15px 0;
+                border-radius: 0;
             }
         }
 
@@ -1382,6 +1400,20 @@
             .mobile-card-content p {
                 font-size: 12px;
             }
+
+            /* Ajustar containers para telas muito pequenas */
+            .container {
+                padding: 0 5px !important;
+            }
+
+            .card {
+                padding: 15px 10px !important;
+                margin: 0 0 10px 0 !important;
+            }
+
+            .mobile-whatsapp-card {
+                margin: 5px 0 10px 0 !important;
+            }
         }
 
         /* Telas extra pequenas (≤ 360px) */
@@ -1420,6 +1452,20 @@
 
             .btn-header i {
                 margin-right: 0 !important;
+            }
+
+            /* Ajustar containers para telas extra pequenas */
+            .container {
+                padding: 0 3px !important;
+            }
+
+            .card {
+                padding: 12px 8px !important;
+                margin: 0 0 8px 0 !important;
+            }
+
+            .mobile-whatsapp-card {
+                margin: 3px 0 8px 0 !important;
             }
         }
 
