@@ -104,12 +104,13 @@ class SessionVault {
             const backupPath = path.join(this.backupDir, `${vaultKey}_${Date.now()}.backup`);
             
             // Dados para salvar
+            const serializedData = this.saveSessionData(sessionData);
             const vaultData = {
                 userId,
                 sessionId,
                 timestamp: Date.now(),
-                sessionData: this.saveSessionData(sessionData),
-                checksum: crypto.createHash('sha256').update(JSON.stringify(sessionData)).digest('hex')
+                sessionData: serializedData,
+                checksum: crypto.createHash('sha256').update(serializedData).digest('hex')
             };
 
             // Salvar no cofre principal
@@ -884,30 +885,37 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         }
     });
 
+    // Controle de throttling para cofre
+    let lastVaultSave = 0;
+    
     sock.ev.on('creds.update', async () => {
         // Salvar credenciais normalmente
         saveCreds();
         
-        // 🏦 SALVAR NO COFRE TAMBÉM
-        try {
-            const sessionData = {
-                userId,
-                sessionId,
-                authDir,
-                timestamp: Date.now(),
-                userInfo: sock.user ? {
-                    id: sock.user.id,
-                    name: sock.user.name,
-                    verifiedName: sock.user.verifiedName,
-                    notify: sock.user.notify,
-                    profilePicture: sock.user.profilePicture
-                } : null
-            };
-            
-            await sessionVault.saveSessionToVault(userId, sessionId, sessionData);
-            console.log(`🏦 Sessão salva no cofre: ${userId}_${sessionId}`);
-        } catch (error) {
-            console.error('❌ Erro ao salvar sessão no cofre:', error);
+        // 🏦 SALVAR NO COFRE COM THROTTLING (máximo 1x por minuto)
+        const now = Date.now();
+        if (now - lastVaultSave > 60000) { // 1 minuto
+            try {
+                const sessionData = {
+                    userId,
+                    sessionId,
+                    authDir,
+                    timestamp: now,
+                    userInfo: sock.user ? {
+                        id: sock.user.id,
+                        name: sock.user.name,
+                        verifiedName: sock.user.verifiedName,
+                        notify: sock.user.notify,
+                        profilePicture: sock.user.profilePicture
+                    } : null
+                };
+                
+                await sessionVault.saveSessionToVault(userId, sessionId, sessionData);
+                console.log(`🏦 Sessão salva no cofre: ${userId}_${sessionId}`);
+                lastVaultSave = now;
+            } catch (error) {
+                console.error('❌ Erro ao salvar sessão no cofre:', error);
+            }
         }
     });
     
