@@ -9,6 +9,9 @@ import { Boom } from '@hapi/boom';
 import P from 'pino';
 import qrcode from 'qrcode';
 import fs from 'fs';
+import { promises as fsPromises } from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import authRoutes from './routes/auth.js';
 import { authenticateToken } from './routes/auth.js';
 import db from './config/database.js';
@@ -33,11 +36,276 @@ app.use(express.static('public'));
 // Rotas de autenticação
 app.use('/api/auth', authRoutes);
 
+// 🏦 ROTAS DO COFRE DE SESSÕES
+app.get('/api/vault/status', async (req, res) => {
+    try {
+        const status = await sessionVault.getVaultStatus();
+        res.json({ success: true, status });
+    } catch (error) {
+        console.error('❌ Erro ao obter status do cofre:', error);
+        res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    }
+});
+
+app.post('/api/vault/cleanup', async (req, res) => {
+    try {
+        await sessionVault.cleanOldSessions();
+        const status = await sessionVault.getVaultStatus();
+        res.json({ success: true, message: 'Limpeza concluída', status });
+    } catch (error) {
+        console.error('❌ Erro ao limpar cofre:', error);
+        res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    }
+});
+
 // Middleware para verificar autenticação
 app.use('/api/*', authenticateToken);
 
 // Armazenar sessões dos usuários
 const userSessions = new Map();
+
+// 🏦 SISTEMA DE COFRE PARA SESSÕES WHATSAPP
+class SessionVault {
+    constructor() {
+        this.vaultDir = path.join(__dirname, 'session_vault');
+        this.backupDir = path.join(__dirname, 'session_backups');
+        this.ensureDirectories();
+    }
+
+    async ensureDirectories() {
+        try {
+            await fsPromises.mkdir(this.vaultDir, { recursive: true });
+            await fsPromises.mkdir(this.backupDir, { recursive: true });
+            console.log('🏦 Cofre de sessões inicializado');
+        } catch (error) {
+            console.error('❌ Erro ao criar diretórios do cofre:', error);
+        }
+    }
+
+    // 🔐 Criptografar dados da sessão
+    encryptSessionData(data) {
+        const algorithm = 'aes-256-cbc';
+        const key = crypto.scryptSync('whatsapp-session-key-2024', 'salt', 32);
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipher(algorithm, key);
+        
+        let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        
+        return {
+            encrypted,
+            iv: iv.toString('hex')
+        };
+    }
+
+    // 🔓 Descriptografar dados da sessão
+    decryptSessionData(encryptedData) {
+        try {
+            const algorithm = 'aes-256-cbc';
+            const key = crypto.scryptSync('whatsapp-session-key-2024', 'salt', 32);
+            const decipher = crypto.createDecipher(algorithm, key);
+            
+            let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+            decrypted += decipher.final('utf8');
+            
+            return JSON.parse(decrypted);
+        } catch (error) {
+            console.error('❌ Erro ao descriptografar sessão:', error);
+            return null;
+        }
+    }
+
+    // 💾 Salvar sessão no cofre com backup
+    async saveSessionToVault(userId, sessionId, sessionData) {
+        try {
+            const vaultKey = `${userId}_${sessionId}`;
+            const vaultPath = path.join(this.vaultDir, `${vaultKey}.vault`);
+            const backupPath = path.join(this.backupDir, `${vaultKey}_${Date.now()}.backup`);
+            
+            // Dados para salvar
+            const vaultData = {
+                userId,
+                sessionId,
+                timestamp: Date.now(),
+                sessionData: this.encryptSessionData(sessionData),
+                checksum: crypto.createHash('sha256').update(JSON.stringify(sessionData)).digest('hex')
+            };
+
+            // Salvar no cofre principal
+            await fsPromises.writeFile(vaultPath, JSON.stringify(vaultData, null, 2));
+            
+            // Criar backup
+            await fsPromises.writeFile(backupPath, JSON.stringify(vaultData, null, 2));
+            
+            console.log(`🏦 Sessão salva no cofre: ${vaultKey}`);
+            console.log(`💾 Backup criado: ${backupPath}`);
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Erro ao salvar sessão no cofre:', error);
+            return false;
+        }
+    }
+
+    // 🔍 Recuperar sessão do cofre
+    async recoverSessionFromVault(userId, sessionId) {
+        try {
+            const vaultKey = `${userId}_${sessionId}`;
+            const vaultPath = path.join(this.vaultDir, `${vaultKey}.vault`);
+            
+            // Tentar recuperar do cofre principal
+            if (fs.existsSync(vaultPath)) {
+                const vaultData = JSON.parse(await fsPromises.readFile(vaultPath, 'utf8'));
+                
+                // Verificar integridade
+                const currentChecksum = crypto.createHash('sha256').update(JSON.stringify(vaultData.sessionData)).digest('hex');
+                if (currentChecksum === vaultData.checksum) {
+                    console.log(`🏦 Sessão recuperada do cofre: ${vaultKey}`);
+                    return this.decryptSessionData(vaultData.sessionData);
+                } else {
+                    console.log(`⚠️ Checksum inválido para sessão: ${vaultKey}`);
+                }
+            }
+            
+            // Se não encontrou no cofre principal, tentar backups
+            const backupFiles = await fsPromises.readdir(this.backupDir);
+            const userBackups = backupFiles.filter(file => file.startsWith(vaultKey) && file.endsWith('.backup'));
+            
+            // Ordenar por timestamp (mais recente primeiro)
+            userBackups.sort((a, b) => {
+                const timestampA = parseInt(a.split('_').pop().replace('.backup', ''));
+                const timestampB = parseInt(b.split('_').pop().replace('.backup', ''));
+                return timestampB - timestampA;
+            });
+            
+            for (const backupFile of userBackups) {
+                try {
+                    const backupPath = path.join(this.backupDir, backupFile);
+                    const vaultData = JSON.parse(await fsPromises.readFile(backupPath, 'utf8'));
+                    
+                    // Verificar integridade
+                    const currentChecksum = crypto.createHash('sha256').update(JSON.stringify(vaultData.sessionData)).digest('hex');
+                    if (currentChecksum === vaultData.checksum) {
+                        console.log(`🏦 Sessão recuperada do backup: ${backupFile}`);
+                        return this.decryptSessionData(vaultData.sessionData);
+                    }
+                } catch (error) {
+                    console.error(`❌ Erro ao ler backup ${backupFile}:`, error);
+                    continue;
+                }
+            }
+            
+            console.log(`❌ Nenhuma sessão válida encontrada no cofre para: ${vaultKey}`);
+            return null;
+            
+        } catch (error) {
+            console.error('❌ Erro ao recuperar sessão do cofre:', error);
+            return null;
+        }
+    }
+
+    // 🧹 Limpar sessões antigas do cofre
+    async cleanOldSessions(maxAge = 30 * 24 * 60 * 60 * 1000) { // 30 dias
+        try {
+            const now = Date.now();
+            
+            // Limpar cofre principal
+            const vaultFiles = await fsPromises.readdir(this.vaultDir);
+            for (const file of vaultFiles) {
+                if (file.endsWith('.vault')) {
+                    const filePath = path.join(this.vaultDir, file);
+                    const stats = await fsPromises.stat(filePath);
+                    if (now - stats.mtime.getTime() > maxAge) {
+                        await fsPromises.unlink(filePath);
+                        console.log(`🧹 Sessão antiga removida do cofre: ${file}`);
+                    }
+                }
+            }
+            
+            // Limpar backups antigos (manter apenas os 5 mais recentes por usuário)
+            const backupFiles = await fsPromises.readdir(this.backupDir);
+            const backupGroups = {};
+            
+            for (const file of backupFiles) {
+                if (file.endsWith('.backup')) {
+                    const userId = file.split('_')[0];
+                    if (!backupGroups[userId]) backupGroups[userId] = [];
+                    backupGroups[userId].push(file);
+                }
+            }
+            
+            for (const [userId, files] of Object.entries(backupGroups)) {
+                if (files.length > 5) {
+                    // Ordenar por timestamp e remover os mais antigos
+                    files.sort((a, b) => {
+                        const timestampA = parseInt(a.split('_').pop().replace('.backup', ''));
+                        const timestampB = parseInt(b.split('_').pop().replace('.backup', ''));
+                        return timestampA - timestampB;
+                    });
+                    
+                    const toRemove = files.slice(0, files.length - 5);
+                    for (const file of toRemove) {
+                        const filePath = path.join(this.backupDir, file);
+                        await fsPromises.unlink(filePath);
+                        console.log(`🧹 Backup antigo removido: ${file}`);
+                    }
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao limpar sessões antigas:', error);
+        }
+    }
+
+    // 📊 Status do cofre
+    async getVaultStatus() {
+        try {
+            const vaultFiles = await fsPromises.readdir(this.vaultDir);
+            const backupFiles = await fsPromises.readdir(this.backupDir);
+            
+            return {
+                vaultSessions: vaultFiles.filter(f => f.endsWith('.vault')).length,
+                backupSessions: backupFiles.filter(f => f.endsWith('.backup')).length,
+                totalSize: await this.getDirectorySize(this.vaultDir) + await this.getDirectorySize(this.backupDir)
+            };
+        } catch (error) {
+            console.error('❌ Erro ao obter status do cofre:', error);
+            return { vaultSessions: 0, backupSessions: 0, totalSize: 0 };
+        }
+    }
+
+    async getDirectorySize(dirPath) {
+        try {
+            const files = await fsPromises.readdir(dirPath);
+            let totalSize = 0;
+            
+            for (const file of files) {
+                const filePath = path.join(dirPath, file);
+                const stats = await fsPromises.stat(filePath);
+                totalSize += stats.size;
+            }
+            
+            return totalSize;
+        } catch (error) {
+            return 0;
+        }
+    }
+}
+
+// Inicializar cofre de sessões
+const sessionVault = new SessionVault();
+
+// 🧹 LIMPEZA AUTOMÁTICA DO COFRE (A CADA 6 HORAS)
+setInterval(async () => {
+    try {
+        console.log('🧹 Iniciando limpeza automática do cofre...');
+        await sessionVault.cleanOldSessions();
+        const status = await sessionVault.getVaultStatus();
+        console.log('🧹 Limpeza automática concluída:', status);
+    } catch (error) {
+        console.error('❌ Erro na limpeza automática do cofre:', error);
+    }
+}, 6 * 60 * 60 * 1000); // 6 horas
 
 // Função para criar socket WhatsApp
 async function createWhatsAppSocket(userId, sessionId = 'default') {
@@ -218,7 +486,32 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         }
     });
 
-    sock.ev.on('creds.update', saveCreds);
+    sock.ev.on('creds.update', async () => {
+        // Salvar credenciais normalmente
+        saveCreds();
+        
+        // 🏦 SALVAR NO COFRE TAMBÉM
+        try {
+            const sessionData = {
+                userId,
+                sessionId,
+                authDir,
+                timestamp: Date.now(),
+                userInfo: sock.user ? {
+                    id: sock.user.id,
+                    name: sock.user.name,
+                    verifiedName: sock.user.verifiedName,
+                    notify: sock.user.notify,
+                    profilePicture: sock.user.profilePicture
+                } : null
+            };
+            
+            await sessionVault.saveSessionToVault(userId, sessionId, sessionData);
+            console.log(`🏦 Sessão salva no cofre: ${userId}_${sessionId}`);
+        } catch (error) {
+            console.error('❌ Erro ao salvar sessão no cofre:', error);
+        }
+    });
     
     return sock;
 }
@@ -1248,6 +1541,40 @@ io.on('connection', (socket) => {
             if (sessions.length > 0) {
                 const savedSession = sessions[0];
                 console.log('💾 Sessão encontrada no banco, tentando reconectar:', savedSession.session_id);
+                
+                // 🏦 TENTAR RECUPERAR DO COFRE PRIMEIRO
+                console.log('🏦 Tentando recuperar sessão do cofre...');
+                const vaultSession = await sessionVault.recoverSessionFromVault(userIdentifier, savedSession.session_id);
+                
+                if (vaultSession && vaultSession.userInfo) {
+                    console.log('🏦 Sessão recuperada do cofre com sucesso!');
+                    console.log('🔍 DEBUG: Dados do cofre:', {
+                        userId: vaultSession.userId,
+                        sessionId: vaultSession.sessionId,
+                        hasUserInfo: !!vaultSession.userInfo,
+                        userName: vaultSession.userInfo.name || 'N/A'
+                    });
+                    
+                    // Usar dados do cofre para reconexão
+                    const whatsappInfo = {
+                        name: vaultSession.userInfo.name || vaultSession.userInfo.verifiedName || vaultSession.userInfo.notify || 'Usuário WhatsApp',
+                        number: vaultSession.userInfo.id?.split(':')[0] || savedSession.account_number || '',
+                        profilePicture: vaultSession.userInfo.profilePicture || null
+                    };
+                    
+                    console.log('✅ Usando dados do cofre para reconexão:', whatsappInfo);
+                    
+                    // Emitir status de conexão com dados do cofre
+                    socket.emit('connection-status', {
+                        connected: true,
+                        whatsappInfo: whatsappInfo,
+                        fromVault: true
+                    });
+                    
+                    return;
+                } else {
+                    console.log('⚠️ Sessão não encontrada no cofre, tentando reconexão normal...');
+                }
                 
                 // Verificar se os arquivos de autenticação existem
                 const authDir = `./auth_info_${userIdentifier}_${savedSession.session_id}`;
