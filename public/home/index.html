@@ -1284,6 +1284,10 @@
                 display: block;
             }
 
+            .mobile-whatsapp-card {
+                display: block;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
@@ -1595,6 +1599,51 @@
             color: #6c757d;
             margin-top: 5px;
         }
+
+        /* Mobile WhatsApp Card - próximo ao header */
+        .mobile-whatsapp-card {
+            display: none;
+            margin: 10px 0 20px 0;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-whatsapp-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            pointer-events: none;
+        }
+
+        .mobile-card-content {
+            position: relative;
+            z-index: 1;
+            padding: 16px 20px;
+            color: white;
+        }
+
+        .mobile-card-content h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .mobile-card-content p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 13px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -1678,7 +1727,15 @@
     <div class="main-content">
         <div class="container">
 
-
+        <!-- Mobile: Conecte sua Conta WhatsApp (próximo ao header) -->
+        <div class="mobile-whatsapp-card" id="mobileWhatsappCard">
+            <div class="mobile-card-content">
+                <h3><i class="fab fa-whatsapp" style="color: #25d366; margin-right: 8px;"></i>Passo 1: Conecte sua Conta WhatsApp</h3>
+                <p style="color: #666; margin: 8px 0 0 0; font-size: 13px;">
+                    Escaneie o QR Code com seu WhatsApp para começar
+                </p>
+            </div>
+        </div>
 
         <!-- Conecte sua Conta WhatsApp -->
         <div class="card">
@@ -2556,6 +2613,12 @@
                 window.whatsappConnected = true;
                 window.isConnecting = false; // ✅ RESETAR FLAG DE CONECTANDO
                 console.log('✅ WhatsApp marcado como conectado globalmente');
+                
+                // ✅ ESCONDER CARD MOBILE QUANDO CONECTADO
+                const mobileCard = document.getElementById('mobileWhatsappCard');
+                if (mobileCard) {
+                    mobileCard.style.display = 'none';
+                }
             } else {
                 statusText.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2580,6 +2643,12 @@
                 window.whatsappConnected = false;
                 window.isConnecting = false; // ✅ RESETAR FLAG DE CONECTANDO
                 console.log('❌ WhatsApp marcado como desconectado globalmente');
+                
+                // ✅ MOSTRAR CARD MOBILE QUANDO DESCONECTADO
+                const mobileCard = document.getElementById('mobileWhatsappCard');
+                if (mobileCard && window.innerWidth <= 768) {
+                    mobileCard.style.display = 'block';
+                }
             }
         });
 
