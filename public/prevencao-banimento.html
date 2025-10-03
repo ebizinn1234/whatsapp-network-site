@@ -26,40 +26,36 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            z-index: 1000;
+            background: white;
+            z-index: 1001;
+            padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            align-items: center;
         }
 
         .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .logo {
+        .header-logo {
             display: flex;
             align-items: center;
             gap: 8px;
-            text-decoration: none;
-            color: inherit;
         }
 
-        .logo svg {
+        .header-logo svg {
             width: 24px;
             height: 24px;
         }
 
-        .logo span {
+        .header-logo span {
             font-size: 20px;
             font-weight: 700;
             color: #24d366;
@@ -71,15 +67,14 @@
         }
 
         .btn-header {
-            padding: 8px 16px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
-            font-size: 14px;
         }
 
         .btn-login {
@@ -105,13 +100,15 @@
 
         /* Sidebar */
         .sidebar {
-            position: fixed;
-            top: 60px;
-            left: 0;
             width: 280px;
-            height: calc(100vh - 60px);
             background: #ffffff;
             border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: calc(100vh - 60px);
+            left: 0;
+            top: 60px;
             z-index: 999;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
         }
@@ -119,46 +116,46 @@
         .sidebar-header {
             padding: 20px;
             border-bottom: 1px solid #e5e7eb;
-            background: #f9fafb;
         }
 
-        .sidebar-user {
+        .sidebar-header .logo-section {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .sidebar-avatar {
+        .sidebar-header .logo-icon {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #24d366 0%, #128c7e 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
+            color: #25d366;
         }
 
-        .sidebar-user-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin: 0;
+        .sidebar-header .logo-icon svg {
+            width: 32px;
+            height: 32px;
         }
 
-        .sidebar-user-info .user-status {
-            font-size: 12px;
-            color: #6c757d;
+        .sidebar-header .brand h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #25d366;
             margin: 0;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
 
         .sidebar-nav {
+            flex: 1;
             padding: 20px 0;
         }
 
-        .nav-item {
+        .nav-list {
             list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin: 0;
         }
 
         .nav-link {
@@ -178,9 +175,54 @@
             border-left-color: #24d366;
         }
 
+        .nav-link.active {
+            background: #f8f9fa;
+            color: #24d366;
+            border-left-color: #24d366;
+        }
+
         .nav-link svg {
             width: 20px;
             height: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #24d366 0%, #128c7e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .user-status {
+            font-size: 12px;
+            color: #6c757d;
         }
 
         /* Main Content */
@@ -365,12 +407,12 @@
     <!-- Header fixo -->
     <div class="main-header">
         <div class="header-content">
-            <a href="home/index.html" class="logo">
+            <div class="header-logo">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.14 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
                 </svg>
                 <span>DisparoZap</span>
-            </a>
+            </div>
             <div class="header-actions">
                 <a href="home/index.html" class="btn-header btn-login">
                     <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>Voltar
@@ -379,27 +421,16 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="sidebar-user-info">
-                    <h3>Usuário</h3>
-                    <p class="user-status">Prevenção de Banimento</p>
-                </div>
-            </div>
-        </div>
+    <!-- Menu Lateral -->
+    <div class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
-            <ul>
+            <ul class="nav-list">
                 <li class="nav-item">
                     <a href="home/index.html" class="nav-link">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                         </svg>
-                        <span>Dashboard</span>
+                        <span>Início</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -411,7 +442,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" style="background: #f8f9fa; color: #24d366; border-left-color: #24d366;">
+                    <a href="#" class="nav-link active">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
                         </svg>
@@ -420,6 +451,20 @@
                 </li>
             </ul>
         </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="sidebarUserAvatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </div>
+                <div class="user-details">
+                    <span class="user-name" id="sidebarUserName">Usuário</span>
+                    <span class="user-status" id="sidebarUserStatus">Prevenção de Banimento</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Conteúdo Principal -->
