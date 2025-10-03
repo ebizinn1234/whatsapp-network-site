@@ -10,7 +10,6 @@ import P from 'pino';
 import qrcode from 'qrcode';
 import fs from 'fs';
 import { promises as fsPromises } from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 import authRoutes from './routes/auth.js';
 import { authenticateToken } from './routes/auth.js';
