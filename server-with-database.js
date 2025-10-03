@@ -83,32 +83,27 @@ class SessionVault {
 
     // 🔐 Criptografar dados da sessão
     encryptSessionData(data) {
-        const algorithm = 'aes-256-gcm';
+        const algorithm = 'aes-256-cbc';
         const key = crypto.scryptSync('whatsapp-session-key-2024', 'salt', 32);
         const iv = crypto.randomBytes(16);
-        const cipher = crypto.createCipherGCM(algorithm, key, iv);
+        const cipher = crypto.createCipher(algorithm, key);
         
         let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
         encrypted += cipher.final('hex');
-        const authTag = cipher.getAuthTag();
         
         return {
             encrypted,
-            iv: iv.toString('hex'),
-            authTag: authTag.toString('hex')
+            iv: iv.toString('hex')
         };
     }
 
     // 🔓 Descriptografar dados da sessão
     decryptSessionData(encryptedData) {
         try {
-            const algorithm = 'aes-256-gcm';
+            const algorithm = 'aes-256-cbc';
             const key = crypto.scryptSync('whatsapp-session-key-2024', 'salt', 32);
-            const iv = Buffer.from(encryptedData.iv, 'hex');
-            const authTag = Buffer.from(encryptedData.authTag, 'hex');
-            const decipher = crypto.createDecipherGCM(algorithm, key, iv);
+            const decipher = crypto.createDecipher(algorithm, key);
             
-            decipher.setAuthTag(authTag);
             let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
             decrypted += decipher.final('utf8');
             
