@@ -2494,53 +2494,60 @@
                 </div>
                 
                 <!-- 📊 INFORMAÇÕES DETALHADAS DO PROGRESSO -->
-                <div class="progress-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                    <div class="progress-detail-item">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                            <i class="fas fa-clock" style="color: #6c757d; font-size: 14px;"></i>
-                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Tempo Restante</span>
-                        </div>
-                        <div id="timeRemaining" style="font-size: 16px; font-weight: 700; color: #2c3e50;">Calculando...</div>
-                    </div>
+                <div class="progress-details" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;">
+                    <h4 style="margin-bottom: 15px; color: #495057; font-size: 16px;">
+                        <i class="fas fa-chart-line" style="margin-right: 8px; color: #24d366;"></i>
+                        Estatísticas Detalhadas
+                    </h4>
                     
-                    <div class="progress-detail-item">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                            <i class="fas fa-hourglass-half" style="color: #6c757d; font-size: 14px;"></i>
-                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Próximo Delay</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                        <div style="flex: 1; min-width: 150px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-clock" style="color: #6c757d; font-size: 14px;"></i>
+                                <span style="font-weight: 600; font-size: 13px; color: #495057;">Tempo Restante</span>
+                            </div>
+                            <div id="timeRemaining" style="font-size: 18px; font-weight: 700; color: #2c3e50;">Calculando...</div>
                         </div>
-                        <div id="nextDelayDisplay" style="font-size: 16px; font-weight: 700; color: #2c3e50;">Aguardando...</div>
-                    </div>
-                    
-                    <div class="progress-detail-item">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                            <i class="fas fa-tachometer-alt" style="color: #6c757d; font-size: 14px;"></i>
-                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Velocidade Média</span>
+                        
+                        <div style="flex: 1; min-width: 150px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-hourglass-half" style="color: #6c757d; font-size: 14px;"></i>
+                                <span style="font-weight: 600; font-size: 13px; color: #495057;">Próximo Delay</span>
+                            </div>
+                            <div id="nextDelayDisplay" style="font-size: 18px; font-weight: 700; color: #2c3e50;">Aguardando...</div>
                         </div>
-                        <div id="averageSpeed" style="font-size: 16px; font-weight: 700; color: #2c3e50;">0 min/msg</div>
-                    </div>
-                    
-                    <div class="progress-detail-item">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                            <i class="fas fa-brain" style="color: #6c757d; font-size: 14px;"></i>
-                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Personalidade IA</span>
+                        
+                        <div style="flex: 1; min-width: 150px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-tachometer-alt" style="color: #6c757d; font-size: 14px;"></i>
+                                <span style="font-weight: 600; font-size: 13px; color: #495057;">Velocidade Média</span>
+                            </div>
+                            <div id="averageSpeed" style="font-size: 18px; font-weight: 700; color: #2c3e50;">0 min/msg</div>
                         </div>
-                        <div id="aiPersonality" style="font-size: 16px; font-weight: 700; color: #2c3e50;">-</div>
-                    </div>
-                    
-                    <div class="progress-detail-item">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                            <i class="fas fa-shield-alt" style="color: #6c757d; font-size: 14px;"></i>
-                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Score de Risco</span>
+                        
+                        <div style="flex: 1; min-width: 150px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-brain" style="color: #6c757d; font-size: 14px;"></i>
+                                <span style="font-weight: 600; font-size: 13px; color: #495057;">Personalidade IA</span>
+                            </div>
+                            <div id="aiPersonality" style="font-size: 18px; font-weight: 700; color: #2c3e50;">-</div>
                         </div>
-                        <div id="riskScoreDisplay" style="font-size: 16px; font-weight: 700; color: #28a745;">0</div>
-                    </div>
-                    
-                    <div class="progress-detail-item">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                            <i class="fas fa-check-circle" style="color: #6c757d; font-size: 14px;"></i>
-                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Taxa de Sucesso</span>
+                        
+                        <div style="flex: 1; min-width: 150px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-shield-alt" style="color: #6c757d; font-size: 14px;"></i>
+                                <span style="font-weight: 600; font-size: 13px; color: #495057;">Score de Risco</span>
+                            </div>
+                            <div id="riskScoreDisplay" style="font-size: 18px; font-weight: 700; color: #28a745;">0</div>
                         </div>
-                        <div id="successRate" style="font-size: 16px; font-weight: 700; color: #28a745;">0%</div>
+                        
+                        <div style="flex: 1; min-width: 150px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-check-circle" style="color: #6c757d; font-size: 14px;"></i>
+                                <span style="font-weight: 600; font-size: 13px; color: #495057;">Taxa de Sucesso</span>
+                            </div>
+                            <div id="successRate" style="font-size: 18px; font-weight: 700; color: #28a745;">0%</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -3495,6 +3502,55 @@
             }
         }
 
+        // 🚀 INICIALIZAR PROGRESSO IMEDIATAMENTE
+        function initializeProgress(totalGroups) {
+            console.log('🚀 Inicializando progresso para', totalGroups, 'grupos');
+            
+            // Resetar variáveis
+            lastMessageTime = null;
+            averageDelay = null;
+            
+            // Atualizar estatísticas iniciais
+            const progressStats = document.getElementById('progressStats');
+            if (progressStats) {
+                progressStats.textContent = `0/${totalGroups} grupos • Iniciando...`;
+            }
+            
+            // Resetar barra de progresso
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressBar && progressPercentage && progressText) {
+                progressBar.style.width = '0%';
+                progressPercentage.textContent = '0%';
+                progressText.textContent = 'Preparando envio...';
+            }
+            
+            // Resetar informações detalhadas
+            const timeRemaining = document.getElementById('timeRemaining');
+            const nextDelayDisplay = document.getElementById('nextDelayDisplay');
+            const averageSpeed = document.getElementById('averageSpeed');
+            const aiPersonality = document.getElementById('aiPersonality');
+            const riskScoreDisplay = document.getElementById('riskScoreDisplay');
+            const successRate = document.getElementById('successRate');
+            
+            if (timeRemaining) timeRemaining.textContent = 'Calculando...';
+            if (nextDelayDisplay) nextDelayDisplay.textContent = 'Aguardando...';
+            if (averageSpeed) averageSpeed.textContent = '0 min/msg';
+            if (aiPersonality) aiPersonality.textContent = '-';
+            if (riskScoreDisplay) riskScoreDisplay.textContent = '0';
+            if (successRate) successRate.textContent = '0%';
+            
+            // Limpar lista de grupos
+            const groupsList = document.getElementById('groupsList');
+            if (groupsList) {
+                groupsList.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">Preparando envio...</div>';
+            }
+            
+            console.log('✅ Progresso inicializado com sucesso');
+        }
+
         function hideProgressCard() {
             const progressCard = document.getElementById('progressCard');
             if (progressCard) {
@@ -3527,9 +3583,6 @@
                 debugLog(`⏱️ Tempo estimado restante: ${estimatedMinutes} minutos`);
             }
             lastMessageTime = now;
-            
-            // Mostrar card de progresso
-            showProgressCard();
             
             // Atualizar estatísticas
             const progressStats = document.getElementById('progressStats');
@@ -4440,6 +4493,10 @@
             sendMessagesBtn.disabled = true;
             sendMessagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
             addLog(`📤 Enviando para ${selectedGroupsList.length} grupos...`, 'info');
+            
+            // 🚀 MOSTRAR BARRA DE PROGRESSO IMEDIATAMENTE
+            showProgressCard();
+            initializeProgress(selectedGroupsList.length);
             
             // ✅ MOSTRAR BOTÕES DE PAUSAR/CANCELAR
             const pauseCancelContainer = document.getElementById('pauseCancelContainer');
