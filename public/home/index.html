@@ -1903,6 +1903,120 @@
             }
         }
 
+        /* Dashboard de Score de Risco */
+        .risk-dashboard {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #28a745;
+        }
+
+        .risk-dashboard.high-risk {
+            border-left-color: #ffc107;
+        }
+
+        .risk-dashboard.critical-risk {
+            border-left-color: #dc3545;
+        }
+
+        .risk-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .risk-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .risk-score {
+            font-size: 24px;
+            font-weight: 900;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            background: #28a745;
+        }
+
+        .risk-score.medium {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .risk-score.high {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .risk-score.critical {
+            background: #dc3545;
+            color: white;
+        }
+
+        .risk-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .risk-stat {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .risk-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .risk-stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .risk-recommendations {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .risk-recommendations h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .risk-recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .risk-recommendations li {
+            padding: 5px 0;
+            font-size: 13px;
+            color: #424242;
+        }
+
+        .risk-recommendations li:before {
+            content: "💡 ";
+            margin-right: 5px;
+        }
+
         .promo-banner::before {
             content: '';
             position: absolute;
@@ -2047,6 +2161,43 @@
                     <h3>Disparos em Massa para Grupos</h3>
                     <p>Totalmente <strong>GRÁTIS</strong> • Envie para milhares de grupos • Sem limites</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Dashboard de Score de Risco -->
+        <div class="risk-dashboard" id="riskDashboard">
+            <div class="risk-header">
+                <div class="risk-title">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Proteção Anti-Banimento</span>
+                </div>
+                <div class="risk-score" id="riskScore">0</div>
+            </div>
+            
+            <div class="risk-stats">
+                <div class="risk-stat">
+                    <div class="risk-stat-value" id="messagesSent">0</div>
+                    <div class="risk-stat-label">Mensagens Enviadas</div>
+                </div>
+                <div class="risk-stat">
+                    <div class="risk-stat-value" id="groupsContacted">0</div>
+                    <div class="risk-stat-label">Grupos Contactados</div>
+                </div>
+                <div class="risk-stat">
+                    <div class="risk-stat-value" id="avgDelay">0s</div>
+                    <div class="risk-stat-label">Delay Médio</div>
+                </div>
+                <div class="risk-stat">
+                    <div class="risk-stat-value" id="currentPersonality">-</div>
+                    <div class="risk-stat-label">Personalidade</div>
+                </div>
+            </div>
+
+            <div class="risk-recommendations" id="riskRecommendations">
+                <h4>🤖 Recomendações da IA</h4>
+                <ul id="recommendationsList">
+                    <li>Sistema inicializado - Aguardando atividade</li>
+                </ul>
             </div>
         </div>
 
@@ -2339,6 +2490,57 @@
                                 <i class="fas fa-play"></i> Retomar Envio
                             </button>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- 📊 INFORMAÇÕES DETALHADAS DO PROGRESSO -->
+                <div class="progress-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <div class="progress-detail-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <i class="fas fa-clock" style="color: #6c757d; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Tempo Restante</span>
+                        </div>
+                        <div id="timeRemaining" style="font-size: 16px; font-weight: 700; color: #2c3e50;">Calculando...</div>
+                    </div>
+                    
+                    <div class="progress-detail-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <i class="fas fa-hourglass-half" style="color: #6c757d; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Próximo Delay</span>
+                        </div>
+                        <div id="nextDelayDisplay" style="font-size: 16px; font-weight: 700; color: #2c3e50;">Aguardando...</div>
+                    </div>
+                    
+                    <div class="progress-detail-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <i class="fas fa-tachometer-alt" style="color: #6c757d; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Velocidade Média</span>
+                        </div>
+                        <div id="averageSpeed" style="font-size: 16px; font-weight: 700; color: #2c3e50;">0 min/msg</div>
+                    </div>
+                    
+                    <div class="progress-detail-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <i class="fas fa-brain" style="color: #6c757d; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Personalidade IA</span>
+                        </div>
+                        <div id="aiPersonality" style="font-size: 16px; font-weight: 700; color: #2c3e50;">-</div>
+                    </div>
+                    
+                    <div class="progress-detail-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <i class="fas fa-shield-alt" style="color: #6c757d; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Score de Risco</span>
+                        </div>
+                        <div id="riskScoreDisplay" style="font-size: 16px; font-weight: 700; color: #28a745;">0</div>
+                    </div>
+                    
+                    <div class="progress-detail-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <i class="fas fa-check-circle" style="color: #6c757d; font-size: 14px;"></i>
+                            <span style="font-weight: 600; font-size: 13px; color: #495057;">Taxa de Sucesso</span>
+                        </div>
+                        <div id="successRate" style="font-size: 16px; font-weight: 700; color: #28a745;">0%</div>
                     </div>
                 </div>
                 
@@ -3351,6 +3553,80 @@
             
             // Adicionar grupo à lista
             addGroupToList(group, status, current);
+            
+            // 📊 ATUALIZAR INFORMAÇÕES DETALHADAS
+            updateProgressDetails(data);
+        }
+
+        // 📊 FUNÇÃO PARA ATUALIZAR INFORMAÇÕES DETALHADAS
+        function updateProgressDetails(data) {
+            const { current, total, delay, personality, riskScore, successCount, errorCount } = data;
+            
+            // Atualizar próximo delay
+            if (delay && document.getElementById('nextDelayDisplay')) {
+                const delayMinutes = Math.floor(delay / 60000);
+                const delaySeconds = Math.floor((delay % 60000) / 1000);
+                if (delayMinutes > 0) {
+                    document.getElementById('nextDelayDisplay').textContent = `${delayMinutes}m ${delaySeconds}s`;
+                } else {
+                    document.getElementById('nextDelayDisplay').textContent = `${delaySeconds}s`;
+                }
+            }
+            
+            // Atualizar velocidade média
+            if (averageDelay && document.getElementById('averageSpeed')) {
+                const avgMinutes = Math.round(averageDelay / 60000 * 10) / 10;
+                document.getElementById('averageSpeed').textContent = `${avgMinutes} min/msg`;
+            }
+            
+            // Atualizar personalidade IA
+            if (personality && document.getElementById('aiPersonality')) {
+                const personalityNames = {
+                    'cautious': 'Cautelosa',
+                    'balanced': 'Equilibrada',
+                    'active': 'Ativa',
+                    'professional': 'Profissional',
+                    'casual': 'Casual'
+                };
+                document.getElementById('aiPersonality').textContent = personalityNames[personality] || personality;
+            }
+            
+            // Atualizar score de risco
+            if (riskScore !== undefined && document.getElementById('riskScoreDisplay')) {
+                const riskElement = document.getElementById('riskScoreDisplay');
+                riskElement.textContent = riskScore;
+                
+                // Atualizar cor baseada no score
+                riskElement.style.color = riskScore >= 5 ? '#dc3545' : 
+                                        riskScore >= 3 ? '#fd7e14' : 
+                                        riskScore >= 1 ? '#ffc107' : '#28a745';
+            }
+            
+            // Atualizar taxa de sucesso
+            if (successCount !== undefined && errorCount !== undefined && document.getElementById('successRate')) {
+                const totalProcessed = successCount + errorCount;
+                const successRate = totalProcessed > 0 ? Math.round((successCount / totalProcessed) * 100) : 0;
+                const successElement = document.getElementById('successRate');
+                successElement.textContent = `${successRate}%`;
+                
+                // Atualizar cor baseada na taxa
+                successElement.style.color = successRate >= 90 ? '#28a745' : 
+                                           successRate >= 70 ? '#ffc107' : '#dc3545';
+            }
+            
+            // Atualizar tempo restante com cálculo mais preciso
+            if (averageDelay && document.getElementById('timeRemaining')) {
+                const remainingGroups = total - current;
+                const estimatedTimeMs = remainingGroups * averageDelay;
+                const minutes = Math.floor(estimatedTimeMs / 60000);
+                const seconds = Math.floor((estimatedTimeMs % 60000) / 1000);
+                
+                if (minutes > 0) {
+                    document.getElementById('timeRemaining').textContent = `${minutes}m ${seconds}s`;
+                } else {
+                    document.getElementById('timeRemaining').textContent = `${seconds}s`;
+                }
+            }
         }
 
         function addGroupToList(groupName, status, current) {
@@ -4855,6 +5131,204 @@
                 }
             }
         });
+        
+        // Dashboard de Score de Risco - Funções
+        function updateRiskDashboard(data) {
+            const riskScore = document.getElementById('riskScore');
+            const riskDashboard = document.getElementById('riskDashboard');
+            const messagesSent = document.getElementById('messagesSent');
+            const groupsContacted = document.getElementById('groupsContacted');
+            const avgDelay = document.getElementById('avgDelay');
+            const currentPersonality = document.getElementById('currentPersonality');
+            const recommendationsList = document.getElementById('recommendationsList');
+
+            if (!riskScore) return;
+
+            // Atualizar score
+            const score = data.score || 0;
+            riskScore.textContent = score;
+            
+            // Atualizar cores baseado no score
+            riskScore.className = 'risk-score';
+            riskDashboard.className = 'risk-dashboard';
+            
+            if (score >= 5) {
+                riskScore.classList.add('critical');
+                riskDashboard.classList.add('critical-risk');
+            } else if (score >= 3) {
+                riskScore.classList.add('high');
+                riskDashboard.classList.add('high-risk');
+            } else if (score >= 1) {
+                riskScore.classList.add('medium');
+            }
+
+            // Atualizar estatísticas
+            if (messagesSent) messagesSent.textContent = data.messagesSent || 0;
+            if (groupsContacted) groupsContacted.textContent = data.groupsContacted || 0;
+            if (avgDelay) avgDelay.textContent = data.avgDelay || '0s';
+            if (currentPersonality) currentPersonality.textContent = data.personality || '-';
+
+            // Atualizar recomendações
+            if (recommendationsList) {
+                const recommendations = getRecommendations(score, data);
+                recommendationsList.innerHTML = recommendations.map(rec => `<li>${rec}</li>`).join('');
+            }
+        }
+
+        function getRecommendations(score, data) {
+            const recommendations = [];
+            
+            if (score === 0) {
+                recommendations.push('Sistema inicializado - Aguardando atividade');
+                recommendations.push('Pronto para envios seguros');
+            } else if (score <= 1) {
+                recommendations.push('✅ Nível de risco baixo - Continue assim!');
+                recommendations.push('Delays adequados para segurança');
+            } else if (score <= 2) {
+                recommendations.push('⚠️ Risco moderado - Aumente delays entre mensagens');
+                recommendations.push('Considere pausas de 2-3 minutos');
+            } else if (score <= 3) {
+                recommendations.push('🚨 Risco alto - Reduza velocidade de envio');
+                recommendations.push('Pausas de 3-5 minutos recomendadas');
+                recommendations.push('Máximo 10 grupos por lote');
+            } else if (score >= 4) {
+                recommendations.push('🛑 Risco crítico - PAUSE IMEDIATAMENTE');
+                recommendations.push('Aguarde 30-60 minutos antes de continuar');
+                recommendations.push('Reduza drasticamente a quantidade de grupos');
+            }
+
+            // Recomendações específicas baseadas nos dados
+            if (data.avgDelay && parseInt(data.avgDelay) < 60) {
+                recommendations.push('⏰ Delays muito baixos - Aumente para 2+ minutos');
+            }
+            
+            if (data.groupsContacted && data.groupsContacted > 20) {
+                recommendations.push('👥 Muitos grupos contactados - Reduza para máximo 15');
+            }
+
+            return recommendations;
+        }
+
+        // Escutar eventos de risco do servidor
+        socket.on('risk-update', (data) => {
+            console.log('🛡️ Atualização de risco recebida:', data);
+            updateRiskDashboard(data);
+        });
+
+        // Escutar eventos de atividade para atualizar dashboard
+        socket.on('activity-update', (data) => {
+            console.log('📊 Atualização de atividade:', data);
+            updateRiskDashboard(data);
+        });
+
+        // Escutar eventos de bloqueio detectado
+        socket.on('block-detected', (data) => {
+            console.log('🚨 Bloqueio detectado:', data);
+            showBlockAlert(data);
+        });
+
+        // Escutar análise de padrões
+        socket.on('pattern-analysis', (data) => {
+            console.log('🔍 Análise de padrões:', data);
+            updatePatternAnalysis(data);
+        });
+
+        // Função para mostrar alerta de bloqueio
+        function showBlockAlert(blockData) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'block-alert';
+            alertDiv.innerHTML = `
+                <div class="block-alert-content">
+                    <div class="block-alert-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="block-alert-text">
+                        <h4>🚨 ${blockData.type === 'connection' ? 'Conexão Perdida' : 
+                                   blockData.type === 'rate_limit' ? 'Limite Atingido' :
+                                   blockData.type === 'ban' ? 'Banimento Detectado' :
+                                   'Atividade Suspeita'}</h4>
+                        <p>${blockData.message}</p>
+                        <div class="block-alert-timer">
+                            <i class="fas fa-clock"></i>
+                            <span id="blockTimer">${Math.round(blockData.waitTime / 60000)} minutos</span>
+                        </div>
+                    </div>
+                    <button class="block-alert-close" onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Adicionar CSS para o alerta
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+                z-index: 10000;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease;
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Timer countdown
+            let timeLeft = blockData.waitTime;
+            const timer = setInterval(() => {
+                timeLeft -= 1000;
+                const minutes = Math.round(timeLeft / 60000);
+                const timerElement = document.getElementById('blockTimer');
+                if (timerElement) {
+                    timerElement.textContent = `${minutes} minutos`;
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alertDiv.remove();
+                }
+            }, 1000);
+            
+            // Auto-remove após 10 segundos (opcional)
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 10000);
+        }
+
+        // Função para atualizar análise de padrões
+        function updatePatternAnalysis(data) {
+            const recommendationsList = document.getElementById('recommendationsList');
+            if (!recommendationsList) return;
+
+            // Adicionar recomendações de padrões
+            const patternRecommendations = data.recommendations || [];
+            const currentRecommendations = Array.from(recommendationsList.children).map(li => li.textContent);
+            
+            patternRecommendations.forEach(rec => {
+                if (!currentRecommendations.includes(rec)) {
+                    const li = document.createElement('li');
+                    li.textContent = `🔍 ${rec}`;
+                    li.style.color = data.risk === 'critical' ? '#dc3545' : 
+                                    data.risk === 'high' ? '#fd7e14' : '#ffc107';
+                    recommendationsList.appendChild(li);
+                }
+            });
+
+            // Atualizar dashboard com dados de padrões
+            if (data.stats) {
+                const riskDashboard = document.getElementById('riskDashboard');
+                if (riskDashboard && data.risk === 'critical') {
+                    riskDashboard.classList.add('critical-risk');
+                } else if (riskDashboard && data.risk === 'high') {
+                    riskDashboard.classList.add('high-risk');
+                }
+            }
+        }
         
         }); // Fechar DOMContentLoaded
     </script>

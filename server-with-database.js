@@ -64,6 +64,197 @@ app.use('/api/*', authenticateToken);
 const userSessions = new Map();
 
 // 🏦 SISTEMA DE COFRE PARA SESSÕES WHATSAPP
+// 🚨 DETECTOR DE BLOQUEIOS DO WHATSAPP
+class WhatsAppBlockDetector {
+    constructor() {
+        this.blockPatterns = {
+            connectionClosed: ['Connection Closed', 'Connection lost', 'Connection timeout'],
+            rateLimit: ['Rate limit', 'Too many requests', 'Request timeout'],
+            banIndicators: ['Blocked', 'Banned', 'Suspended', 'Restricted'],
+            suspiciousActivity: ['Suspicious activity', 'Unusual activity', 'Security check']
+        };
+        this.blockHistory = new Map(); // Histórico de bloqueios por usuário
+        this.recoveryStrategies = new Map(); // Estratégias de recuperação
+    }
+
+    // 🔍 Detectar tipo de bloqueio
+    detectBlockType(error) {
+        const errorMessage = error.message || error.toString();
+        
+        for (const [type, patterns] of Object.entries(this.blockPatterns)) {
+            for (const pattern of patterns) {
+                if (errorMessage.includes(pattern)) {
+                    return type;
+                }
+            }
+        }
+        return 'unknown';
+    }
+
+    // 📊 Registrar bloqueio
+    recordBlock(userId, blockType, error) {
+        if (!this.blockHistory.has(userId)) {
+            this.blockHistory.set(userId, []);
+        }
+        
+        const history = this.blockHistory.get(userId);
+        const blockRecord = {
+            type: blockType,
+            timestamp: Date.now(),
+            error: error.message,
+            severity: this.getBlockSeverity(blockType)
+        };
+        
+        history.push(blockRecord);
+        
+        // Manter apenas últimos 10 bloqueios
+        if (history.length > 10) {
+            history.shift();
+        }
+        
+        console.log(`🚨 Bloqueio detectado para usuário ${userId}: ${blockType} (severidade: ${blockRecord.severity})`);
+        
+        // Aplicar estratégia de recuperação
+        this.applyRecoveryStrategy(userId, blockType);
+    }
+
+    // ⚖️ Determinar severidade do bloqueio
+    getBlockSeverity(blockType) {
+        const severities = {
+            'connectionClosed': 'medium',
+            'rateLimit': 'high',
+            'banIndicators': 'critical',
+            'suspiciousActivity': 'high',
+            'unknown': 'low'
+        };
+        return severities[blockType] || 'low';
+    }
+
+    // 🛠️ Aplicar estratégia de recuperação
+    applyRecoveryStrategy(userId, blockType) {
+        const strategies = {
+            'connectionClosed': () => this.handleConnectionLoss(userId),
+            'rateLimit': () => this.handleRateLimit(userId),
+            'banIndicators': () => this.handleBan(userId),
+            'suspiciousActivity': () => this.handleSuspiciousActivity(userId)
+        };
+        
+        const strategy = strategies[blockType];
+        if (strategy) {
+            strategy();
+        }
+    }
+
+    // 🔄 Lidar com perda de conexão
+    handleConnectionLoss(userId) {
+        console.log(`🔄 Aplicando estratégia de recuperação de conexão para usuário ${userId}`);
+        
+        // Pausar envios por 5 minutos
+        this.pauseUserActivity(userId, 300000, 'Perda de conexão detectada');
+        
+        // Notificar usuário
+        io.to(userId).emit('block-detected', {
+            type: 'connection',
+            message: 'Conexão perdida. Reconectando automaticamente...',
+            waitTime: 300000
+        });
+    }
+
+    // ⏱️ Lidar com limite de taxa
+    handleRateLimit(userId) {
+        console.log(`⏱️ Aplicando estratégia de rate limit para usuário ${userId}`);
+        
+        // Pausar por 30 minutos
+        this.pauseUserActivity(userId, 1800000, 'Limite de taxa atingido');
+        
+        // Notificar usuário
+        io.to(userId).emit('block-detected', {
+            type: 'rate_limit',
+            message: 'Limite de mensagens atingido. Aguarde 30 minutos.',
+            waitTime: 1800000
+        });
+    }
+
+    // 🚫 Lidar com banimento
+    handleBan(userId) {
+        console.log(`🚫 Aplicando estratégia de banimento para usuário ${userId}`);
+        
+        // Pausar por 2 horas
+        this.pauseUserActivity(userId, 7200000, 'Possível banimento detectado');
+        
+        // Notificar usuário
+        io.to(userId).emit('block-detected', {
+            type: 'ban',
+            message: 'Possível banimento detectado. Aguarde 2 horas antes de tentar novamente.',
+            waitTime: 7200000
+        });
+    }
+
+    // 🕵️ Lidar com atividade suspeita
+    handleSuspiciousActivity(userId) {
+        console.log(`🕵️ Aplicando estratégia de atividade suspeita para usuário ${userId}`);
+        
+        // Pausar por 1 hora
+        this.pauseUserActivity(userId, 3600000, 'Atividade suspeita detectada');
+        
+        // Notificar usuário
+        io.to(userId).emit('block-detected', {
+            type: 'suspicious',
+            message: 'Atividade suspeita detectada. Aguarde 1 hora.',
+            waitTime: 3600000
+        });
+    }
+
+    // ⏸️ Pausar atividade do usuário
+    pauseUserActivity(userId, duration, reason) {
+        if (!userSessions[userId]) {
+            userSessions[userId] = {};
+        }
+        
+        userSessions[userId].isPaused = true;
+        userSessions[userId].pauseReason = reason;
+        userSessions[userId].pauseUntil = Date.now() + duration;
+        
+        console.log(`⏸️ Usuário ${userId} pausado por ${Math.round(duration/60000)} minutos: ${reason}`);
+        
+        // Remover pausa após o tempo
+        setTimeout(() => {
+            if (userSessions[userId]) {
+                userSessions[userId].isPaused = false;
+                userSessions[userId].pauseReason = null;
+                userSessions[userId].pauseUntil = null;
+                console.log(`▶️ Pausa removida para usuário ${userId}`);
+            }
+        }, duration);
+    }
+
+    // 📈 Obter estatísticas de bloqueio
+    getBlockStats(userId) {
+        const history = this.blockHistory.get(userId) || [];
+        const stats = {
+            totalBlocks: history.length,
+            lastBlock: history[history.length - 1] || null,
+            blockTypes: {},
+            severity: 'low'
+        };
+        
+        // Contar tipos de bloqueio
+        history.forEach(block => {
+            stats.blockTypes[block.type] = (stats.blockTypes[block.type] || 0) + 1;
+        });
+        
+        // Determinar severidade geral
+        const hasCritical = history.some(block => block.severity === 'critical');
+        const hasHigh = history.some(block => block.severity === 'high');
+        
+        if (hasCritical) stats.severity = 'critical';
+        else if (hasHigh) stats.severity = 'high';
+        else if (history.length > 0) stats.severity = 'medium';
+        
+        return stats;
+    }
+}
+
 class SessionVault {
     constructor() {
         this.vaultDir = path.join(__dirname, 'session_vault');
@@ -277,6 +468,212 @@ class SessionVault {
 // Inicializar cofre de sessões
 const sessionVault = new SessionVault();
 
+// Inicializar detector de bloqueios
+const blockDetector = new WhatsAppBlockDetector();
+
+// 🔍 ANALISADOR DE PADRÕES DO WHATSAPP
+class WhatsAppPatternAnalyzer {
+    constructor() {
+        this.patterns = {
+            // Padrões que o WhatsApp monitora
+            suspiciousPatterns: [
+                'identical_messages',      // Mensagens idênticas
+                'rapid_sending',          // Envio muito rápido
+                'bulk_contacts',          // Muitos contatos de uma vez
+                'repetitive_timing',      // Timing repetitivo
+                'no_reading_time',        // Sem tempo de leitura
+                'no_typing_simulation',   // Sem simulação de digitação
+                'same_hour_activity',     // Atividade sempre no mesmo horário
+                'no_breaks',              // Sem pausas naturais
+                'too_many_groups',        // Muitos grupos
+                'no_response_pattern'     // Sem padrão de resposta
+            ],
+            
+            // Padrões seguros
+            safePatterns: [
+                'varied_messages',        // Mensagens variadas
+                'natural_timing',         // Timing natural
+                'reading_simulation',     // Simulação de leitura
+                'typing_simulation',      // Simulação de digitação
+                'break_patterns',         // Padrões de pausa
+                'hour_variation',         // Variação de horários
+                'response_simulation',    // Simulação de resposta
+                'human_errors',           // Erros humanos
+                'context_awareness'       // Consciência contextual
+            ]
+        };
+        
+        this.userPatterns = new Map(); // Padrões por usuário
+        this.globalPatterns = new Map(); // Padrões globais
+    }
+
+    // 📊 Analisar padrão de envio
+    analyzeSendingPattern(userId, messageData) {
+        if (!this.userPatterns.has(userId)) {
+            this.userPatterns.set(userId, {
+                messages: [],
+                timings: [],
+                groups: new Set(),
+                lastAnalysis: Date.now()
+            });
+        }
+        
+        const userPattern = this.userPatterns.get(userId);
+        const now = Date.now();
+        
+        // Registrar dados
+        userPattern.messages.push({
+            content: messageData.content,
+            timestamp: now,
+            groupId: messageData.groupId,
+            delay: messageData.delay
+        });
+        
+        userPattern.timings.push(now);
+        userPattern.groups.add(messageData.groupId);
+        
+        // Manter apenas últimos 50 registros
+        if (userPattern.messages.length > 50) {
+            userPattern.messages.shift();
+            userPattern.timings.shift();
+        }
+        
+        // Analisar padrões
+        const analysis = this.performPatternAnalysis(userId);
+        
+        // Aplicar correções se necessário
+        this.applyPatternCorrections(userId, analysis);
+        
+        return analysis;
+    }
+
+    // 🔍 Realizar análise de padrões
+    performPatternAnalysis(userId) {
+        const userPattern = this.userPatterns.get(userId);
+        if (!userPattern || userPattern.messages.length < 3) {
+            return { risk: 'low', issues: [], recommendations: [] };
+        }
+        
+        const issues = [];
+        const recommendations = [];
+        let riskScore = 0;
+        
+        // 1. Verificar mensagens idênticas
+        const identicalCount = this.countIdenticalMessages(userPattern.messages);
+        if (identicalCount > 0.7) { // Mais de 70% idênticas
+            issues.push('Muitas mensagens idênticas');
+            riskScore += 2;
+            recommendations.push('Varia mais o conteúdo das mensagens');
+        }
+        
+        // 2. Verificar timing repetitivo
+        const timingVariation = this.analyzeTimingVariation(userPattern.timings);
+        if (timingVariation < 0.3) { // Pouca variação
+            issues.push('Timing muito repetitivo');
+            riskScore += 1;
+            recommendations.push('Varie mais os intervalos entre mensagens');
+        }
+        
+        // 3. Verificar velocidade
+        const avgSpeed = this.calculateAverageSpeed(userPattern.timings);
+        if (avgSpeed > 0.5) { // Muito rápido
+            issues.push('Envio muito rápido');
+            riskScore += 2;
+            recommendations.push('Reduza a velocidade de envio');
+        }
+        
+        // 4. Verificar diversidade de grupos
+        const groupDiversity = userPattern.groups.size / userPattern.messages.length;
+        if (groupDiversity < 0.3) { // Poucos grupos diferentes
+            issues.push('Pouca diversidade de grupos');
+            riskScore += 1;
+            recommendations.push('Varie mais os grupos de destino');
+        }
+        
+        // Determinar nível de risco
+        let riskLevel = 'low';
+        if (riskScore >= 4) riskLevel = 'critical';
+        else if (riskScore >= 3) riskLevel = 'high';
+        else if (riskScore >= 1) riskLevel = 'medium';
+        
+        return {
+            risk: riskLevel,
+            score: riskScore,
+            issues,
+            recommendations,
+            stats: {
+                identicalMessages: identicalCount,
+                timingVariation,
+                averageSpeed: avgSpeed,
+                groupDiversity
+            }
+        };
+    }
+
+    // 🔢 Contar mensagens idênticas
+    countIdenticalMessages(messages) {
+        if (messages.length < 2) return 0;
+        
+        const contentCounts = {};
+        messages.forEach(msg => {
+            const content = msg.content.toLowerCase().trim();
+            contentCounts[content] = (contentCounts[content] || 0) + 1;
+        });
+        
+        const maxCount = Math.max(...Object.values(contentCounts));
+        return maxCount / messages.length;
+    }
+
+    // ⏰ Analisar variação de timing
+    analyzeTimingVariation(timings) {
+        if (timings.length < 2) return 1;
+        
+        const intervals = [];
+        for (let i = 1; i < timings.length; i++) {
+            intervals.push(timings[i] - timings[i-1]);
+        }
+        
+        const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avg, 2), 0) / intervals.length;
+        const stdDev = Math.sqrt(variance);
+        
+        return Math.min(stdDev / avg, 1); // Coeficiente de variação
+    }
+
+    // ⚡ Calcular velocidade média
+    calculateAverageSpeed(timings) {
+        if (timings.length < 2) return 0;
+        
+        const totalTime = timings[timings.length - 1] - timings[0];
+        const messagesPerMinute = (timings.length - 1) / (totalTime / 60000);
+        
+        return Math.min(messagesPerMinute / 10, 1); // Normalizar para 0-1
+    }
+
+    // 🛠️ Aplicar correções de padrão
+    applyPatternCorrections(userId, analysis) {
+        if (analysis.risk === 'critical') {
+            // Pausa forçada
+            blockDetector.pauseUserActivity(userId, 3600000, 'Padrão crítico detectado');
+        } else if (analysis.risk === 'high') {
+            // Aumentar delays
+            const userProfile = humanLikeAI.analyzeUserProfile(userId);
+            userProfile.typingSpeed.normal *= 2; // Dobrar velocidade de digitação
+        }
+        
+        // Notificar usuário
+        io.to(userId).emit('pattern-analysis', {
+            risk: analysis.risk,
+            issues: analysis.issues,
+            recommendations: analysis.recommendations,
+            stats: analysis.stats
+        });
+    }
+}
+
+// Inicializar analisador de padrões
+const patternAnalyzer = new WhatsAppPatternAnalyzer();
+
 // 🛡️ SISTEMA DE PROTEÇÃO CONTRA BANIMENTO
 class AntiBanProtection {
     constructor() {
@@ -288,7 +685,7 @@ class AntiBanProtection {
         };
     }
 
-    // 📊 Registrar atividade do usuário
+    // 📊 Registrar atividade do usuário (MELHORADO COM DASHBOARD)
     recordUserActivity(userId, action, details = {}) {
         if (!this.userStats.has(userId)) {
             this.userStats.set(userId, {
@@ -298,7 +695,12 @@ class AntiBanProtection {
                 lastGroupContact: 0,
                 dailyLimit: 0,
                 hourlyLimit: 0,
-                riskLevel: 'low'
+                riskLevel: 'low',
+                riskScore: 0,
+                sessionStart: Date.now(),
+                consecutiveMessages: 0,
+                avgDelay: 0,
+                personality: 'balanced'
             });
         }
 
@@ -321,7 +723,34 @@ class AntiBanProtection {
         // Atualizar nível de risco
         this.updateRiskLevel(userId);
         
+        // 📊 ENVIAR ATUALIZAÇÃO DO DASHBOARD EM TEMPO REAL
+        this.sendDashboardUpdate(userId);
+        
         console.log(`📊 Atividade registrada: ${action} para usuário ${userId}`);
+    }
+
+    // 📊 Enviar atualização do dashboard em tempo real
+    sendDashboardUpdate(userId) {
+        const stats = this.userStats.get(userId);
+        if (!stats) return;
+
+        // Obter personalidade do usuário
+        const userProfile = humanLikeAI.analyzeUserProfile(userId);
+        
+        const dashboardData = {
+            score: stats.riskScore || 0,
+            messagesSent: stats.messagesSent || 0,
+            groupsContacted: stats.groupsContacted || 0,
+            avgDelay: stats.avgDelay ? `${Math.round(stats.avgDelay/1000)}s` : '0s',
+            personality: userProfile.personality || 'balanced',
+            riskLevel: stats.riskLevel || 'low',
+            sessionDuration: Math.round((Date.now() - stats.sessionStart) / 60000), // minutos
+            consecutiveMessages: stats.consecutiveMessages || 0
+        };
+
+        // Enviar para o frontend
+        io.to(userId).emit('risk-update', dashboardData);
+        console.log(`📊 Dashboard atualizado para usuário ${userId}:`, dashboardData);
     }
 
     // ⚠️ Atualizar nível de risco
@@ -355,7 +784,7 @@ class AntiBanProtection {
         console.log(`⚠️ Nível de risco atualizado para usuário ${userId}: ${stats.riskLevel} (score: ${riskScore})`);
     }
 
-    // 🚫 Verificar se pode enviar mensagem
+    // 🚫 Verificar se pode enviar mensagem (MELHORADO COM PAUSAS AUTOMÁTICAS)
     canSendMessage(userId, groupId) {
         const stats = this.userStats.get(userId);
         if (!stats) return { allowed: true, reason: 'Primeira mensagem' };
@@ -363,49 +792,95 @@ class AntiBanProtection {
         const now = Date.now();
         const timeSinceLastMessage = now - stats.lastMessage;
 
-        // Verificações de segurança
+        // Verificações de segurança (MELHORADAS)
         const checks = {
-            // Muito rápido = suspeito
-            tooFast: timeSinceLastMessage < 2000, // Menos de 2 segundos
+            // Muito rápido = suspeito (AUMENTADO)
+            tooFast: timeSinceLastMessage < 5000, // Menos de 5 segundos (mais seguro)
             
-            // Muitas mensagens por hora
-            tooManyPerHour: stats.messagesSent > 30,
+            // Muitas mensagens por hora (REDUZIDO)
+            tooManyPerHour: stats.messagesSent > 15, // Máximo 15 por hora (muito mais seguro)
             
-            // Muitos grupos diferentes
-            tooManyGroups: stats.groupsContacted > 50,
+            // Muitos grupos diferentes (REDUZIDO)
+            tooManyGroups: stats.groupsContacted > 20, // Máximo 20 grupos (mais seguro)
             
             // Risco crítico
-            criticalRisk: stats.riskLevel === 'critical'
+            criticalRisk: stats.riskLevel === 'critical',
+            
+            // NOVO: Pausa automática quando score > 2
+            autoPause: stats.riskScore > 2,
+            
+            // NOVO: Pausa por tempo de sessão (máximo 2 horas)
+            sessionTooLong: (now - stats.sessionStart) > 7200000, // 2 horas
+            
+            // NOVO: Pausa por muitas mensagens consecutivas
+            tooManyConsecutive: stats.consecutiveMessages > 5
         };
 
         // Se risco crítico, bloquear
         if (checks.criticalRisk) {
             return { 
                 allowed: false, 
-                reason: 'Risco crítico detectado. Aguarde 1 hora antes de tentar novamente.',
+                reason: '🛑 Risco crítico detectado. Aguarde 2 horas antes de tentar novamente.',
+                waitTime: 7200000 // 2 horas
+            };
+        }
+
+        // NOVO: Pausa automática quando score > 2
+        if (checks.autoPause) {
+            const pauseTime = 1800000; // 30 minutos
+            return { 
+                allowed: false, 
+                reason: '🤖 IA: Pausa automática ativada (score alto). Aguarde 30 minutos.',
+                waitTime: pauseTime
+            };
+        }
+
+        // NOVO: Pausa por sessão muito longa
+        if (checks.sessionTooLong) {
+            return { 
+                allowed: false, 
+                reason: '⏰ Sessão muito longa. Aguarde 1 hora para descansar.',
                 waitTime: 3600000 // 1 hora
             };
         }
 
-        // Se muito rápido, forçar delay
+        // NOVO: Pausa por muitas mensagens consecutivas
+        if (checks.tooManyConsecutive) {
+            return { 
+                allowed: false, 
+                reason: '🔄 Muitas mensagens consecutivas. Pausa de 15 minutos.',
+                waitTime: 900000 // 15 minutos
+            };
+        }
+
+        // Se muito rápido, forçar delay (AUMENTADO)
         if (checks.tooFast) {
             return { 
                 allowed: false, 
-                reason: 'Muito rápido! Aguarde 3 segundos.',
-                waitTime: 3000
+                reason: '⚡ Muito rápido! Aguarde 10 segundos.',
+                waitTime: 10000 // 10 segundos
             };
         }
 
-        // Se muitas mensagens por hora, forçar delay maior
+        // Se muitas mensagens por hora, forçar delay maior (AUMENTADO)
         if (checks.tooManyPerHour) {
             return { 
                 allowed: false, 
-                reason: 'Limite de mensagens por hora atingido. Aguarde 10 minutos.',
-                waitTime: 600000 // 10 minutos
+                reason: '📊 Limite de mensagens por hora atingido. Aguarde 30 minutos.',
+                waitTime: 1800000 // 30 minutos
             };
         }
 
-        return { allowed: true, reason: 'OK para enviar' };
+        // Se muitos grupos, forçar pausa
+        if (checks.tooManyGroups) {
+            return { 
+                allowed: false, 
+                reason: '👥 Muitos grupos contactados. Aguarde 20 minutos.',
+                waitTime: 1200000 // 20 minutos
+            };
+        }
+
+        return { allowed: true, reason: '✅ OK para enviar' };
     }
 
     // ⏱️ Calcular delay inteligente
@@ -512,13 +987,14 @@ class HumanLikeAI {
         return personalities[Math.floor(Math.random() * personalities.length)];
     }
 
-    // ⌨️ Velocidade de digitação humana
+    // ⌨️ Velocidade de digitação humana mais realista
     getRandomTypingSpeed() {
-        const baseSpeed = Math.random() * 1200 + 800; // 800-2000ms por caractere
+        const baseSpeed = Math.random() * 1500 + 1000; // 1000-2500ms por caractere (mais realista)
         return {
-            fast: baseSpeed * 0.7,
-            normal: baseSpeed,
-            slow: baseSpeed * 1.5
+            fast: baseSpeed * 0.6,    // Digitação rápida
+            normal: baseSpeed,        // Velocidade normal
+            slow: baseSpeed * 1.8,    // Digitação mais lenta
+            verySlow: baseSpeed * 2.5 // Digitação muito lenta (pensando)
         };
     }
 
@@ -542,58 +1018,75 @@ class HumanLikeAI {
         return styles[Math.floor(Math.random() * styles.length)];
     }
 
-    // ⏱️ Calcular delay inteligente baseado em IA
+    // ⏱️ Calcular delay inteligente baseado em IA (MELHORADO)
     calculateIntelligentDelay(userId, messageLength, groupId) {
         const profile = this.analyzeUserProfile(userId);
         const now = new Date();
         const currentHour = now.getHours();
         
-        // Base delay por personalidade
-        let baseDelay = 5000; // 5 segundos base
+        // Base delay por personalidade (AUMENTADOS para maior segurança)
+        let baseDelay = 120000; // 2 minutos base (muito mais seguro)
         switch (profile.personality) {
             case 'cautious':
-                baseDelay = 15000; // 15s
+                baseDelay = 300000; // 5 minutos - máximo cuidado
                 break;
             case 'balanced':
-                baseDelay = 8000;  // 8s
+                baseDelay = 180000; // 3 minutos - equilibrado
                 break;
             case 'active':
-                baseDelay = 4000;  // 4s
+                baseDelay = 120000; // 2 minutos - ativo mas seguro
                 break;
             case 'professional':
-                baseDelay = 10000; // 10s
+                baseDelay = 240000; // 4 minutos - profissional
                 break;
             case 'casual':
-                baseDelay = Math.random() * 10000 + 3000; // 3-13s aleatório
+                baseDelay = Math.random() * 120000 + 90000; // 1.5-3.5 minutos aleatório
                 break;
         }
 
         // Ajustar por horário (mais lento fora do horário ativo)
         if (!profile.activityPattern.preferredHours.includes(currentHour)) {
-            baseDelay *= 2; // Dobrar delay fora do horário
+            baseDelay *= 1.5; // 50% mais lento fora do horário
         }
 
-        // Simular tempo de digitação humana
-        const typingTime = messageLength * profile.typingSpeed.normal;
+        // Simular tempo de digitação humana (MELHORADO)
+        const typingSpeed = profile.typingSpeed;
+        let typingTime = 0;
         
-        // Adicionar pausa de leitura
-        const readingTime = Math.random() * 3000 + 1000; // 1-4s
+        // Escolher velocidade de digitação baseada no contexto
+        if (messageLength > 100) {
+            typingTime = messageLength * typingSpeed.slow; // Mensagens longas = digitação mais lenta
+        } else if (messageLength < 20) {
+            typingTime = messageLength * typingSpeed.fast; // Mensagens curtas = digitação mais rápida
+        } else {
+            typingTime = messageLength * typingSpeed.normal; // Mensagens médias = velocidade normal
+        }
+        
+        // Adicionar pausa de leitura (MELHORADO)
+        const readingTime = Math.random() * 8000 + 2000; // 2-10s (mais realista)
 
-        // Variação aleatória para parecer humano
-        const humanVariation = Math.random() * 5000; // 0-5s
+        // Variação aleatória para parecer humano (AUMENTADA)
+        const humanVariation = Math.random() * 30000 + 10000; // 10-40s (muito mais variação)
 
-        // Pausa ocasional (simular distração)
+        // Pausa ocasional (simular distração) - MAIS FREQUENTE
         let breakTime = 0;
-        if (Math.random() < profile.activityPattern.breakFrequency) {
-            breakTime = this.globalPatterns.breakPatterns[Math.floor(Math.random() * this.globalPatterns.breakPatterns.length)];
+        if (Math.random() < 0.4) { // 40% chance de pausa (mais humano)
+            const breakOptions = [60000, 120000, 180000, 300000]; // 1-5 minutos
+            breakTime = breakOptions[Math.floor(Math.random() * breakOptions.length)];
             console.log(`🤖 IA: Pausa humana detectada para usuário ${userId} (${Math.round(breakTime/1000)}s)`);
         }
 
-        const totalDelay = baseDelay + typingTime + readingTime + humanVariation + breakTime;
+        // Adicionar fator de cansaço (mais lento conforme o tempo passa)
+        const sessionStart = profile.lastActivity || Date.now();
+        const sessionDuration = Date.now() - sessionStart;
+        const fatigueFactor = Math.min(sessionDuration / 3600000, 2); // Máximo 2x mais lento após 1 hora
+        const fatigueDelay = baseDelay * fatigueFactor * 0.3; // 30% do delay base por fator de cansaço
+
+        const totalDelay = baseDelay + typingTime + readingTime + humanVariation + breakTime + fatigueDelay;
         
-        console.log(`🤖 IA Delay calculado para ${userId}: ${Math.round(totalDelay/1000)}s (${profile.personality}, ${messageLength} chars)`);
+        console.log(`🤖 IA Delay calculado para ${userId}: ${Math.round(totalDelay/1000)}s (${profile.personality}, ${messageLength} chars, cansaço: ${Math.round(fatigueFactor*100)}%)`);
         
-        return Math.min(totalDelay, 300000); // Máximo 5 minutos
+        return Math.min(totalDelay, 600000); // Máximo 10 minutos (muito mais seguro)
     }
 
     // 🎯 Decidir se deve enviar agora (baseado em padrões humanos)
@@ -620,34 +1113,169 @@ class HumanLikeAI {
         return true;
     }
 
-    // 📝 Modificar mensagem para parecer mais humana
+    // 📝 Modificar mensagem para parecer mais humana (MELHORADO)
     humanizeMessage(message, profile) {
         let humanizedMessage = message;
 
-        // Adicionar variações baseadas no estilo
-        if (profile.messageStyle.useEmojis && Math.random() < 0.3) {
-            const emojis = ['😊', '👍', '✨', '💪', '🚀'];
-            humanizedMessage += ' ' + emojis[Math.floor(Math.random() * emojis.length)];
-        }
-
-        // Variações de capitalização
-        if (profile.messageStyle.useCaps && Math.random() < 0.2) {
-            humanizedMessage = humanizedMessage.toUpperCase();
-        }
-
-        // Adicionar pequenos erros de digitação ocasionais
-        if (Math.random() < 0.05) { // 5% chance
-            const words = humanizedMessage.split(' ');
-            if (words.length > 1) {
-                const randomIndex = Math.floor(Math.random() * words.length);
-                words[randomIndex] = words[randomIndex].replace(/[aeiou]/gi, (match, offset) => 
-                    offset === 0 ? match : (Math.random() < 0.5 ? match : '')
-                );
-                humanizedMessage = words.join(' ');
+        // 🎭 Variações baseadas na personalidade
+        const personality = profile.personality;
+        
+        // Adicionar emojis baseado na personalidade
+        if (Math.random() < this.getEmojiChance(personality)) {
+            const emojis = this.getPersonalityEmojis(personality);
+            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            // Posicionar emoji de forma natural
+            if (Math.random() < 0.5) {
+                humanizedMessage = emoji + ' ' + humanizedMessage; // No início
+            } else {
+                humanizedMessage += ' ' + emoji; // No final
             }
         }
 
+        // 📝 Variações de formatação baseadas na personalidade
+        if (personality === 'professional') {
+            // Profissional: manter formal, mas ocasionalmente adicionar entusiasmo
+            if (Math.random() < 0.1) {
+                humanizedMessage = humanizedMessage.replace(/\.$/, '!');
+            }
+        } else if (personality === 'casual') {
+            // Casual: mais variações
+            if (Math.random() < 0.3) {
+                humanizedMessage = humanizedMessage.toLowerCase();
+            }
+            if (Math.random() < 0.2) {
+                humanizedMessage = humanizedMessage.replace(/\b(é|e)\b/gi, 'eh');
+            }
+        } else if (personality === 'active') {
+            // Ativo: mais energia
+            if (Math.random() < 0.2) {
+                humanizedMessage = humanizedMessage.toUpperCase();
+            }
+        }
+
+        // ⌨️ Erros de digitação mais realistas
+        if (Math.random() < this.getTypoChance(personality)) {
+            humanizedMessage = this.addRealisticTypos(humanizedMessage);
+        }
+
+        // 🎯 Variações de pontuação
+        if (Math.random() < 0.1) {
+            humanizedMessage = this.varyPunctuation(humanizedMessage);
+        }
+
+        // 📱 Simular comportamento de WhatsApp (abreviações ocasionais)
+        if (personality === 'casual' && Math.random() < 0.15) {
+            humanizedMessage = this.addWhatsAppAbbreviations(humanizedMessage);
+        }
+
         return humanizedMessage;
+    }
+
+    // 🎭 Obter chance de emoji baseada na personalidade
+    getEmojiChance(personality) {
+        const chances = {
+            'cautious': 0.1,      // Poucos emojis
+            'balanced': 0.2,      // Emojis moderados
+            'active': 0.4,        // Muitos emojis
+            'professional': 0.05, // Quase nenhum emoji
+            'casual': 0.5         // Muitos emojis
+        };
+        return chances[personality] || 0.2;
+    }
+
+    // 😊 Obter emojis baseados na personalidade
+    getPersonalityEmojis(personality) {
+        const emojiSets = {
+            'cautious': ['👍', '✅', '💯'],
+            'balanced': ['😊', '👍', '✨', '💪'],
+            'active': ['🚀', '💪', '🔥', '⚡', '🎯'],
+            'professional': ['✅', '💼', '📈'],
+            'casual': ['😊', '👍', '✨', '💪', '🚀', '🔥', '💯', '🎉']
+        };
+        return emojiSets[personality] || emojiSets['balanced'];
+    }
+
+    // ⌨️ Obter chance de erro de digitação
+    getTypoChance(personality) {
+        const chances = {
+            'cautious': 0.02,     // Quase nenhum erro
+            'balanced': 0.05,     // Poucos erros
+            'active': 0.08,       // Alguns erros
+            'professional': 0.01, // Muito poucos erros
+            'casual': 0.1         // Mais erros
+        };
+        return chances[personality] || 0.05;
+    }
+
+    // ⌨️ Adicionar erros de digitação realistas
+    addRealisticTypos(message) {
+        const typos = [
+            // Trocar letras adjacentes
+            (text) => text.replace(/([a-z])([a-z])/gi, (match, a, b) => 
+                Math.random() < 0.1 ? b + a : match
+            ),
+            // Remover vogais ocasionais
+            (text) => text.replace(/[aeiou]/gi, (match, offset) => 
+                offset > 0 && Math.random() < 0.1 ? '' : match
+            ),
+            // Duplicar letras ocasionais
+            (text) => text.replace(/([a-z])/gi, (match) => 
+                Math.random() < 0.05 ? match + match : match
+            ),
+            // Trocar letras similares
+            (text) => text.replace(/e/gi, (match) => 
+                Math.random() < 0.1 ? 'i' : match
+            )
+        ];
+        
+        let result = message;
+        typos.forEach(typo => {
+            if (Math.random() < 0.3) {
+                result = typo(result);
+            }
+        });
+        
+        return result;
+    }
+
+    // 🎯 Variações de pontuação
+    varyPunctuation(message) {
+        const variations = [
+            message.replace(/\.$/, '!'),
+            message.replace(/\.$/, '...'),
+            message.replace(/!$/, '.'),
+            message + '!',
+            message + '...'
+        ];
+        
+        return variations[Math.floor(Math.random() * variations.length)];
+    }
+
+    // 📱 Adicionar abreviações do WhatsApp
+    addWhatsAppAbbreviations(message) {
+        const abbreviations = {
+            'voce': 'vc',
+            'você': 'vc',
+            'para': 'pra',
+            'com': 'c/',
+            'nao': 'n',
+            'não': 'n',
+            'que': 'q',
+            'de': 'd',
+            'do': 'd',
+            'da': 'd'
+        };
+        
+        let result = message;
+        Object.entries(abbreviations).forEach(([full, abbrev]) => {
+            if (Math.random() < 0.3) {
+                const regex = new RegExp(`\\b${full}\\b`, 'gi');
+                result = result.replace(regex, abbrev);
+            }
+        });
+        
+        return result;
     }
 
     // 🎲 Decidir estratégia de envio
@@ -2313,6 +2941,10 @@ io.on('connection', (socket) => {
             console.log('📤 Iniciando envio para', groups.length, 'grupos');
             console.log('📝 Mensagem:', message);
             
+            // Contadores para estatísticas
+            let successCount = 0;
+            let errorCount = 0;
+            
             // Processar cada grupo
             for (let i = 0; i < groups.length; i++) {
                 // ✅ VERIFICAR SE FOI CANCELADO
@@ -2378,6 +3010,13 @@ io.on('connection', (socket) => {
                     antiBanProtection.recordUserActivity(userId, 'message_sent', { groupId: group.id });
                     antiBanProtection.recordUserActivity(userId, 'group_contacted', { groupId: group.id });
                     
+                    // 🔍 ANALISAR PADRÃO DE ENVIO
+                    patternAnalyzer.analyzeSendingPattern(userId, {
+                        content: processedMessage,
+                        groupId: group.id,
+                        delay: actualDelay || 0
+                    });
+                    
                     console.log(`✅ Mensagem enviada com sucesso para: ${group.name || group}`);
                     
                     // ✅ VERIFICAR APÓS O ENVIO
@@ -2400,11 +3039,19 @@ io.on('connection', (socket) => {
                     
                     // Emitir para TODOS os sockets do usuário (não apenas o socket atual)
                     // Isso garante que o progresso seja recebido mesmo se o socket reconectar
+                    // Incrementar contador de sucesso
+                    successCount++;
+                    
                     io.to(`user_${userId}`).emit('send-progress', { 
                         current: i + 1, 
                         total: groups.length, 
                         group: group.name || group,
-                        status: 'success'
+                        status: 'success',
+                        delay: actualDelay,
+                        personality: userProfile.personality,
+                        riskScore: antiBanProtection.userStats.get(userId)?.riskScore || 0,
+                        successCount: successCount,
+                        errorCount: errorCount
                     });
                     
                     // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
@@ -2449,6 +3096,12 @@ io.on('connection', (socket) => {
                 } catch (error) {
                     console.error(`❌ Erro ao enviar para ${group.name || group}:`, error);
                     
+                    // 🚨 DETECTAR E REGISTRAR BLOQUEIO
+                    const blockType = blockDetector.detectBlockType(error);
+                    if (blockType !== 'unknown') {
+                        blockDetector.recordBlock(userId, blockType, error);
+                    }
+                    
                     // ✅ TRATAMENTO ESPECÍFICO PARA ERRO "FORBIDDEN"
                     let errorMessage = error.message || 'Erro desconhecido';
                     if (error.message && error.message.includes('forbidden')) {
@@ -2457,7 +3110,13 @@ io.on('connection', (socket) => {
                     } else if (error.message && error.message.includes('not-authorized')) {
                         errorMessage = 'Não autorizado a enviar para este grupo';
                         console.log('⚠️ Grupo não autorizado:', group.name || group);
+                    } else if (error.message && error.message.includes('Connection Closed')) {
+                        errorMessage = 'Conexão perdida - Bloqueio detectado';
+                        console.log('🚨 Bloqueio de conexão detectado para:', group.name || group);
                     }
+                    
+                    // Incrementar contador de erro
+                    errorCount++;
                     
                     // Emitir erro para todos os sockets do usuário
                     io.to(`user_${userId}`).emit('send-progress', { 
@@ -2465,7 +3124,12 @@ io.on('connection', (socket) => {
                         total: groups.length, 
                         group: group.name || group,
                         status: 'error',
-                        error: errorMessage
+                        error: errorMessage,
+                        delay: actualDelay || 0,
+                        personality: userProfile.personality,
+                        riskScore: antiBanProtection.userStats.get(userId)?.riskScore || 0,
+                        successCount: successCount,
+                        errorCount: errorCount
                     });
                     
                     // ✅ CONTINUAR ENVIO MESMO COM ERRO
@@ -2485,7 +3149,10 @@ io.on('connection', (socket) => {
             // Emitir conclusão para todos os sockets do usuário
             io.to(`user_${userId}`).emit('send-complete', { 
                 total: groups.length,
-                message: 'Todas as mensagens foram enviadas com sucesso!'
+                success: successCount,
+                errors: errorCount,
+                successRate: Math.round((successCount / groups.length) * 100),
+                message: `Envio concluído! ${successCount} sucessos, ${errorCount} erros`
             });
             
         } catch (error) {
