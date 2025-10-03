@@ -81,35 +81,17 @@ class SessionVault {
         }
     }
 
-    // 🔐 Criptografar dados da sessão
-    encryptSessionData(data) {
-        const algorithm = 'aes-256-cbc';
-        const key = crypto.scryptSync('whatsapp-session-key-2024', 'salt', 32);
-        const iv = crypto.randomBytes(16);
-        const cipher = crypto.createCipher(algorithm, key);
-        
-        let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-        
-        return {
-            encrypted,
-            iv: iv.toString('hex')
-        };
+    // 💾 Salvar dados da sessão (sem criptografia)
+    saveSessionData(data) {
+        return JSON.stringify(data);
     }
 
-    // 🔓 Descriptografar dados da sessão
-    decryptSessionData(encryptedData) {
+    // 📖 Ler dados da sessão (sem descriptografia)
+    readSessionData(data) {
         try {
-            const algorithm = 'aes-256-cbc';
-            const key = crypto.scryptSync('whatsapp-session-key-2024', 'salt', 32);
-            const decipher = crypto.createDecipher(algorithm, key);
-            
-            let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
-            decrypted += decipher.final('utf8');
-            
-            return JSON.parse(decrypted);
+            return JSON.parse(data);
         } catch (error) {
-            console.error('❌ Erro ao descriptografar sessão:', error);
+            console.error('❌ Erro ao ler dados da sessão:', error);
             return null;
         }
     }
@@ -126,7 +108,7 @@ class SessionVault {
                 userId,
                 sessionId,
                 timestamp: Date.now(),
-                sessionData: this.encryptSessionData(sessionData),
+                sessionData: this.saveSessionData(sessionData),
                 checksum: crypto.createHash('sha256').update(JSON.stringify(sessionData)).digest('hex')
             };
 
@@ -160,7 +142,7 @@ class SessionVault {
                 const currentChecksum = crypto.createHash('sha256').update(JSON.stringify(vaultData.sessionData)).digest('hex');
                 if (currentChecksum === vaultData.checksum) {
                     console.log(`🏦 Sessão recuperada do cofre: ${vaultKey}`);
-                    return this.decryptSessionData(vaultData.sessionData);
+                    return this.readSessionData(vaultData.sessionData);
                 } else {
                     console.log(`⚠️ Checksum inválido para sessão: ${vaultKey}`);
                 }
@@ -186,7 +168,7 @@ class SessionVault {
                     const currentChecksum = crypto.createHash('sha256').update(JSON.stringify(vaultData.sessionData)).digest('hex');
                     if (currentChecksum === vaultData.checksum) {
                         console.log(`🏦 Sessão recuperada do backup: ${backupFile}`);
-                        return this.decryptSessionData(vaultData.sessionData);
+                        return this.readSessionData(vaultData.sessionData);
                     }
                 } catch (error) {
                     console.error(`❌ Erro ao ler backup ${backupFile}:`, error);
@@ -293,6 +275,423 @@ class SessionVault {
 
 // Inicializar cofre de sessões
 const sessionVault = new SessionVault();
+
+// 🛡️ SISTEMA DE PROTEÇÃO CONTRA BANIMENTO
+class AntiBanProtection {
+    constructor() {
+        this.userStats = new Map(); // Estatísticas por usuário
+        this.globalStats = {
+            totalMessages: 0,
+            totalGroups: 0,
+            lastActivity: Date.now()
+        };
+    }
+
+    // 📊 Registrar atividade do usuário
+    recordUserActivity(userId, action, details = {}) {
+        if (!this.userStats.has(userId)) {
+            this.userStats.set(userId, {
+                messagesSent: 0,
+                groupsContacted: 0,
+                lastMessage: 0,
+                lastGroupContact: 0,
+                dailyLimit: 0,
+                hourlyLimit: 0,
+                riskLevel: 'low'
+            });
+        }
+
+        const stats = this.userStats.get(userId);
+        const now = Date.now();
+
+        switch (action) {
+            case 'message_sent':
+                stats.messagesSent++;
+                stats.lastMessage = now;
+                this.globalStats.totalMessages++;
+                break;
+            case 'group_contacted':
+                stats.groupsContacted++;
+                stats.lastGroupContact = now;
+                this.globalStats.totalGroups++;
+                break;
+        }
+
+        // Atualizar nível de risco
+        this.updateRiskLevel(userId);
+        
+        console.log(`📊 Atividade registrada: ${action} para usuário ${userId}`);
+    }
+
+    // ⚠️ Atualizar nível de risco
+    updateRiskLevel(userId) {
+        const stats = this.userStats.get(userId);
+        if (!stats) return;
+
+        const now = Date.now();
+        const timeSinceLastMessage = now - stats.lastMessage;
+        const messagesPerHour = stats.messagesSent / ((now - stats.lastMessage) / (1000 * 60 * 60));
+
+        // Calcular risco baseado em vários fatores
+        let riskScore = 0;
+
+        // Muitas mensagens em pouco tempo = alto risco
+        if (messagesPerHour > 50) riskScore += 3;
+        else if (messagesPerHour > 20) riskScore += 2;
+        else if (messagesPerHour > 10) riskScore += 1;
+
+        // Muitos grupos contactados = alto risco
+        if (stats.groupsContacted > 100) riskScore += 3;
+        else if (stats.groupsContacted > 50) riskScore += 2;
+        else if (stats.groupsContacted > 20) riskScore += 1;
+
+        // Determinar nível de risco
+        if (riskScore >= 5) stats.riskLevel = 'critical';
+        else if (riskScore >= 3) stats.riskLevel = 'high';
+        else if (riskScore >= 1) stats.riskLevel = 'medium';
+        else stats.riskLevel = 'low';
+
+        console.log(`⚠️ Nível de risco atualizado para usuário ${userId}: ${stats.riskLevel} (score: ${riskScore})`);
+    }
+
+    // 🚫 Verificar se pode enviar mensagem
+    canSendMessage(userId, groupId) {
+        const stats = this.userStats.get(userId);
+        if (!stats) return { allowed: true, reason: 'Primeira mensagem' };
+
+        const now = Date.now();
+        const timeSinceLastMessage = now - stats.lastMessage;
+
+        // Verificações de segurança
+        const checks = {
+            // Muito rápido = suspeito
+            tooFast: timeSinceLastMessage < 2000, // Menos de 2 segundos
+            
+            // Muitas mensagens por hora
+            tooManyPerHour: stats.messagesSent > 30,
+            
+            // Muitos grupos diferentes
+            tooManyGroups: stats.groupsContacted > 50,
+            
+            // Risco crítico
+            criticalRisk: stats.riskLevel === 'critical'
+        };
+
+        // Se risco crítico, bloquear
+        if (checks.criticalRisk) {
+            return { 
+                allowed: false, 
+                reason: 'Risco crítico detectado. Aguarde 1 hora antes de tentar novamente.',
+                waitTime: 3600000 // 1 hora
+            };
+        }
+
+        // Se muito rápido, forçar delay
+        if (checks.tooFast) {
+            return { 
+                allowed: false, 
+                reason: 'Muito rápido! Aguarde 3 segundos.',
+                waitTime: 3000
+            };
+        }
+
+        // Se muitas mensagens por hora, forçar delay maior
+        if (checks.tooManyPerHour) {
+            return { 
+                allowed: false, 
+                reason: 'Limite de mensagens por hora atingido. Aguarde 10 minutos.',
+                waitTime: 600000 // 10 minutos
+            };
+        }
+
+        return { allowed: true, reason: 'OK para enviar' };
+    }
+
+    // ⏱️ Calcular delay inteligente
+    calculateSmartDelay(userId, groupId) {
+        const stats = this.userStats.get(userId);
+        if (!stats) return 5000; // 5 segundos para novos usuários
+
+        const baseDelay = 5000; // 5 segundos base
+        let additionalDelay = 0;
+
+        // Ajustar delay baseado no nível de risco
+        switch (stats.riskLevel) {
+            case 'critical':
+                additionalDelay = 300000; // +5 minutos
+                break;
+            case 'high':
+                additionalDelay = 120000; // +2 minutos
+                break;
+            case 'medium':
+                additionalDelay = 60000; // +1 minuto
+                break;
+            case 'low':
+                additionalDelay = 0;
+                break;
+        }
+
+        // Adicionar variação aleatória para parecer mais humano
+        const randomVariation = Math.random() * 10000; // 0-10 segundos
+
+        const totalDelay = baseDelay + additionalDelay + randomVariation;
+        
+        console.log(`⏱️ Delay calculado para usuário ${userId}: ${Math.round(totalDelay/1000)}s (risco: ${stats.riskLevel})`);
+        
+        return totalDelay;
+    }
+
+    // 📈 Obter estatísticas
+    getStats(userId = null) {
+        if (userId) {
+            return this.userStats.get(userId) || null;
+        }
+        return {
+            global: this.globalStats,
+            users: Array.from(this.userStats.entries()).map(([id, stats]) => ({
+                userId: id,
+                ...stats
+            }))
+        };
+    }
+
+    // 🧹 Limpar estatísticas antigas
+    cleanOldStats() {
+        const now = Date.now();
+        const oneDayAgo = now - (24 * 60 * 60 * 1000);
+
+        for (const [userId, stats] of this.userStats.entries()) {
+            if (stats.lastMessage < oneDayAgo) {
+                this.userStats.delete(userId);
+                console.log(`🧹 Estatísticas antigas removidas para usuário ${userId}`);
+            }
+        }
+    }
+}
+
+// Inicializar proteção contra banimento
+const antiBanProtection = new AntiBanProtection();
+
+// 🤖 SISTEMA DE IA PARA ENVIO HUMANO INTELIGENTE
+class HumanLikeAI {
+    constructor() {
+        this.userProfiles = new Map(); // Perfis de comportamento por usuário
+        this.globalPatterns = {
+            typingSpeed: { min: 800, max: 3000 }, // Velocidade de digitação humana
+            readingTime: { min: 2000, max: 8000 }, // Tempo de leitura
+            breakPatterns: [30000, 60000, 120000, 300000], // Pausas naturais
+            activityHours: [9, 10, 11, 14, 15, 16, 17, 18, 19, 20, 21] // Horários ativos
+        };
+    }
+
+    // 🧠 Analisar perfil do usuário
+    analyzeUserProfile(userId) {
+        if (!this.userProfiles.has(userId)) {
+            this.userProfiles.set(userId, {
+                personality: this.generatePersonality(),
+                typingSpeed: this.getRandomTypingSpeed(),
+                activityPattern: this.generateActivityPattern(),
+                messageStyle: this.generateMessageStyle(),
+                riskTolerance: Math.random() * 0.3 + 0.1, // 0.1 a 0.4
+                lastActivity: Date.now()
+            });
+        }
+        return this.userProfiles.get(userId);
+    }
+
+    // 🎭 Gerar personalidade única
+    generatePersonality() {
+        const personalities = [
+            'cautious',    // Cuidadoso - delays maiores
+            'balanced',    // Equilibrado - delays médios  
+            'active',      // Ativo - delays menores
+            'professional', // Profissional - horários específicos
+            'casual'       // Casual - padrões irregulares
+        ];
+        return personalities[Math.floor(Math.random() * personalities.length)];
+    }
+
+    // ⌨️ Velocidade de digitação humana
+    getRandomTypingSpeed() {
+        const baseSpeed = Math.random() * 1200 + 800; // 800-2000ms por caractere
+        return {
+            fast: baseSpeed * 0.7,
+            normal: baseSpeed,
+            slow: baseSpeed * 1.5
+        };
+    }
+
+    // 📅 Padrão de atividade
+    generateActivityPattern() {
+        return {
+            preferredHours: this.globalPatterns.activityHours.slice(0, Math.floor(Math.random() * 5) + 3),
+            breakFrequency: Math.random() * 0.3 + 0.1, // 10-40% chance de pausa
+            sessionLength: Math.random() * 30 + 10 // 10-40 minutos por sessão
+        };
+    }
+
+    // ✍️ Estilo de mensagem
+    generateMessageStyle() {
+        const styles = [
+            { useEmojis: true, useCaps: false, formal: false },
+            { useEmojis: false, useCaps: true, formal: true },
+            { useEmojis: true, useCaps: true, formal: false },
+            { useEmojis: false, useCaps: false, formal: true }
+        ];
+        return styles[Math.floor(Math.random() * styles.length)];
+    }
+
+    // ⏱️ Calcular delay inteligente baseado em IA
+    calculateIntelligentDelay(userId, messageLength, groupId) {
+        const profile = this.analyzeUserProfile(userId);
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // Base delay por personalidade
+        let baseDelay = 5000; // 5 segundos base
+        switch (profile.personality) {
+            case 'cautious':
+                baseDelay = 15000; // 15s
+                break;
+            case 'balanced':
+                baseDelay = 8000;  // 8s
+                break;
+            case 'active':
+                baseDelay = 4000;  // 4s
+                break;
+            case 'professional':
+                baseDelay = 10000; // 10s
+                break;
+            case 'casual':
+                baseDelay = Math.random() * 10000 + 3000; // 3-13s aleatório
+                break;
+        }
+
+        // Ajustar por horário (mais lento fora do horário ativo)
+        if (!profile.activityPattern.preferredHours.includes(currentHour)) {
+            baseDelay *= 2; // Dobrar delay fora do horário
+        }
+
+        // Simular tempo de digitação humana
+        const typingTime = messageLength * profile.typingSpeed.normal;
+        
+        // Adicionar pausa de leitura
+        const readingTime = Math.random() * 3000 + 1000; // 1-4s
+
+        // Variação aleatória para parecer humano
+        const humanVariation = Math.random() * 5000; // 0-5s
+
+        // Pausa ocasional (simular distração)
+        let breakTime = 0;
+        if (Math.random() < profile.activityPattern.breakFrequency) {
+            breakTime = this.globalPatterns.breakPatterns[Math.floor(Math.random() * this.globalPatterns.breakPatterns.length)];
+            console.log(`🤖 IA: Pausa humana detectada para usuário ${userId} (${Math.round(breakTime/1000)}s)`);
+        }
+
+        const totalDelay = baseDelay + typingTime + readingTime + humanVariation + breakTime;
+        
+        console.log(`🤖 IA Delay calculado para ${userId}: ${Math.round(totalDelay/1000)}s (${profile.personality}, ${messageLength} chars)`);
+        
+        return Math.min(totalDelay, 300000); // Máximo 5 minutos
+    }
+
+    // 🎯 Decidir se deve enviar agora (baseado em padrões humanos)
+    shouldSendNow(userId) {
+        const profile = this.analyzeUserProfile(userId);
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // Verificar horário ativo
+        if (!profile.activityPattern.preferredHours.includes(currentHour)) {
+            const chance = 0.2; // 20% chance fora do horário
+            if (Math.random() > chance) {
+                console.log(`🤖 IA: Horário inativo para ${userId} (${currentHour}h) - aguardando`);
+                return false;
+            }
+        }
+
+        // Verificar se precisa de pausa
+        if (Math.random() < profile.activityPattern.breakFrequency) {
+            console.log(`🤖 IA: Pausa necessária para ${userId}`);
+            return false;
+        }
+
+        return true;
+    }
+
+    // 📝 Modificar mensagem para parecer mais humana
+    humanizeMessage(message, profile) {
+        let humanizedMessage = message;
+
+        // Adicionar variações baseadas no estilo
+        if (profile.messageStyle.useEmojis && Math.random() < 0.3) {
+            const emojis = ['😊', '👍', '✨', '💪', '🚀'];
+            humanizedMessage += ' ' + emojis[Math.floor(Math.random() * emojis.length)];
+        }
+
+        // Variações de capitalização
+        if (profile.messageStyle.useCaps && Math.random() < 0.2) {
+            humanizedMessage = humanizedMessage.toUpperCase();
+        }
+
+        // Adicionar pequenos erros de digitação ocasionais
+        if (Math.random() < 0.05) { // 5% chance
+            const words = humanizedMessage.split(' ');
+            if (words.length > 1) {
+                const randomIndex = Math.floor(Math.random() * words.length);
+                words[randomIndex] = words[randomIndex].replace(/[aeiou]/gi, (match, offset) => 
+                    offset === 0 ? match : (Math.random() < 0.5 ? match : '')
+                );
+                humanizedMessage = words.join(' ');
+            }
+        }
+
+        return humanizedMessage;
+    }
+
+    // 🎲 Decidir estratégia de envio
+    getSendingStrategy(userId, totalGroups) {
+        const profile = this.analyzeUserProfile(userId);
+        
+        const strategies = {
+            cautious: {
+                maxPerSession: Math.min(5, totalGroups),
+                sessionBreak: 300000, // 5 minutos
+                dailyLimit: 20
+            },
+            balanced: {
+                maxPerSession: Math.min(10, totalGroups),
+                sessionBreak: 180000, // 3 minutos
+                dailyLimit: 50
+            },
+            active: {
+                maxPerSession: Math.min(15, totalGroups),
+                sessionBreak: 120000, // 2 minutos
+                dailyLimit: 100
+            },
+            professional: {
+                maxPerSession: Math.min(8, totalGroups),
+                sessionBreak: 240000, // 4 minutos
+                dailyLimit: 30
+            },
+            casual: {
+                maxPerSession: Math.min(12, totalGroups),
+                sessionBreak: Math.random() * 300000 + 60000, // 1-6 minutos aleatório
+                dailyLimit: 40
+            }
+        };
+
+        return strategies[profile.personality];
+    }
+}
+
+// Inicializar IA de envio humano
+const humanLikeAI = new HumanLikeAI();
+
+// Limpeza automática de estatísticas (a cada 6 horas)
+setInterval(() => {
+    antiBanProtection.cleanOldStats();
+}, 6 * 60 * 60 * 1000);
 
 // 🧹 LIMPEZA AUTOMÁTICA DO COFRE (A CADA 6 HORAS)
 setInterval(async () => {
@@ -1803,6 +2202,17 @@ io.on('connection', (socket) => {
             console.log('🔍 DEBUG: send-messages recebido com data:', data);
             let { groups, message, userId, sessionId, delay = 2000, minDelay = 1000, maxDelay = 5000, humanMode = true } = data || {};
             
+            // 🛡️ VERIFICAR PROTEÇÃO CONTRA BANIMENTO
+            const protectionCheck = antiBanProtection.canSendMessage(userId, groups[0]?.id);
+            if (!protectionCheck.allowed) {
+                console.log(`🛡️ Envio bloqueado por proteção: ${protectionCheck.reason}`);
+                socket.emit('send-error', { 
+                    message: protectionCheck.reason,
+                    waitTime: protectionCheck.waitTime
+                });
+                return;
+            }
+            
             // ✅ VERIFICAR SE JÁ EXISTE ENVIO ATIVO
             if (userSessions[userId] && userSessions[userId].isSending) {
                 console.log('⚠️ Já existe um envio ativo para este usuário');
@@ -1933,14 +2343,29 @@ io.on('connection', (socket) => {
                     // ENVIO REAL PARA O WHATSAPP
                     console.log(`📤 Enviando mensagem real para: ${group.name || group}`);
                     
+                    // 🤖 IA: Verificar se deve enviar agora
+                    if (!humanLikeAI.shouldSendNow(userId)) {
+                        console.log(`🤖 IA: Pausa inteligente ativada para usuário ${userId}`);
+                        await new Promise(resolve => setTimeout(resolve, 30000)); // 30s de pausa
+                    }
+                    
                     // Processar variáveis na mensagem ({nome}, {hora}, {data}, etc)
-                    const processedMessage = processMessageVariables(message, group.name || group);
-                    console.log(`🔄 Mensagem processada com variáveis:`, processedMessage.substring(0, 100) + '...');
+                    let processedMessage = processMessageVariables(message, group.name || group);
+                    
+                    // 🤖 IA: Humanizar mensagem
+                    const userProfile = humanLikeAI.analyzeUserProfile(userId);
+                    processedMessage = humanLikeAI.humanizeMessage(processedMessage, userProfile);
+                    
+                    console.log(`🔄 Mensagem processada com IA:`, processedMessage.substring(0, 100) + '...');
                     
                     // Enviar mensagem para o grupo via WhatsApp
                     await sock.sendMessage(group.id, { 
                         text: processedMessage 
                     });
+                    
+                    // 🛡️ REGISTRAR ATIVIDADE PARA PROTEÇÃO
+                    antiBanProtection.recordUserActivity(userId, 'message_sent', { groupId: group.id });
+                    antiBanProtection.recordUserActivity(userId, 'group_contacted', { groupId: group.id });
                     
                     console.log(`✅ Mensagem enviada com sucesso para: ${group.name || group}`);
                     
@@ -1973,19 +2398,23 @@ io.on('connection', (socket) => {
                     
                     // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
                     if (i < groups.length - 1) {
-                    let actualDelay = delay;
+                    // 🤖 IA: Calcular delay inteligente
+                    const messageLength = processedMessage.length;
+                    const intelligentDelay = humanLikeAI.calculateIntelligentDelay(userId, messageLength, group.id);
+                    
+                    let actualDelay = intelligentDelay;
                     
                     if (humanMode) {
-                        // Delay humano: variação aleatória entre minDelay e maxDelay
-                        const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-                        actualDelay = randomDelay;
-                            const minutes = Math.floor(actualDelay / 60000);
-                            const seconds = Math.floor((actualDelay % 60000) / 1000);
-                            console.log(`⏱️ Aguardando ${minutes}min ${seconds}s antes do próximo envio...`);
+                        // Usar delay da IA (já é inteligente)
+                        const minutes = Math.floor(actualDelay / 60000);
+                        const seconds = Math.floor((actualDelay % 60000) / 1000);
+                        console.log(`🤖 IA: Aguardando ${minutes}min ${seconds}s (delay inteligente)...`);
                     } else {
-                            const seconds = Math.floor(actualDelay / 1000);
-                            console.log(`⏱️ Aguardando ${seconds}s antes do próximo envio...`);
-                        }
+                        // Modo rápido: usar delay menor mas ainda inteligente
+                        actualDelay = Math.min(actualDelay * 0.3, 5000); // 30% do delay IA, máximo 5s
+                        const seconds = Math.floor(actualDelay / 1000);
+                        console.log(`⚡ Modo rápido: Aguardando ${seconds}s...`);
+                    }
                         
                         // ✅ DELAY INTERROMPÍVEL
                         const delayStart = Date.now();
