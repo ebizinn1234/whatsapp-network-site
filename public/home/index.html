@@ -4406,12 +4406,11 @@
                 <div class="modal-body">
                     <form id="loginForm">
                         <div class="form-group">
-                            <label for="loginPhone">Telefone:</label>
-                            <input type="tel" id="loginPhone" placeholder="83991234567 (apenas números)" required>
-                            <div class="phone-help">Digite apenas números (10 ou 11 dígitos)</div>
+                            <label for="loginPhone"><i class="fas fa-phone" style="margin-right: 8px; color: #24d366;"></i>Telefone:</label>
+                            <input type="tel" id="loginPhone" placeholder="(83) 99942-4664" required>
                         </div>
                         <div class="form-group">
-                            <label for="loginPassword">Senha:</label>
+                            <label for="loginPassword"><i class="fas fa-lock" style="margin-right: 8px; color: #24d366;"></i>Senha:</label>
                             <input type="password" id="loginPassword" placeholder="Sua senha" required>
                         </div>
                         <button type="submit" class="btn-login-modal">
@@ -4441,16 +4440,15 @@
                 <div class="modal-body">
                     <form id="registerForm">
                         <div class="form-group">
-                            <label for="registerPhone">Telefone:</label>
-                            <input type="tel" id="registerPhone" placeholder="83991234567 (apenas números)" required>
-                            <div class="phone-help">Digite apenas números (10 ou 11 dígitos)</div>
+                            <label for="registerPhone"><i class="fas fa-phone" style="margin-right: 8px; color: #24d366;"></i>Telefone:</label>
+                            <input type="tel" id="registerPhone" placeholder="(83) 99942-4664" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerPassword">Senha:</label>
+                            <label for="registerPassword"><i class="fas fa-lock" style="margin-right: 8px; color: #24d366;"></i>Senha:</label>
                             <input type="password" id="registerPassword" placeholder="Sua senha" required>
                         </div>
                         <div class="form-group">
-                            <label for="confirmPassword">Confirmar Senha:</label>
+                            <label for="confirmPassword"><i class="fas fa-lock" style="margin-right: 8px; color: #24d366;"></i>Confirmar Senha:</label>
                             <input type="password" id="confirmPassword" placeholder="Confirme sua senha" required>
                         </div>
                         <button type="submit" class="btn-register-modal">
@@ -4472,16 +4470,23 @@
     </div>
 
     <script>
-        // Validação de telefone brasileiro (apenas números)
-        function validatePhone(input) {
+        // Máscara de telefone brasileiro
+        function formatPhone(input) {
             let value = input.value.replace(/\D/g, '');
             
-            // Limitar a 11 dígitos (máximo para celular brasileiro)
+            // Limitar a 11 dígitos
             if (value.length > 11) {
                 value = value.slice(0, 11);
             }
             
+            // Aplicar máscara baseada no tamanho
+            if (value.length <= 2) {
             input.value = value;
+            } else if (value.length <= 7) {
+                input.value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+            } else if (value.length <= 11) {
+                input.value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+            }
             
             // Adicionar classe de erro se não tiver 10 ou 11 dígitos
             if (value.length < 10) {
@@ -4491,10 +4496,10 @@
             }
         }
 
-        // Aplicar validação nos campos de telefone
+        // Aplicar máscara nos campos de telefone
         document.querySelectorAll('input[type="tel"]').forEach(input => {
-            input.addEventListener('input', () => validatePhone(input));
-            input.addEventListener('blur', () => validatePhone(input));
+            input.addEventListener('input', () => formatPhone(input));
+            input.addEventListener('blur', () => formatPhone(input));
         });
 
         // Funções para modais

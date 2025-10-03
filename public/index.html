@@ -471,12 +471,12 @@
             <!-- Formulário de Login -->
             <form id="loginForm" class="auth-form">
                 <div class="form-group">
-                    <label for="loginPhone">Telefone</label>
-                    <input type="tel" id="loginPhone" placeholder="83991234567 (apenas números)" required>
+                    <label for="loginPhone"><i class="fas fa-phone" style="margin-right: 8px; color: #24d366;"></i>Telefone</label>
+                    <input type="tel" id="loginPhone" placeholder="(83) 99942-4664" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="loginPassword">Senha</label>
+                    <label for="loginPassword"><i class="fas fa-lock" style="margin-right: 8px; color: #24d366;"></i>Senha</label>
                     <input type="password" id="loginPassword" placeholder="Digite sua senha" required>
                 </div>
 
@@ -490,22 +490,22 @@
             <!-- Formulário de Cadastro -->
             <form id="registerForm" class="auth-form hidden">
                 <div class="form-group">
-                    <label for="registerPhone">Telefone</label>
-                    <input type="tel" id="registerPhone" placeholder="83991234567 (apenas números)" required>
+                    <label for="registerPhone"><i class="fas fa-phone" style="margin-right: 8px; color: #24d366;"></i>Telefone</label>
+                    <input type="tel" id="registerPhone" placeholder="(83) 99942-4664" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="registerPassword">Senha</label>
+                    <label for="registerPassword"><i class="fas fa-lock" style="margin-right: 8px; color: #24d366;"></i>Senha</label>
                     <input type="password" id="registerPassword" placeholder="Digite uma senha forte" required>
-        </div>
+                </div>
 
                 <div class="form-group">
-                    <label for="confirmPassword">Confirmar Senha</label>
+                    <label for="confirmPassword"><i class="fas fa-lock" style="margin-right: 8px; color: #24d366;"></i>Confirmar Senha</label>
                     <input type="password" id="confirmPassword" placeholder="Confirme sua senha" required>
-            </div>
+                </div>
 
                 <div class="form-group">
-                    <label for="recoveryQuestion">Pergunta de Recuperação</label>
+                    <label for="recoveryQuestion"><i class="fas fa-question-circle" style="margin-right: 8px; color: #24d366;"></i>Pergunta de Recuperação</label>
                     <select id="recoveryQuestion" required>
                         <option value="">Selecione uma pergunta</option>
                         <option value="Qual o nome da sua mãe?">Qual o nome da sua mãe?</option>
@@ -514,12 +514,12 @@
                         <option value="Qual sua cor favorita?">Qual sua cor favorita?</option>
                         <option value="Qual o nome da sua escola?">Qual o nome da sua escola?</option>
                     </select>
-            </div>
+                </div>
 
                 <div class="form-group">
-                    <label for="recoveryAnswer">Resposta</label>
+                    <label for="recoveryAnswer"><i class="fas fa-key" style="margin-right: 8px; color: #24d366;"></i>Resposta</label>
                     <input type="text" id="recoveryAnswer" placeholder="Digite sua resposta" required>
-        </div>
+                </div>
 
                 <button type="submit" class="btn btn-primary" id="registerBtn">
                     <span id="registerBtnText">Criar Conta</span>
@@ -530,8 +530,8 @@
             <!-- Formulário de Recuperação -->
             <form id="recoveryForm" class="auth-form hidden">
                 <div class="form-group">
-                    <label for="recoveryPhone">Telefone</label>
-                    <input type="tel" id="recoveryPhone" placeholder="83991234567 (apenas números)" required>
+                    <label for="recoveryPhone"><i class="fas fa-phone" style="margin-right: 8px; color: #24d366;"></i>Telefone</label>
+                    <input type="tel" id="recoveryPhone" placeholder="(83) 99942-4664" required>
                 </div>
 
                 <div class="form-group">
@@ -575,16 +575,23 @@
     </div>
 
     <script>
-        // Validação de telefone brasileiro (apenas números)
-        function validatePhone(input) {
+        // Máscara de telefone brasileiro
+        function formatPhone(input) {
             let value = input.value.replace(/\D/g, '');
             
-            // Limitar a 11 dígitos (máximo para celular brasileiro)
+            // Limitar a 11 dígitos
             if (value.length > 11) {
                 value = value.slice(0, 11);
             }
             
-            input.value = value;
+            // Aplicar máscara baseada no tamanho
+            if (value.length <= 2) {
+                input.value = value;
+            } else if (value.length <= 7) {
+                input.value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+            } else if (value.length <= 11) {
+                input.value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+            }
             
             // Adicionar classe de erro se não tiver 10 ou 11 dígitos
             if (value.length < 10) {
@@ -594,10 +601,10 @@
             }
         }
 
-        // Aplicar validação nos campos de telefone
+        // Aplicar máscara nos campos de telefone
         document.querySelectorAll('input[type="tel"]').forEach(input => {
-            input.addEventListener('input', () => validatePhone(input));
-            input.addEventListener('blur', () => validatePhone(input));
+            input.addEventListener('input', () => formatPhone(input));
+            input.addEventListener('blur', () => formatPhone(input));
         });
 
         // Elementos do DOM
