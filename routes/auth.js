@@ -11,10 +11,16 @@ router.post('/register', async (req, res) => {
     try {
         const { phone, password, recoveryQuestion, recoveryAnswer } = req.body;
 
+        // Validar telefone brasileiro (10 ou 11 dígitos)
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+            return res.json({ success: false, error: 'Telefone deve ter 10 ou 11 dígitos (apenas números brasileiros)' });
+        }
+
         // Verificar se o usuário já existe
         const [existingUser] = await db.execute(
             'SELECT id FROM users WHERE phone = ?',
-            [phone]
+            [cleanPhone]
         );
 
         if (existingUser.length > 0) {
@@ -28,18 +34,18 @@ router.post('/register', async (req, res) => {
         // Criar usuário
         const [result] = await db.execute(
             'INSERT INTO users (phone, password_hash, recovery_question, recovery_answer) VALUES (?, ?, ?, ?)',
-            [phone, passwordHash, recoveryQuestion, recoveryAnswerHash]
+            [cleanPhone, passwordHash, recoveryQuestion, recoveryAnswerHash]
         );
 
         const userId = result.insertId;
 
         // Gerar token JWT
-        const token = jwt.sign({ userId, phone }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ userId, phone: cleanPhone }, JWT_SECRET, { expiresIn: '7d' });
 
         res.json({
             success: true,
             token,
-            user: { id: userId, phone }
+            user: { id: userId, phone: cleanPhone }
         });
 
     } catch (error) {
@@ -53,10 +59,16 @@ router.post('/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
 
+        // Validar telefone brasileiro (10 ou 11 dígitos)
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+            return res.json({ success: false, error: 'Telefone deve ter 10 ou 11 dígitos (apenas números brasileiros)' });
+        }
+
         // Buscar usuário
         const [users] = await db.execute(
             'SELECT id, phone, password_hash FROM users WHERE phone = ?',
-            [phone]
+            [cleanPhone]
         );
 
         if (users.length === 0) {
