@@ -1333,7 +1333,7 @@
 
             .main-content {
                 left: 0;            /* volta pro zero no mobile */
-                padding: 2px 0;     /* padding mínimo superior */
+                padding: 0;         /* sem padding superior */
             }
 
             .container {
@@ -1355,7 +1355,7 @@
 
             /* Ajustar banner promocional para mobile */
             .promo-banner {
-                margin: 0 0 10px 0;  /* reduzir margem superior */
+                margin: 0 0 10px 0;  /* sem margem superior */
                 border-radius: 0;
             }
 
@@ -1905,6 +1905,14 @@
             box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
             position: relative;
             overflow: hidden;
+        }
+
+        /* Mobile: Banner colado no header */
+        @media (max-width: 768px) {
+            .promo-banner {
+                margin: 0 0 15px 0;
+                border-radius: 0;
+            }
         }
 
         .promo-banner::before {
