@@ -2164,42 +2164,7 @@
             </div>
         </div>
 
-        <!-- Dashboard de Score de Risco -->
-        <div class="risk-dashboard" id="riskDashboard">
-            <div class="risk-header">
-                <div class="risk-title">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Proteção Anti-Banimento</span>
-                </div>
-                <div class="risk-score" id="riskScore">0</div>
-            </div>
-            
-            <div class="risk-stats">
-                <div class="risk-stat">
-                    <div class="risk-stat-value" id="messagesSent">0</div>
-                    <div class="risk-stat-label">Mensagens Enviadas</div>
-                </div>
-                <div class="risk-stat">
-                    <div class="risk-stat-value" id="groupsContacted">0</div>
-                    <div class="risk-stat-label">Grupos Contactados</div>
-                </div>
-                <div class="risk-stat">
-                    <div class="risk-stat-value" id="avgDelay">0s</div>
-                    <div class="risk-stat-label">Delay Médio</div>
-                </div>
-                <div class="risk-stat">
-                    <div class="risk-stat-value" id="currentPersonality">-</div>
-                    <div class="risk-stat-label">Personalidade</div>
-                </div>
-            </div>
-
-            <div class="risk-recommendations" id="riskRecommendations">
-                <h4>🤖 Recomendações da IA</h4>
-                <ul id="recommendationsList">
-                    <li>Sistema inicializado - Aguardando atividade</li>
-                </ul>
-            </div>
-        </div>
+        <!-- Dashboard de Score de Risco (movido para dentro do progresso) -->
 
         <!-- Mobile: Conecte sua Conta WhatsApp (próximo ao header) -->
         <div class="mobile-whatsapp-card" id="mobileWhatsappCard">
@@ -2548,6 +2513,46 @@
                             </div>
                             <div id="successRate" style="font-size: 18px; font-weight: 700; color: #28a745;">0%</div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- 🛡️ DASHBOARD DE PROTEÇÃO ANTI-BANIMENTO -->
+                <div class="risk-dashboard" id="riskDashboard" style="margin: 20px 0; padding: 15px; background: #e8f5e8; border-radius: 10px; border: 1px solid #28a745;">
+                    <div class="risk-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="risk-title" style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-shield-alt" style="color: #28a745; font-size: 18px;"></i>
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 16px;">Proteção Anti-Banimento</span>
+                        </div>
+                        <div class="risk-score" id="riskScore" style="font-size: 20px; font-weight: 900; padding: 6px 12px; border-radius: 15px; color: white; background: #28a745;">0</div>
+                    </div>
+                    
+                    <div class="risk-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <div class="risk-stat" style="text-align: center; background: white; padding: 10px; border-radius: 8px;">
+                            <div class="risk-stat-value" id="messagesSent" style="font-size: 18px; font-weight: 700; color: #2c3e50;">0</div>
+                            <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Mensagens</div>
+                        </div>
+                        <div class="risk-stat" style="text-align: center; background: white; padding: 10px; border-radius: 8px;">
+                            <div class="risk-stat-value" id="groupsContacted" style="font-size: 18px; font-weight: 700; color: #2c3e50;">0</div>
+                            <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Grupos</div>
+                        </div>
+                        <div class="risk-stat" style="text-align: center; background: white; padding: 10px; border-radius: 8px;">
+                            <div class="risk-stat-value" id="avgDelay" style="font-size: 18px; font-weight: 700; color: #2c3e50;">0s</div>
+                            <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Delay Médio</div>
+                        </div>
+                        <div class="risk-stat" style="text-align: center; background: white; padding: 10px; border-radius: 8px;">
+                            <div class="risk-stat-value" id="currentPersonality" style="font-size: 18px; font-weight: 700; color: #2c3e50;">-</div>
+                            <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Personalidade</div>
+                        </div>
+                    </div>
+
+                    <div class="risk-recommendations" id="riskRecommendations" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h4 style="color: #28a745; margin-bottom: 8px; font-size: 14px;">
+                            <i class="fas fa-robot" style="margin-right: 6px;"></i>
+                            Recomendações da IA
+                        </h4>
+                        <ul id="recommendationsList" style="list-style: none; padding: 0; margin: 0;">
+                            <li style="padding: 4px 0; font-size: 13px; color: #495057;">Sistema inicializado - Aguardando atividade</li>
+                        </ul>
                     </div>
                 </div>
                 
