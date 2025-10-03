@@ -2835,23 +2835,48 @@
                     `;
                     statusHint.textContent = '';
                     
+                    // 💾 Salvar dados do WhatsApp globalmente para usar no resize
+                    window.whatsappInfo = { name, number, profilePicture };
+                    
                     // ✅ ATUALIZAR HEADER COM NOME E FOTO DA CONTA WHATSAPP
                     const headerActions = document.querySelector('.header-actions');
                     if (headerActions) {
-                        headerActions.innerHTML = `
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                ${profilePicture 
-                                    ? `<img src="${profilePicture}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #24d366;">` 
-                                    : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
-                                        <i class="fas fa-user"></i>
-                                    </div>`
-                                }
-                                <div style="display: flex; flex-direction: column;">
-                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">${name || 'Usuário'}</span>
-                                    <span style="color: #666; font-size: 12px;">${formattedNumber}</span>
+                        // Verificar se é mobile
+                        const isMobile = window.innerWidth <= 768;
+                        
+                        if (isMobile) {
+                            // Mobile: Mostrar menu hambúrguer
+                            headerActions.innerHTML = `
+                                <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
+                                    background: none;
+                                    border: none;
+                                    color: #24d366;
+                                    font-size: 24px;
+                                    cursor: pointer;
+                                    padding: 8px;
+                                    border-radius: 8px;
+                                    transition: all 0.3s ease;
+                                ">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                            `;
+                        } else {
+                            // Desktop: Mostrar dados do usuário
+                            headerActions.innerHTML = `
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    ${profilePicture 
+                                        ? `<img src="${profilePicture}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #24d366;">` 
+                                        : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>`
+                                    }
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="color: #24d366; font-weight: 600; font-size: 14px;">${name || 'Usuário'}</span>
+                                        <span style="color: #666; font-size: 12px;">${formattedNumber}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        `;
+                            `;
+                        }
                     }
                     
                     // ✅ ATUALIZAR SIDEBAR COM NOME E FOTO DA CONTA WHATSAPP
@@ -4781,6 +4806,54 @@
         socket.on('send-resumed', (data) => {
             console.log('Envio retomado:', data);
             addLog(data.message, 'success');
+        });
+        
+        // 📱 Listener para redimensionamento da tela (mobile/desktop)
+        window.addEventListener('resize', function() {
+            // Verificar se há dados do WhatsApp para atualizar o header
+            if (window.whatsappConnected && window.whatsappInfo) {
+                const headerActions = document.querySelector('.header-actions');
+                if (headerActions) {
+                    const isMobile = window.innerWidth <= 768;
+                    
+                    if (isMobile) {
+                        // Mobile: Mostrar menu hambúrguer
+                        headerActions.innerHTML = `
+                            <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
+                                background: none;
+                                border: none;
+                                color: #24d366;
+                                font-size: 24px;
+                                cursor: pointer;
+                                padding: 8px;
+                                border-radius: 8px;
+                                transition: all 0.3s ease;
+                            ">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                        `;
+                    } else {
+                        // Desktop: Mostrar dados do usuário
+                        const { name, number, profilePicture } = window.whatsappInfo;
+                        const formattedNumber = formatPhoneNumber(number);
+                        
+                        headerActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                ${profilePicture 
+                                    ? `<img src="${profilePicture}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #24d366;">` 
+                                    : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #24d366; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>`
+                                }
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: #24d366; font-weight: 600; font-size: 14px;">${name || 'Usuário'}</span>
+                                    <span style="color: #666; font-size: 12px;">${formattedNumber}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
         });
         
         }); // Fechar DOMContentLoaded
