@@ -2683,6 +2683,52 @@
         
         // MODO PRODUCTION: Desabilitar logs DEBUG
         const PRODUCTION_MODE = true; // Mudar para false para debug
+        
+        // 🔄 RESTAURAR ESTADO APÓS REFRESH DA PÁGINA
+        function restoreSendingState() {
+            const savedState = loadSendingState();
+            if (savedState && savedState.isSending) {
+                console.log('🔄 Estado de envio encontrado após refresh:', savedState);
+                
+                // Verificar se o estado não é muito antigo (máximo 24 horas)
+                const stateAge = Date.now() - savedState.timestamp;
+                if (stateAge > 24 * 60 * 60 * 1000) {
+                    console.log('⏰ Estado muito antigo, removendo...');
+                    clearSendingState();
+                    return;
+                }
+                
+                // Restaurar estado global
+                window.isSending = true;
+                window.currentProgress = savedState.current || 0;
+                window.totalGroups = savedState.total || 0;
+                
+                // Mostrar interface de progresso
+                showProgressCard();
+                initializeProgress(savedState.total);
+                
+                // Atualizar progresso com dados salvos
+                updateProgress({
+                    current: savedState.current,
+                    total: savedState.total,
+                    group: savedState.lastGroup || 'Restaurando...',
+                    status: 'restoring'
+                });
+                
+                // Solicitar status atual do servidor
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                if (userData.id) {
+                    console.log('🔄 Solicitando status atual do servidor...');
+                    socket.emit('check-sending-status', { userId: userData.id });
+                    socket.emit('get-dashboard-status', { userId: userData.id });
+                }
+                
+                addLog('🔄 Envio em andamento detectado! Restaurando progresso...', 'info');
+            }
+        }
+        
+        // Executar restauração após um pequeno delay para garantir que o socket esteja conectado
+        setTimeout(restoreSendingState, 2000);
         const debugLog = PRODUCTION_MODE ? () => {} : console.log;
         
         // Função para configurar os botões
@@ -2867,6 +2913,9 @@
             }
             
             isSending = false;
+            
+            // 🗑️ LIMPAR ESTADO SALVO APÓS CANCELAR
+            clearSendingState();
         }
         
         // setupButtons será chamada depois dos event listeners principais
@@ -2972,6 +3021,54 @@
         let isReconnecting = false;
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
+        
+        // 💾 SISTEMA DE PERSISTÊNCIA DE ESTADO
+        const STATE_KEY = 'whatsapp_sending_state';
+        
+        // Salvar estado de envio no localStorage
+        function saveSendingState(state) {
+            try {
+                const stateToSave = {
+                    ...state,
+                    timestamp: Date.now(),
+                    userId: JSON.parse(localStorage.getItem('user') || '{}').id
+                };
+                localStorage.setItem(STATE_KEY, JSON.stringify(stateToSave));
+                console.log('💾 Estado de envio salvo:', stateToSave);
+            } catch (error) {
+                console.error('❌ Erro ao salvar estado:', error);
+            }
+        }
+        
+        // Carregar estado de envio do localStorage
+        function loadSendingState() {
+            try {
+                const savedState = localStorage.getItem(STATE_KEY);
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                    
+                    // Verificar se o estado é do usuário atual
+                    if (state.userId === userData.id) {
+                        console.log('💾 Estado de envio carregado:', state);
+                        return state;
+                    } else {
+                        console.log('💾 Estado de outro usuário, ignorando');
+                        localStorage.removeItem(STATE_KEY);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erro ao carregar estado:', error);
+                localStorage.removeItem(STATE_KEY);
+            }
+            return null;
+        }
+        
+        // Limpar estado salvo
+        function clearSendingState() {
+            localStorage.removeItem(STATE_KEY);
+            console.log('🗑️ Estado de envio limpo');
+        }
         
         // Detectar desconexão
         socket.on('disconnect', (reason) => {
@@ -3539,6 +3636,9 @@
             sendMessagesBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar Mensagens';
             addLog(`✅ Envio concluído! ${data.total} grupos processados`, 'success');
             completeProgress(data);
+            
+            // 🗑️ LIMPAR ESTADO SALVO APÓS CONCLUIR
+            clearSendingState();
         });
 
         // Funções de controle de progresso
@@ -3612,6 +3712,17 @@
 
         function updateProgress(data) {
             const { current, total, group, status } = data;
+            
+            // 💾 ATUALIZAR ESTADO SALVO COM PROGRESSO ATUAL
+            if (window.isSending) {
+                const currentState = loadSendingState();
+                if (currentState) {
+                    currentState.current = current;
+                    currentState.lastGroup = group;
+                    currentState.lastUpdate = Date.now();
+                    saveSendingState(currentState);
+                }
+            }
             
             // Calcular tempo estimado restante
             const now = Date.now();
@@ -4753,6 +4864,19 @@
             
             console.log('📤 Dados enviados:', sendData);
             socket.emit('send-messages', sendData);
+            
+            // 💾 SALVAR ESTADO DE ENVIO PARA PERSISTÊNCIA
+            const sendingState = {
+                isSending: true,
+                groups: selectedGroupsList,
+                message: messageText.value,
+                speedMode: selectedSpeed,
+                delayConfig: delayConfig,
+                startTime: Date.now(),
+                current: 0,
+                total: selectedGroupsList.length
+            };
+            saveSendingState(sendingState);
             
             isSending = true;
             sendMessagesBtn.disabled = true;
