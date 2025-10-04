@@ -761,13 +761,16 @@ class AntiBanProtection {
         if (!stats) return;
 
         const now = Date.now();
-        const timeSinceLastMessage = now - stats.lastMessage;
-        const messagesPerHour = stats.messagesSent / ((now - stats.lastMessage) / (1000 * 60 * 60));
+        const sessionDuration = now - stats.sessionStart;
+        const sessionDurationHours = sessionDuration / (1000 * 60 * 60);
+        
+        // Calcular mensagens por hora baseado na duração da sessão (não desde última mensagem)
+        const messagesPerHour = sessionDurationHours > 0 ? stats.messagesSent / sessionDurationHours : 0;
 
         // Calcular risco baseado em vários fatores
         let riskScore = 0;
 
-        // Muitas mensagens em pouco tempo = alto risco
+        // 🔧 CORRIGIDO: Mensagens por hora baseado na sessão completa
         if (messagesPerHour > 50) riskScore += 3;
         else if (messagesPerHour > 20) riskScore += 2;
         else if (messagesPerHour > 10) riskScore += 1;
@@ -777,10 +780,13 @@ class AntiBanProtection {
         else if (stats.groupsContacted > 50) riskScore += 2;
         else if (stats.groupsContacted > 20) riskScore += 1;
 
-        // Score base por atividade (mesmo no início)
-        if (stats.messagesSent > 0) riskScore += 1; // +1 por ter enviado mensagens
-        if (stats.groupsContacted > 5) riskScore += 1; // +1 por contactar muitos grupos
-        if (stats.consecutiveMessages > 3) riskScore += 1; // +1 por muitas mensagens consecutivas
+        // 🔧 CORRIGIDO: Score mais realista para início
+        if (stats.messagesSent >= 20) riskScore += 2; // +2 apenas com muitas mensagens
+        else if (stats.messagesSent >= 10) riskScore += 1; // +1 com quantidade moderada
+        // Não adiciona score para poucas mensagens (1-9)
+        
+        if (stats.groupsContacted >= 15) riskScore += 1; // +1 apenas com muitos grupos
+        if (stats.consecutiveMessages >= 5) riskScore += 1; // +1 apenas com muitas consecutivas
 
         // Salvar o score calculado
         stats.riskScore = riskScore;
@@ -791,7 +797,15 @@ class AntiBanProtection {
         else if (riskScore >= 1) stats.riskLevel = 'medium';
         else stats.riskLevel = 'low';
 
+        // 🔍 LOG DETALHADO PARA DEBUG
         console.log(`⚠️ Nível de risco atualizado para usuário ${userId}: ${stats.riskLevel} (score: ${riskScore})`);
+        console.log(`📊 Detalhes do cálculo:`);
+        console.log(`   - Mensagens enviadas: ${stats.messagesSent}`);
+        console.log(`   - Grupos contactados: ${stats.groupsContacted}`);
+        console.log(`   - Mensagens consecutivas: ${stats.consecutiveMessages}`);
+        console.log(`   - Duração da sessão: ${Math.round(sessionDurationHours * 60)} minutos`);
+        console.log(`   - Mensagens por hora: ${Math.round(messagesPerHour)}`);
+        console.log(`   - Score final: ${riskScore}`);
     }
 
     // 🚫 Verificar se pode enviar mensagem (MELHORADO COM PAUSAS AUTOMÁTICAS)
