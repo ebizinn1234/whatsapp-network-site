@@ -3729,6 +3729,24 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 📊 GET DASHBOARD STATUS - Para sincronização após reconexão
+    socket.on('get-dashboard-status', async (data) => {
+        const { userId } = data;
+        console.log('📊 Solicitando status do dashboard para usuário:', userId);
+        
+        try {
+            // Enviar dados atualizados do dashboard
+            if (antiBanProtection.userStats.has(userId)) {
+                antiBanProtection.sendDashboardUpdate(userId);
+                console.log('📊 Dashboard atualizado enviado para usuário:', userId);
+            } else {
+                console.log('📊 Nenhuma estatística encontrada para usuário:', userId);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao obter status do dashboard:', error);
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`👤 Cliente desconectado: ${socket.id}`);
     });

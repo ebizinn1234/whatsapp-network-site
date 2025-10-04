@@ -2968,8 +2968,47 @@
         // Função para atualizar configurações de velocidade
 
         // Socket events
+        // 🔄 SISTEMA DE RECONEXÃO ROBUSTO
+        let isReconnecting = false;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        
+        // Detectar desconexão
+        socket.on('disconnect', (reason) => {
+            console.log('🔌 Socket desconectado:', reason);
+            isReconnecting = true;
+            
+            // Mostrar aviso de reconexão
+            if (window.isSending) {
+                addLog('⚠️ Conexão perdida durante envio. Tentando reconectar...', 'warning');
+            }
+        });
+        
+        // Detectar tentativa de reconexão
+        socket.on('reconnect_attempt', (attemptNumber) => {
+            console.log(`🔄 Tentativa de reconexão ${attemptNumber}/${maxReconnectAttempts}`);
+            reconnectAttempts = attemptNumber;
+        });
+        
         // Reconectar automaticamente ao carregar a página
         socket.on('connect', () => {
+            console.log('✅ Socket reconectado com sucesso!');
+            isReconnecting = false;
+            reconnectAttempts = 0;
+            
+            // Se estava enviando, verificar status
+            if (window.isSending) {
+                console.log('🔄 Reconexão durante envio - verificando status...');
+                addLog('✅ Conexão restaurada! Verificando status do envio...', 'success');
+                
+                // Aguardar um pouco para a conexão se estabilizar
+                setTimeout(() => {
+                    checkSendingStatus();
+                    // Forçar atualização do dashboard
+                    forceDashboardUpdate();
+                }, 2000);
+            }
+            
             console.log('Socket conectado, verificando status WhatsApp...');
             // updateDebugInfo('🔄 Verificando status da conexão WhatsApp...');
             // Aguardar um pouco antes de verificar a conexão
@@ -4281,37 +4320,119 @@
             }
         });
         
-        // Função para verificar status do envio
+        // 🔄 Função para verificar status do envio (MELHORADA)
         function checkSendingStatus() {
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            if (userData.id && socket.connected) {
-                console.log('🔍 Verificando status do envio após retomada...');
-                console.log('📊 Estado atual:', {
-                    isPcSuspended,
-                    isTabVisible,
-                    timeSinceLastActivity: Math.round((Date.now() - lastActivity) / 1000) + 's',
-                    socketConnected: socket.connected
-                });
-                socket.emit('check-sending-status', { userId: userData.id });
-            } else {
-                console.log('⚠️ Não foi possível verificar status - socket desconectado ou usuário não logado');
+            
+            if (!userData.id) {
+                console.log('⚠️ Usuário não logado, não é possível verificar status');
+                return;
+            }
+            
+            if (!socket.connected) {
+                console.log('⚠️ Socket desconectado, aguardando reconexão...');
+                // Tentar reconectar
+                socket.connect();
+                return;
+            }
+            
+            console.log('🔍 Verificando status do envio após retomada...');
+            console.log('📊 Estado atual:', {
+                isPcSuspended,
+                isTabVisible,
+                timeSinceLastActivity: Math.round((Date.now() - lastActivity) / 1000) + 's',
+                socketConnected: socket.connected,
+                isSending: window.isSending,
+                reconnectAttempts
+            });
+            
+            // Emitir verificação de status
+            socket.emit('check-sending-status', { userId: userData.id });
+            
+            // Também verificar conexão WhatsApp
+            socket.emit('check-connection', { userId: userData.id });
+            
+            // Forçar atualização do dashboard se estava enviando
+            if (window.isSending) {
+                console.log('🔄 Forçando atualização do dashboard...');
+                socket.emit('get-dashboard-status', { userId: userData.id });
             }
         }
         
-        // Listener para status do envio
+        // 🔄 Função para forçar atualização do dashboard após reconexão
+        function forceDashboardUpdate() {
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!userData.id || !socket.connected) {
+                console.log('⚠️ Não é possível forçar atualização - usuário não logado ou socket desconectado');
+                return;
+            }
+            
+            console.log('🔄 Forçando atualização completa do dashboard...');
+            
+            // Solicitar status completo do envio
+            socket.emit('check-sending-status', { userId: userData.id });
+            
+            // Solicitar dados do dashboard de risco
+            socket.emit('get-dashboard-status', { userId: userData.id });
+            
+            // Solicitar status da conexão WhatsApp
+            socket.emit('check-connection', { userId: userData.id });
+            
+            // Forçar re-renderização dos elementos visuais
+            setTimeout(() => {
+                if (window.isSending) {
+                    console.log('🔄 Re-renderizando interface de envio...');
+                    // Mostrar progresso se estava enviando
+                    showProgressCard();
+                }
+            }, 1000);
+        }
+        
+        // 🔄 Listener para status do envio (MELHORADO PARA SINCRONIZAÇÃO)
         socket.on('sending-status', (data) => {
             console.log('📊 Status do envio recebido:', data);
+            console.log('🔍 Estado atual do frontend:', {
+                isSending: window.isSending,
+                current: window.currentProgress || 0,
+                total: window.totalGroups || 0
+            });
+            
+            // Sincronizar estado global
+            window.isSending = data.isSending;
+            window.currentProgress = data.current || 0;
+            window.totalGroups = data.total || 0;
+            
             if (data.isSending && data.isPaused) {
                 console.log('⏸️ Envio pausado detectado - mostrando botão retomar');
                 showResumeButton();
             } else if (data.isSending && !data.isPaused) {
                 console.log('▶️ Envio em andamento detectado - mostrando progresso');
+                console.log(`📈 Sincronizando progresso: ${data.current}/${data.total}`);
+                
+                // Mostrar progresso se não estiver visível
+                if (!document.getElementById('progressCard')?.style.display || 
+                    document.getElementById('progressCard').style.display === 'none') {
+                    showProgressCard();
+                }
+                
+                // Atualizar progresso
+                updateProgress({
+                    current: data.current,
+                    total: data.total,
+                    group: 'Sincronizando...',
+                    status: 'syncing'
+                });
+                
                 // ✅ VERIFICAR SE FUNÇÃO EXISTE ANTES DE CHAMAR
                 if (typeof showProgress === 'function') {
                     showProgress(data.current, data.total);
-            } else {
-                    console.log('⚠️ Função showProgress não encontrada, ignorando');
+                } else {
+                    console.log('⚠️ Função showProgress não encontrada, usando updateProgress');
                 }
+            } else if (!data.isSending) {
+                console.log('⏹️ Envio não está em andamento - ocultando progresso');
+                window.isSending = false;
+                // Não ocultar automaticamente, deixar usuário decidir
             }
         });
         
