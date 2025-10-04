@@ -2990,6 +2990,11 @@ io.on('connection', (socket) => {
                 const group = groups[i];
                 console.log(`📤 Enviando para grupo ${i + 1}/${groups.length}: ${group.name || group}`);
                 
+                // 🤖 IA: Calcular delay inteligente (sempre calcular, mas só aplicar entre mensagens)
+                const messageLength = message.length;
+                const intelligentDelay = humanLikeAI.calculateIntelligentDelay(userId, messageLength, group.id);
+                let actualDelay = intelligentDelay;
+                
                 try {
                     // ✅ VERIFICAR NOVAMENTE ANTES DO ENVIO
                     if (userSessions[userId] && userSessions[userId].isCancelled) {
@@ -3068,11 +3073,7 @@ io.on('connection', (socket) => {
                         errorCount: errorCount
                     });
                     
-                    // 🤖 IA: Calcular delay inteligente (sempre calcular, mas só aplicar entre mensagens)
-                    const messageLength = processedMessage.length;
-                    const intelligentDelay = humanLikeAI.calculateIntelligentDelay(userId, messageLength, group.id);
-                    
-                    let actualDelay = intelligentDelay;
+                    // ✅ Delay já calculado no início do loop
                     
                     // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
                     if (i < groups.length - 1) {
