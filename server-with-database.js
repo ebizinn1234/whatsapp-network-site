@@ -1417,7 +1417,6 @@ class HumanLikeAI {
                     }
                     
                     // 📊 Enviar update do dashboard incluindo tempo de digitação
-                    const userStats = antiBanProtection.userStats.get(userId);
                     const dashboardData = {
                         score: userStats?.riskScore || 0,
                         messagesSent: userStats?.messagesSent || 0,
