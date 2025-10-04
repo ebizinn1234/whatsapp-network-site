@@ -3642,9 +3642,16 @@
             }
             
             // Atualizar velocidade média
-            if (averageDelay && document.getElementById('averageSpeed')) {
-                const avgMinutes = Math.round(averageDelay / 60000 * 10) / 10;
-                document.getElementById('averageSpeed').textContent = `${avgMinutes} min/msg`;
+            if (document.getElementById('averageSpeed')) {
+                const delayToUse = averageDelay || delay || 60000;
+                const avgMinutes = Math.round(delayToUse / 60000 * 10) / 10;
+                
+                if (avgMinutes >= 1) {
+                    document.getElementById('averageSpeed').textContent = `${avgMinutes} min/msg`;
+                } else {
+                    const avgSeconds = Math.round(delayToUse / 1000);
+                    document.getElementById('averageSpeed').textContent = `${avgSeconds}s/msg`;
+                }
             }
             
             // Atualizar personalidade IA
@@ -3683,9 +3690,12 @@
             }
             
             // Atualizar tempo restante com cálculo mais preciso
-            if (averageDelay && document.getElementById('timeRemaining')) {
+            if (document.getElementById('timeRemaining')) {
                 const remainingGroups = total - current;
-                const estimatedTimeMs = remainingGroups * averageDelay;
+                
+                // Usar delay atual se averageDelay não estiver disponível ainda
+                const delayToUse = averageDelay || delay || 60000; // fallback para 1 minuto
+                const estimatedTimeMs = remainingGroups * delayToUse;
                 const minutes = Math.floor(estimatedTimeMs / 60000);
                 const seconds = Math.floor((estimatedTimeMs % 60000) / 1000);
                 
