@@ -3068,13 +3068,14 @@ io.on('connection', (socket) => {
                         errorCount: errorCount
                     });
                     
-                    // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
-                    if (i < groups.length - 1) {
-                    // 🤖 IA: Calcular delay inteligente
+                    // 🤖 IA: Calcular delay inteligente (sempre calcular, mas só aplicar entre mensagens)
                     const messageLength = processedMessage.length;
                     const intelligentDelay = humanLikeAI.calculateIntelligentDelay(userId, messageLength, group.id);
                     
                     let actualDelay = intelligentDelay;
+                    
+                    // ✅ APLICAR DELAY APENAS ENTRE MENSAGENS (NÃO APÓS A PRIMEIRA)
+                    if (i < groups.length - 1) {
                     
                     if (humanMode) {
                         // Usar delay da IA (já é inteligente)
