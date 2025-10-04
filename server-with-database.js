@@ -700,7 +700,9 @@ class AntiBanProtection {
                 sessionStart: Date.now(),
                 consecutiveMessages: 0,
                 avgDelay: 0,
-                personality: 'balanced'
+                personality: 'balanced',
+                lastTypingSpeed: null,
+                typingTime: null
             });
         }
 
@@ -753,6 +755,8 @@ class AntiBanProtection {
         // Enviar para o frontend
         io.to(`user_${userId}`).emit('risk-update', dashboardData);
         console.log(`📊 Dashboard atualizado para usuário ${userId}:`, dashboardData);
+        console.log(`🔍 DEBUG: lastTypingSpeed enviado = ${dashboardData.lastTypingSpeed}`);
+        console.log(`🔍 DEBUG: typingTime enviado = ${dashboardData.typingTime}`);
     }
 
     // ⚠️ Atualizar nível de risco
@@ -1406,18 +1410,23 @@ class HumanLikeAI {
                         userStats.lastTypingSpeed = typingSpeed;
                         userStats.typingTime = Math.round(typingTime/1000);
                         console.log(`📊 Dados de digitação salvos: ${typingSpeed} chars/min, ${Math.round(typingTime/1000)}s`);
+                        console.log(`🔍 DEBUG: userStats.lastTypingSpeed = ${userStats.lastTypingSpeed}`);
+                        console.log(`🔍 DEBUG: userStats.typingTime = ${userStats.typingTime}`);
+                    } else {
+                        console.log('❌ ERRO: userStats não encontrado para userId:', userId);
                     }
                     
                     // 📊 Enviar update do dashboard incluindo tempo de digitação
+                    const userStats = antiBanProtection.userStats.get(userId);
                     const dashboardData = {
-                        score: antiBanProtection.userStats[userId]?.riskScore || 0,
-                        messagesSent: antiBanProtection.userStats[userId]?.messagesSent || 0,
-                        groupsContacted: antiBanProtection.userStats[userId]?.groupsContacted || 0,
-                        avgDelay: antiBanProtection.userStats[userId]?.avgDelay || 0,
+                        score: userStats?.riskScore || 0,
+                        messagesSent: userStats?.messagesSent || 0,
+                        groupsContacted: userStats?.groupsContacted || 0,
+                        avgDelay: userStats?.avgDelay || 0,
                         personality: profile.personality,
-                        riskLevel: antiBanProtection.userStats[userId]?.riskLevel || 'low',
-                        sessionDuration: Date.now() - (antiBanProtection.userStats[userId]?.sessionStart || Date.now()),
-                        consecutiveMessages: antiBanProtection.userStats[userId]?.consecutiveMessages || 0,
+                        riskLevel: userStats?.riskLevel || 'low',
+                        sessionDuration: Date.now() - (userStats?.sessionStart || Date.now()),
+                        consecutiveMessages: userStats?.consecutiveMessages || 0,
                         typingTime: Math.round(typingTime/1000),
                         lastTypingSpeed: typingSpeed
                     };
