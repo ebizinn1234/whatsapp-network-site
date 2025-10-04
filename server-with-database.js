@@ -775,6 +775,14 @@ class AntiBanProtection {
         else if (stats.groupsContacted > 50) riskScore += 2;
         else if (stats.groupsContacted > 20) riskScore += 1;
 
+        // Score base por atividade (mesmo no início)
+        if (stats.messagesSent > 0) riskScore += 1; // +1 por ter enviado mensagens
+        if (stats.groupsContacted > 5) riskScore += 1; // +1 por contactar muitos grupos
+        if (stats.consecutiveMessages > 3) riskScore += 1; // +1 por muitas mensagens consecutivas
+
+        // Salvar o score calculado
+        stats.riskScore = riskScore;
+
         // Determinar nível de risco
         if (riskScore >= 5) stats.riskLevel = 'critical';
         else if (riskScore >= 3) stats.riskLevel = 'high';
