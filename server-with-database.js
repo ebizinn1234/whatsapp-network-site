@@ -2945,6 +2945,20 @@ io.on('connection', (socket) => {
             let successCount = 0;
             let errorCount = 0;
             
+            // 🚀 ENVIAR DADOS INICIAIS IMEDIATAMENTE
+            const userProfile = humanLikeAI.analyzeUserProfile(userId);
+            io.to(`user_${userId}`).emit('send-progress', { 
+                current: 0, 
+                total: groups.length, 
+                group: 'Preparando envio...',
+                status: 'preparing',
+                delay: 0,
+                personality: userProfile.personality,
+                riskScore: antiBanProtection.userStats.get(userId)?.riskScore || 0,
+                successCount: 0,
+                errorCount: 0
+            });
+            
             // Processar cada grupo
             for (let i = 0; i < groups.length; i++) {
                 // ✅ VERIFICAR SE FOI CANCELADO

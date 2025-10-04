@@ -3606,7 +3606,17 @@
                 const percentage = Math.round((current / total) * 100);
                 progressBar.style.width = `${percentage}%`;
                 progressPercentage.textContent = `${percentage}%`;
-                progressText.textContent = `Enviando para: ${group}`;
+                
+                // Tratar diferentes status
+                if (status === 'preparing') {
+                    progressText.textContent = `Preparando envio...`;
+                } else if (status === 'success') {
+                    progressText.textContent = `Enviando para: ${group}`;
+                } else if (status === 'error') {
+                    progressText.textContent = `Erro em: ${group}`;
+                } else {
+                    progressText.textContent = `Processando: ${group}`;
+                }
             }
             
             // Adicionar grupo à lista
