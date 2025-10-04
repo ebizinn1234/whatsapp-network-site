@@ -770,23 +770,31 @@ class AntiBanProtection {
         // Calcular risco baseado em vários fatores
         let riskScore = 0;
 
-        // 🔧 CORRIGIDO: Mensagens por hora baseado na sessão completa
-        if (messagesPerHour > 50) riskScore += 3;
-        else if (messagesPerHour > 20) riskScore += 2;
-        else if (messagesPerHour > 10) riskScore += 1;
+        // 🔧 CORRIGIDO: Mensagens por hora MUITO mais realista
+        if (messagesPerHour > 100) riskScore += 3; // +3 apenas com MUITAS mensagens/hora
+        else if (messagesPerHour > 50) riskScore += 2; // +2 com quantidade alta
+        else if (messagesPerHour > 20) riskScore += 1; // +1 com quantidade moderada
+        // Não adiciona score para poucas mensagens/hora (1-19)
 
-        // Muitos grupos contactados = alto risco
-        if (stats.groupsContacted > 100) riskScore += 3;
-        else if (stats.groupsContacted > 50) riskScore += 2;
-        else if (stats.groupsContacted > 20) riskScore += 1;
+        // Muitos grupos contactados = alto risco (MUITO mais realista)
+        if (stats.groupsContacted > 200) riskScore += 3; // +3 apenas com MUITOS grupos
+        else if (stats.groupsContacted > 100) riskScore += 2; // +2 com muitos grupos
+        else if (stats.groupsContacted > 50) riskScore += 1; // +1 com quantidade moderada
+        // Não adiciona score para poucos grupos (1-49)
 
-        // 🔧 CORRIGIDO: Score mais realista para início
-        if (stats.messagesSent >= 20) riskScore += 2; // +2 apenas com muitas mensagens
-        else if (stats.messagesSent >= 10) riskScore += 1; // +1 com quantidade moderada
-        // Não adiciona score para poucas mensagens (1-9)
+        // 🔧 CORRIGIDO: Score MUITO mais realista para início
+        if (stats.messagesSent >= 50) riskScore += 2; // +2 apenas com MUITAS mensagens
+        else if (stats.messagesSent >= 25) riskScore += 1; // +1 com quantidade moderada
+        // Não adiciona score para poucas mensagens (1-24)
         
-        if (stats.groupsContacted >= 15) riskScore += 1; // +1 apenas com muitos grupos
-        if (stats.consecutiveMessages >= 5) riskScore += 1; // +1 apenas com muitas consecutivas
+        if (stats.groupsContacted >= 30) riskScore += 1; // +1 apenas com MUITOS grupos
+        if (stats.consecutiveMessages >= 15) riskScore += 1; // +1 apenas com MUITAS consecutivas
+        
+        // 🆕 BONUS DE SEGURANÇA: Reduzir score se está sendo cauteloso
+        if (stats.avgDelay > 300000) { // Se delay médio > 5 minutos
+            riskScore = Math.max(0, riskScore - 1); // Reduzir 1 ponto
+            console.log('✅ BONUS: Delay alto detectado, reduzindo score de risco');
+        }
 
         // Salvar o score calculado
         stats.riskScore = riskScore;
@@ -816,28 +824,28 @@ class AntiBanProtection {
         const now = Date.now();
         const timeSinceLastMessage = now - stats.lastMessage;
 
-        // Verificações de segurança (MELHORADAS)
+        // Verificações de segurança (MUITO MAIS REALISTAS)
         const checks = {
             // Muito rápido = suspeito (AUMENTADO)
             tooFast: timeSinceLastMessage < 5000, // Menos de 5 segundos (mais seguro)
             
-            // Muitas mensagens por hora (REDUZIDO)
-            tooManyPerHour: stats.messagesSent > 15, // Máximo 15 por hora (muito mais seguro)
+            // Muitas mensagens por hora (MUITO MAIS REALISTA)
+            tooManyPerHour: stats.messagesSent > 50, // Máximo 50 por hora (muito mais realista)
             
-            // Muitos grupos diferentes (REDUZIDO)
-            tooManyGroups: stats.groupsContacted > 20, // Máximo 20 grupos (mais seguro)
+            // Muitos grupos diferentes (MUITO MAIS REALISTA)
+            tooManyGroups: stats.groupsContacted > 100, // Máximo 100 grupos (muito mais realista)
             
             // Risco crítico
             criticalRisk: stats.riskLevel === 'critical',
             
-            // NOVO: Pausa automática quando score > 2
-            autoPause: stats.riskScore > 2,
+            // 🚨 PAUSA AUTOMÁTICA: Só quando score MUITO alto
+            autoPause: stats.riskScore >= 4, // Só pausa com score 4+ (muito mais realista)
             
-            // NOVO: Pausa por tempo de sessão (máximo 2 horas)
-            sessionTooLong: (now - stats.sessionStart) > 7200000, // 2 horas
+            // Pausa por tempo de sessão (máximo 4 horas)
+            sessionTooLong: (now - stats.sessionStart) > 14400000, // 4 horas (mais realista)
             
-            // NOVO: Pausa por muitas mensagens consecutivas
-            tooManyConsecutive: stats.consecutiveMessages > 5
+            // Pausa por muitas mensagens consecutivas (MUITO MAIS REALISTA)
+            tooManyConsecutive: stats.consecutiveMessages > 20 // 20 consecutivas (muito mais realista)
         };
 
         // Se risco crítico, bloquear
@@ -849,12 +857,30 @@ class AntiBanProtection {
             };
         }
 
-        // NOVO: Pausa automática quando score > 2
+        // 🚨 PAUSA AUTOMÁTICA INTELIGENTE (só quando realmente necessário)
         if (checks.autoPause) {
-            const pauseTime = 1800000; // 30 minutos
+            let pauseTime, reason;
+            
+            if (stats.riskScore >= 5) {
+                // RISCO CRÍTICO - Pausa longa
+                pauseTime = 3600000; // 1 hora
+                reason = '🚨 RISCO CRÍTICO detectado! Pausa automática de 1 hora para segurança.';
+                console.log('🚨 PAUSA AUTOMÁTICA: Risco crítico - pausando por 1 hora');
+            } else if (stats.riskScore >= 4) {
+                // RISCO ALTO - Pausa moderada
+                pauseTime = 1800000; // 30 minutos
+                reason = '⚠️ RISCO ALTO detectado! Pausa automática de 30 minutos.';
+                console.log('⚠️ PAUSA AUTOMÁTICA: Risco alto - pausando por 30 minutos');
+            } else {
+                // RISCO MÉDIO - Pausa curta
+                pauseTime = 900000; // 15 minutos
+                reason = '⚡ RISCO MÉDIO detectado! Pausa automática de 15 minutos.';
+                console.log('⚡ PAUSA AUTOMÁTICA: Risco médio - pausando por 15 minutos');
+            }
+            
             return { 
                 allowed: false, 
-                reason: '🤖 IA: Pausa automática ativada (score alto). Aguarde 30 minutos.',
+                reason: reason,
                 waitTime: pauseTime
             };
         }
@@ -1042,11 +1068,16 @@ class HumanLikeAI {
         return styles[Math.floor(Math.random() * styles.length)];
     }
 
-    // ⏱️ Calcular delay inteligente baseado em IA (MELHORADO)
+    // ⏱️ Calcular delay inteligente baseado em IA (MELHORADO COM AUTO-AJUSTE)
     calculateIntelligentDelay(userId, messageLength, groupId) {
         const profile = this.analyzeUserProfile(userId);
         const now = new Date();
         const currentHour = now.getHours();
+        
+        // 🛡️ OBTER SCORE DE RISCO ATUAL PARA AUTO-AJUSTE
+        const userStats = antiBanProtection.userStats.get(userId);
+        const currentRiskScore = userStats?.riskScore || 0;
+        const currentRiskLevel = userStats?.riskLevel || 'low';
         
         // Base delay por personalidade (OTIMIZADOS para praticidade)
         let baseDelay = 60000; // 1 minuto base
@@ -1066,6 +1097,52 @@ class HumanLikeAI {
             case 'casual':
                 baseDelay = Math.random() * 120000 + 90000; // 1.5-3.5 minutos aleatório
                 break;
+        }
+        
+        // 🚨 AUTO-AJUSTE BASEADO NO SCORE DE RISCO
+        let riskMultiplier = 1.0;
+        let autoAdjustmentReason = '';
+        
+        if (currentRiskScore >= 4) {
+            // RISCO CRÍTICO - Aumentar drasticamente
+            riskMultiplier = 3.0;
+            autoAdjustmentReason = 'RISCO CRÍTICO - Delay triplicado automaticamente';
+            console.log('🚨 AUTO-AJUSTE: Risco crítico detectado, triplicando delay');
+        } else if (currentRiskScore >= 3) {
+            // RISCO ALTO - Aumentar significativamente
+            riskMultiplier = 2.0;
+            autoAdjustmentReason = 'RISCO ALTO - Delay dobrado automaticamente';
+            console.log('⚠️ AUTO-AJUSTE: Risco alto detectado, dobrando delay');
+        } else if (currentRiskScore >= 2) {
+            // RISCO MÉDIO - Aumentar moderadamente
+            riskMultiplier = 1.5;
+            autoAdjustmentReason = 'RISCO MÉDIO - Delay aumentado em 50%';
+            console.log('⚡ AUTO-AJUSTE: Risco médio detectado, aumentando delay em 50%');
+        } else if (currentRiskScore <= 0.5) {
+            // RISCO BAIXO - Pode acelerar ligeiramente
+            riskMultiplier = 0.8;
+            autoAdjustmentReason = 'RISCO BAIXO - Delay reduzido em 20%';
+            console.log('✅ AUTO-AJUSTE: Risco baixo, reduzindo delay em 20%');
+        }
+        
+        // Aplicar multiplicador de risco
+        baseDelay = Math.round(baseDelay * riskMultiplier);
+        
+        // 🎯 AUTO-AJUSTE BASEADO NO NÚMERO DE MENSAGENS CONSECUTIVAS
+        const consecutiveMessages = userStats?.consecutiveMessages || 0;
+        if (consecutiveMessages >= 10) {
+            const consecutiveMultiplier = 1.0 + (consecutiveMessages * 0.1); // +10% por mensagem consecutiva
+            baseDelay = Math.round(baseDelay * consecutiveMultiplier);
+            autoAdjustmentReason += ` | ${consecutiveMessages} mensagens consecutivas - Delay +${Math.round((consecutiveMultiplier - 1) * 100)}%`;
+            console.log(`🔄 AUTO-AJUSTE: ${consecutiveMessages} mensagens consecutivas, aumentando delay`);
+        }
+        
+        // 🕐 AUTO-AJUSTE BASEADO NO HORÁRIO (horários de pico)
+        if (currentHour >= 8 && currentHour <= 18) {
+            // Horário comercial - mais cauteloso
+            baseDelay = Math.round(baseDelay * 1.2);
+            autoAdjustmentReason += ' | Horário comercial - Delay +20%';
+            console.log('🕐 AUTO-AJUSTE: Horário comercial, aumentando delay');
         }
 
         // Ajustar por horário (mais lento fora do horário ativo)
