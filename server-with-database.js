@@ -1677,6 +1677,39 @@ function startHealthCheck(userId, sessionId, sock) {
     }
 }
 
+// 🧹 FUNÇÃO PARA LIMPAR SESSÕES CORROMPIDAS
+async function clearCorruptedSession(authDir, userId, sessionId) {
+    try {
+        console.log('🧹 Limpando sessão corrompida:', authDir);
+        
+        // Fazer backup da sessão corrompida
+        const backupDir = `${authDir}_corrupted_${Date.now()}`;
+        if (fs.existsSync(authDir)) {
+            fs.renameSync(authDir, backupDir);
+            console.log('💾 Backup da sessão corrompida criado:', backupDir);
+        }
+        
+        // Criar novo diretório limpo
+        fs.mkdirSync(authDir, { recursive: true });
+        
+        // Marcar sessão como inativa no banco
+        try {
+            await db.execute(
+                'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id = ?',
+                [userId, sessionId]
+            );
+            console.log('🗑️ Sessão marcada como inativa no banco');
+        } catch (dbError) {
+            console.error('❌ Erro ao marcar sessão como inativa:', dbError);
+        }
+        
+        console.log('✅ Sessão corrompida limpa com sucesso');
+        
+    } catch (error) {
+        console.error('❌ Erro ao limpar sessão corrompida:', error);
+    }
+}
+
 async function createWhatsAppSocket(userId, sessionId = 'default') {
     const authDir = `auth_info_${userId}_${sessionId}`;
     
@@ -1689,7 +1722,36 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         fs.mkdirSync(authDir, { recursive: true });
     }
     
-    const { state, saveCreds } = await useMultiFileAuthState(authDir);
+    let state, saveCreds;
+    
+    try {
+        // 🔧 TENTAR CARREGAR ESTADO COM TRATAMENTO DE ERRO
+        const authState = await useMultiFileAuthState(authDir);
+        state = authState.state;
+        saveCreds = authState.saveCreds;
+        
+        // ✅ VERIFICAR SE O ESTADO É VÁLIDO
+        if (!state || !state.creds) {
+            console.log('⚠️ Estado de autenticação inválido, limpando diretório...');
+            await clearCorruptedSession(authDir, userId, sessionId);
+            
+            // Recriar estado limpo
+            const newAuthState = await useMultiFileAuthState(authDir);
+            state = newAuthState.state;
+            saveCreds = newAuthState.saveCreds;
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar estado de autenticação:', error.message);
+        
+        // 🧹 LIMPAR SESSÃO CORROMPIDA
+        await clearCorruptedSession(authDir, userId, sessionId);
+        
+        // Recriar estado limpo
+        const newAuthState = await useMultiFileAuthState(authDir);
+        state = newAuthState.state;
+        saveCreds = newAuthState.saveCreds;
+    }
     
     const sock = makeWASocket({
         auth: state,
@@ -1714,6 +1776,24 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         // 📱 CONFIGURAÇÕES DE DISPOSITIVO
         deviceName: 'DisparoZap Pro',
         deviceType: 'desktop'
+    });
+
+    // 🛡️ LISTENER PARA ERROS DE CRIPTOGRAFIA E SESSÃO
+    sock.ev.on('CB:call', (json) => {
+        // Ignorar chamadas - não processar
+    });
+    
+    // 🚨 LISTENER PARA ERROS DE SESSÃO CORROMPIDA
+    sock.ev.on('messages.upsert', (m) => {
+        // Interceptar mensagens com erro de criptografia
+        if (m.messages) {
+            m.messages.forEach(msg => {
+                if (msg.messageStubType === 7) { // Erro de criptografia
+                    console.log('🚨 Erro de criptografia detectado, limpando sessão...');
+                    clearCorruptedSession(authDir, userId, sessionId);
+                }
+            });
+        }
     });
 
     sock.ev.on('connection.update', async (update) => {
@@ -1751,6 +1831,24 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         }
         
         if (connection === 'close') {
+            // 🔍 DETECTAR ERROS DE CRIPTOGRAFIA
+            const isCryptographicError = lastDisconnect?.error?.message?.includes('Bad MAC') || 
+                                       lastDisconnect?.error?.message?.includes('Failed to decrypt') ||
+                                       lastDisconnect?.error?.message?.includes('Session error');
+            
+            if (isCryptographicError) {
+                console.log('🚨 ERRO DE CRIPTOGRAFIA DETECTADO! Limpando sessão corrompida...');
+                await clearCorruptedSession(authDir, userId, sessionId);
+                
+                // Notificar frontend sobre o problema
+                io.to(`user_${userId}`).emit('connection-error', {
+                    message: 'Sessão corrompida detectada. Nova autenticação necessária.',
+                    type: 'cryptographic_error'
+                });
+                
+                return; // Não tentar reconectar automaticamente
+            }
+            
             const shouldReconnect = (lastDisconnect?.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
             
             if (shouldReconnect) {
@@ -3657,6 +3755,51 @@ io.on('connection', (socket) => {
     });
 
     // ============================================
+    // 🧹 COMANDO PARA LIMPAR SESSÕES CORROMPIDAS
+    // ============================================
+    
+    socket.on('clear-corrupted-sessions', async (data) => {
+        const { userId } = data;
+        console.log('🧹 Limpando todas as sessões corrompidas para usuário:', userId);
+        
+        try {
+            // Listar todos os diretórios de autenticação do usuário
+            const authDirs = fs.readdirSync('.')
+                .filter(dir => dir.startsWith(`auth_info_${userId}_`))
+                .map(dir => ({ dir, sessionId: dir.replace(`auth_info_${userId}_`, '') }));
+            
+            let clearedCount = 0;
+            
+            for (const { dir, sessionId } of authDirs) {
+                try {
+                    // Tentar carregar o estado para verificar se está corrompido
+                    await useMultiFileAuthState(dir);
+                    console.log(`✅ Sessão ${sessionId} está íntegra`);
+                } catch (error) {
+                    console.log(`🚨 Sessão ${sessionId} corrompida detectada:`, error.message);
+                    
+                    // Limpar sessão corrompida
+                    await clearCorruptedSession(dir, userId, sessionId);
+                    clearedCount++;
+                }
+            }
+            
+            console.log(`🧹 Limpeza concluída: ${clearedCount} sessões corrompidas removidas`);
+            
+            // Notificar frontend
+            io.to(`user_${userId}`).emit('sessions-cleared', {
+                clearedCount,
+                message: `${clearedCount} sessões corrompidas foram limpas`
+            });
+            
+        } catch (error) {
+            console.error('❌ Erro ao limpar sessões:', error);
+            io.to(`user_${userId}`).emit('clear-sessions-error', {
+                message: 'Erro ao limpar sessões corrompidas'
+            });
+        }
+    });
+
     // 🔄 VERIFICAR STATUS DO ENVIO
     // ============================================
     
@@ -3674,13 +3817,18 @@ io.on('connection', (socket) => {
                     isCancelled: userSession.isCancelled
                 });
                 
-                // Enviar status atual
+                // Enviar status atual com mais detalhes
                 io.to(`user_${userId}`).emit('sending-status', {
                     isSending: userSession.isSending,
                     isPaused: userSession.isPaused,
                     isCancelled: userSession.isCancelled,
                     current: userSession.currentGroup || 0,
-                    total: userSession.totalGroups || 0
+                    total: userSession.totalGroups || 0,
+                    lastGroup: userSession.currentGroupName || null,
+                    startTime: userSession.startTime || null,
+                    estimatedCompletion: userSession.startTime && userSession.totalGroups ? 
+                        new Date(userSession.startTime + (userSession.totalGroups * 120000)).toISOString() : null,
+                    syncTime: new Date().toISOString()
                 });
             } else {
                 // Verificar no banco de dados

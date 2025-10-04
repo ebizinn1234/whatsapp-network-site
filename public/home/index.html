@@ -2684,6 +2684,47 @@
         // MODO PRODUCTION: Desabilitar logs DEBUG
         const PRODUCTION_MODE = true; // Mudar para false para debug
         
+        // 🧹 FUNÇÃO PARA LIMPAR SESSÕES CORROMPIDAS
+        function clearCorruptedSessions() {
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.id) {
+                console.log('🧹 Solicitando limpeza de sessões corrompidas...');
+                socket.emit('clear-corrupted-sessions', { userId: userData.id });
+                addLog('🧹 Limpando sessões corrompidas...', 'info');
+            }
+        }
+        
+        // Event listeners para limpeza de sessões
+        socket.on('sessions-cleared', (data) => {
+            addLog(`✅ ${data.message}`, 'success');
+            addLog('🔄 Recarregue a página para uma nova autenticação', 'info');
+        });
+        
+        socket.on('clear-sessions-error', (data) => {
+            addLog(`❌ ${data.message}`, 'error');
+        });
+        
+        socket.on('connection-error', (data) => {
+            if (data.type === 'cryptographic_error') {
+                addLog('🚨 Sessão corrompida detectada!', 'danger');
+                addLog('💡 Clique em "Limpar Sessões" e reconecte', 'warning');
+                
+                // Mostrar botão de limpeza se não existir
+                if (!document.getElementById('clearSessionsBtn')) {
+                    const clearBtn = document.createElement('button');
+                    clearBtn.id = 'clearSessionsBtn';
+                    clearBtn.className = 'btn btn-warning';
+                    clearBtn.innerHTML = '🧹 Limpar Sessões Corrompidas';
+                    clearBtn.onclick = clearCorruptedSessions;
+                    
+                    const connectBtn = document.getElementById('connectBtn');
+                    if (connectBtn && connectBtn.parentNode) {
+                        connectBtn.parentNode.insertBefore(clearBtn, connectBtn.nextSibling);
+                    }
+                }
+            }
+        });
+
         // 🔄 RESTAURAR ESTADO APÓS REFRESH DA PÁGINA
         function restoreSendingState() {
             const savedState = loadSendingState();
@@ -2698,6 +2739,47 @@
                     return;
                 }
                 
+                // Mostrar indicador de restauração
+                addLog('🔄 Detectado envio em andamento! Restaurando progresso...', 'info');
+                
+                // Mostrar notificação especial de restauração
+                const restoreNotification = document.createElement('div');
+                restoreNotification.className = 'alert alert-info';
+                restoreNotification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    background: linear-gradient(135deg, #17a2b8, #138496);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    animation: slideInRight 0.3s ease-out;
+                `;
+                restoreNotification.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-size: 24px;">🔄</div>
+                        <div>
+                            <strong>Envio em andamento detectado!</strong><br>
+                            <small>Sincronizando com servidor...</small>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(restoreNotification);
+                
+                // Remover notificação após 5 segundos
+                setTimeout(() => {
+                    if (restoreNotification.parentNode) {
+                        restoreNotification.style.animation = 'slideOutRight 0.3s ease-in';
+                        setTimeout(() => {
+                            if (restoreNotification.parentNode) {
+                                restoreNotification.remove();
+                            }
+                        }, 300);
+                    }
+                }, 5000);
+                
                 // Restaurar estado global
                 window.isSending = true;
                 window.currentProgress = savedState.current || 0;
@@ -2711,9 +2793,18 @@
                 updateProgress({
                     current: savedState.current,
                     total: savedState.total,
-                    group: savedState.lastGroup || 'Restaurando...',
+                    group: savedState.lastGroup || 'Sincronizando com servidor...',
                     status: 'restoring'
                 });
+                
+                // Adicionar indicador visual de sincronização
+                const progressStats = document.getElementById('progressStats');
+                if (progressStats) {
+                    progressStats.innerHTML = `
+                        <span style="color: #ffc107;">🔄 Sincronizando...</span>
+                        ${savedState.current}/${savedState.total} grupos
+                    `;
+                }
                 
                 // Solicitar status atual do servidor
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -2721,9 +2812,18 @@
                     console.log('🔄 Solicitando status atual do servidor...');
                     socket.emit('check-sending-status', { userId: userData.id });
                     socket.emit('get-dashboard-status', { userId: userData.id });
+                    
+                    // Timeout para limpar estado se não receber resposta
+                    setTimeout(() => {
+                        if (window.isSending) {
+                            console.log('⚠️ Timeout na sincronização, limpando estado...');
+                            clearSendingState();
+                            window.isSending = false;
+                            hideProgressCard();
+                            addLog('⚠️ Não foi possível sincronizar com o servidor. Envio pode ter sido finalizado.', 'warning');
+                        }
+                    }, 10000); // 10 segundos
                 }
-                
-                addLog('🔄 Envio em andamento detectado! Restaurando progresso...', 'info');
             }
         }
         
@@ -3028,10 +3128,15 @@
         // Salvar estado de envio no localStorage
         function saveSendingState(state) {
             try {
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 const stateToSave = {
                     ...state,
                     timestamp: Date.now(),
-                    userId: JSON.parse(localStorage.getItem('user') || '{}').id
+                    userId: userData.id,
+                    sessionId: userData.sessionId || null,
+                    lastGroup: state.lastGroup || null,
+                    estimatedCompletion: state.startTime ? 
+                        new Date(state.startTime + (state.total * state.delayConfig?.delay || 120000)).toISOString() : null
                 };
                 localStorage.setItem(STATE_KEY, JSON.stringify(stateToSave));
                 console.log('💾 Estado de envio salvo:', stateToSave);
@@ -3597,11 +3702,17 @@
 
         socket.on('sending-completed', (data) => {
             isSending = false;
+            window.isSending = false;
             hideControls();
             progressContainer.classList.add('hidden');
             sendMessagesBtn.disabled = false;
+            sendMessagesBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Mensagens';
             sentMessages.textContent = data.success;
             addLog(`🎉 Envio concluído! ${data.success} sucessos, ${data.errors} erros`, 'success');
+            
+            // 💾 LIMPAR ESTADO SALVO APÓS CONCLUSÃO
+            clearSendingState();
+            console.log('🗑️ Estado de envio limpo após conclusão');
         });
 
         socket.on('send-error', (error) => {
@@ -3951,10 +4062,16 @@
 
         socket.on('sending-cancelled', (message) => {
             isSending = false;
+            window.isSending = false;
             hideControls();
             progressContainer.classList.add('hidden');
             sendMessagesBtn.disabled = false;
+            sendMessagesBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Mensagens';
             addLog(`⏹️ ${message}`, 'warning');
+            
+            // 💾 LIMPAR ESTADO SALVO APÓS CANCELAMENTO
+            clearSendingState();
+            console.log('🗑️ Estado de envio limpo após cancelamento');
         });
 
         socket.on('new-sending-ready', (message) => {
@@ -4516,6 +4633,13 @@
             if (data.isSending && data.isPaused) {
                 console.log('⏸️ Envio pausado detectado - mostrando botão retomar');
                 showResumeButton();
+                
+                // Atualizar estado salvo
+                const currentState = loadSendingState();
+                if (currentState) {
+                    currentState.isPaused = true;
+                    saveSendingState(currentState);
+                }
             } else if (data.isSending && !data.isPaused) {
                 console.log('▶️ Envio em andamento detectado - mostrando progresso');
                 console.log(`📈 Sincronizando progresso: ${data.current}/${data.total}`);
@@ -4526,13 +4650,29 @@
                     showProgressCard();
                 }
                 
-                // Atualizar progresso
+                // Atualizar progresso com dados do servidor
                 updateProgress({
                     current: data.current,
                     total: data.total,
-                    group: 'Sincronizando...',
+                    group: data.lastGroup || 'Sincronizando...',
                     status: 'syncing'
                 });
+                
+                // Atualizar estado salvo com dados do servidor
+                const currentState = loadSendingState();
+                if (currentState) {
+                    currentState.current = data.current;
+                    currentState.lastGroup = data.lastGroup;
+                    currentState.isPaused = false;
+                    if (data.startTime) currentState.startTime = new Date(data.startTime).getTime();
+                    saveSendingState(currentState);
+                }
+                
+                // Mostrar mensagem de sincronização bem-sucedida
+                if (data.syncTime) {
+                    const syncDate = new Date(data.syncTime);
+                    addLog(`✅ Sincronizado com servidor às ${syncDate.toLocaleTimeString()}`, 'success');
+                }
                 
                 // ✅ VERIFICAR SE FUNÇÃO EXISTE ANTES DE CHAMAR
                 if (typeof showProgress === 'function') {
@@ -4541,9 +4681,16 @@
                     console.log('⚠️ Função showProgress não encontrada, usando updateProgress');
                 }
             } else if (!data.isSending) {
-                console.log('⏹️ Envio não está em andamento - ocultando progresso');
+                console.log('⏹️ Envio não está em andamento - limpando estado');
                 window.isSending = false;
-                // Não ocultar automaticamente, deixar usuário decidir
+                clearSendingState();
+                
+                // Mostrar mensagem se o envio foi finalizado
+                if (data.current >= data.total) {
+                    addLog('✅ Envio finalizado! Estado sincronizado com servidor.', 'success');
+                } else {
+                    addLog('⚠️ Envio interrompido no servidor. Estado limpo.', 'warning');
+                }
             }
         });
         
