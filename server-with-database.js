@@ -1471,7 +1471,127 @@ setInterval(async () => {
 // Controle de throttling global para cofre
 const vaultThrottle = new Map();
 
+// 🔄 SISTEMA DE RETRY INTELIGENTE PARA OPERAÇÕES CRÍTICAS
+async function retryOperation(operation, operationName, maxRetries = 3, baseDelay = 1000) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`🔄 ${operationName} - Tentativa ${attempt}/${maxRetries}`);
+            const result = await operation();
+            console.log(`✅ ${operationName} - Sucesso na tentativa ${attempt}`);
+            return result;
+        } catch (error) {
+            lastError = error;
+            console.log(`❌ ${operationName} - Falha na tentativa ${attempt}:`, error.message);
+            
+            // Se é a última tentativa, não aguardar
+            if (attempt === maxRetries) {
+                break;
+            }
+            
+            // Backoff exponencial com jitter
+            const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+            console.log(`⏱️ ${operationName} - Aguardando ${Math.round(delay)}ms antes da próxima tentativa...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    
+    console.log(`🚨 ${operationName} - Todas as tentativas falharam`);
+    throw lastError;
+}
+
+// 🛡️ WRAPPER PARA OPERAÇÕES DE SOCKET COM RETRY AUTOMÁTICO
+async function safeSocketOperation(sock, operation, operationName, maxRetries = 3) {
+    return await retryOperation(async () => {
+        // Verificar se o socket ainda está válido
+        if (!sock || !sock.user) {
+            throw new Error('Socket inválido ou desconectado');
+        }
+        
+        // Executar a operação
+        return await operation(sock);
+    }, operationName, maxRetries);
+}
+
 // Função para criar socket WhatsApp
+// 🏥 SISTEMA DE HEALTH CHECK PARA DETECTAR PROBLEMAS DE CONEXÃO
+function startHealthCheck(userId, sessionId, sock) {
+    const healthCheckInterval = setInterval(async () => {
+        try {
+            const userSession = userSessions.get(userId);
+            const sessionData = userSession?.[sessionId];
+            
+            // Verificar se a sessão ainda existe
+            if (!sessionData || !sessionData.isConnected) {
+                console.log(`🏥 Health check: Sessão não encontrada para usuário ${userId}, parando health check`);
+                clearInterval(healthCheckInterval);
+                return;
+            }
+            
+            // Verificar se o socket ainda está válido
+            if (!sock || !sock.user) {
+                console.log(`🏥 Health check: Socket inválido para usuário ${userId}, marcando como desconectado`);
+                sessionData.isConnected = false;
+                clearInterval(healthCheckInterval);
+                return;
+            }
+            
+            // 🧪 TESTE DE CONECTIVIDADE: Tentar uma operação simples
+            try {
+                // Teste simples: verificar se conseguimos acessar informações básicas
+                const userInfo = sock.user;
+                if (!userInfo || !userInfo.id) {
+                    throw new Error('User info não disponível');
+                }
+                
+                // Atualizar timestamp do último health check bem-sucedido
+                sessionData.lastHealthCheck = Date.now();
+                sessionData.healthCheckFailures = 0;
+                
+                // Log apenas a cada 10 health checks para não poluir
+                if (sessionData.healthCheckCount % 10 === 0) {
+                    console.log(`🏥 Health check OK para usuário ${userId} (${sessionData.healthCheckCount + 1} checks)`);
+                }
+                sessionData.healthCheckCount = (sessionData.healthCheckCount || 0) + 1;
+                
+            } catch (healthError) {
+                sessionData.healthCheckFailures = (sessionData.healthCheckFailures || 0) + 1;
+                console.log(`🏥 Health check falhou para usuário ${userId} (falha ${sessionData.healthCheckFailures}/3):`, healthError.message);
+                
+                // Se 3 health checks consecutivos falharam, marcar como desconectado
+                if (sessionData.healthCheckFailures >= 3) {
+                    console.log(`🚨 Health check: 3 falhas consecutivas para usuário ${userId}, marcando como desconectado`);
+                    sessionData.isConnected = false;
+                    clearInterval(healthCheckInterval);
+                    
+                    // Notificar usuário sobre problema de conexão
+                    io.to(`user_${userId}`).emit('connection-status', {
+                        connected: false,
+                        message: 'Conexão instável detectada. Tentando reconectar...',
+                        requiresReconnect: false
+                    });
+                    
+                    // Tentar reconectar
+                    setTimeout(() => {
+                        console.log(`🔄 Health check: Iniciando reconexão para usuário ${userId}`);
+                        createWhatsAppSocket(userId, sessionId);
+                    }, 5000);
+                }
+            }
+            
+        } catch (error) {
+            console.error(`🏥 Erro no health check para usuário ${userId}:`, error);
+        }
+    }, 30000); // Health check a cada 30 segundos
+    
+    // Armazenar o interval ID para poder parar depois
+    const userSession = userSessions.get(userId);
+    if (userSession && userSession[sessionId]) {
+        userSession[sessionId].healthCheckInterval = healthCheckInterval;
+    }
+}
+
 async function createWhatsAppSocket(userId, sessionId = 'default') {
     const authDir = `auth_info_${userId}_${sessionId}`;
     
@@ -1490,7 +1610,25 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         auth: state,
         printQRInTerminal: false,
         logger: P({ level: 'silent' }),
-        browser: ['DisparoZap', 'Chrome', '1.0.0']
+        browser: ['DisparoZap', 'Chrome', '1.0.0'],
+        // 🔧 CONFIGURAÇÕES DE CONEXÃO MAIS ROBUSTAS
+        connectTimeoutMs: 60000, // 60 segundos para conectar
+        keepAliveIntervalMs: 30000, // 30 segundos entre keep-alive
+        retryRequestDelayMs: 5000, // 5 segundos entre tentativas de requisição
+        maxMsgRetryCount: 3, // Máximo 3 tentativas por mensagem
+        defaultQueryTimeoutMs: 30000, // 30 segundos timeout para queries
+        // 🛡️ CONFIGURAÇÕES ANTI-BAN
+        markOnlineOnConnect: false, // Não marcar como online automaticamente
+        syncFullHistory: false, // Não sincronizar histórico completo
+        fireInitQueries: false, // Não executar queries de inicialização automaticamente
+        generateHighQualityLinkPreview: false, // Não gerar preview de links
+        // 🔄 CONFIGURAÇÕES DE RECONEXÃO
+        shouldSyncHistoryMessage: () => false, // Não sincronizar mensagens antigas
+        shouldIgnoreJid: () => false, // Não ignorar nenhum JID
+        getMessage: async () => undefined, // Não buscar mensagens antigas
+        // 📱 CONFIGURAÇÕES DE DISPOSITIVO
+        deviceName: 'DisparoZap Pro',
+        deviceType: 'desktop'
     });
 
     sock.ev.on('connection.update', async (update) => {
@@ -1529,8 +1667,81 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
         
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect?.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+            
             if (shouldReconnect) {
+                // 🔄 SISTEMA DE RECONEXÃO INTELIGENTE COM BACKOFF EXPONENCIAL
+                const userSession = userSessions.get(userId);
+                const sessionData = userSession?.[sessionId];
+                
+                if (!sessionData) {
+                    console.log('⚠️ Dados da sessão não encontrados, criando nova sessão...');
                 setTimeout(() => createWhatsAppSocket(userId, sessionId), 3000);
+                    return;
+                }
+                
+                // Incrementar contador de tentativas
+                sessionData.reconnectAttempts = (sessionData.reconnectAttempts || 0) + 1;
+                sessionData.lastReconnectAttempt = Date.now();
+                
+                console.log(`🔄 Tentativa de reconexão ${sessionData.reconnectAttempts} para usuário ${userId}`);
+                
+                // 🚨 LIMITE DE TENTATIVAS - LIMPAR SESSÃO SE MUITAS FALHAS
+                if (sessionData.reconnectAttempts >= 5) {
+                    console.log('🚨 MUITAS TENTATIVAS DE RECONEXÃO FALHARAM! Limpando sessão...');
+                    
+                    // Limpar sessão corrompida
+                    try {
+                        const authDir = `auth_info_${userId}_${sessionId}`;
+                        if (fs.existsSync(authDir)) {
+                            fs.rmSync(authDir, { recursive: true, force: true });
+                            console.log('🗑️ Diretório de autenticação removido:', authDir);
+                        }
+                        
+                        // Remover do banco de dados
+                        await db.query('DELETE FROM whatsapp_sessions WHERE user_id = ? AND session_id = ?', [userId, sessionId]);
+                        console.log('🗑️ Sessão removida do banco de dados');
+                        
+                        // Limpar da memória
+                        if (userSessions.has(userId)) {
+                            delete userSessions.get(userId)[sessionId];
+                            if (Object.keys(userSessions.get(userId)).length === 0) {
+                                userSessions.delete(userId);
+                            }
+                        }
+                        
+                        // Notificar usuário
+                        io.to(`user_${userId}`).emit('connection-status', {
+                            connected: false,
+                            message: 'Sessão corrompida. Por favor, reconecte escaneando o QR Code novamente.',
+                            requiresReconnect: true
+                        });
+                        
+                        console.log('✅ Sessão limpa com sucesso. Usuário deve reconectar.');
+                        return;
+                        
+                    } catch (cleanupError) {
+                        console.error('❌ Erro ao limpar sessão corrompida:', cleanupError);
+                    }
+                }
+                
+                // 📊 BACKOFF EXPONENCIAL: 3s, 6s, 12s, 24s, 30s (máximo)
+                const baseDelay = 3000;
+                const maxDelay = 30000;
+                const exponentialDelay = Math.min(baseDelay * Math.pow(2, sessionData.reconnectAttempts - 1), maxDelay);
+                
+                // 🎲 ADICIONAR JITTER ALEATÓRIO (±20%) para evitar thundering herd
+                const jitter = exponentialDelay * 0.2 * (Math.random() - 0.5);
+                const finalDelay = Math.max(1000, exponentialDelay + jitter);
+                
+                console.log(`⏱️ Reconectando em ${Math.round(finalDelay/1000)}s (tentativa ${sessionData.reconnectAttempts}/5)`);
+                
+                setTimeout(() => {
+                    console.log(`🔄 Iniciando reconexão (tentativa ${sessionData.reconnectAttempts})...`);
+                    createWhatsAppSocket(userId, sessionId);
+                }, finalDelay);
+                
+            } else {
+                console.log('🚪 Usuário deslogado, não reconectando automaticamente');
             }
         } else if (connection === 'open') {
                 // Verificar se já emitimos connection-status para esta sessão
@@ -1545,8 +1756,15 @@ async function createWhatsAppSocket(userId, sessionId = 'default') {
                 
                 // Atualizar status da sessão na memória
                 if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
-                    userSessions.get(userId)[sessionId].isConnected = true;
+                    const sessionData = userSessions.get(userId)[sessionId];
+                    sessionData.isConnected = true;
+                    sessionData.connectedAt = Date.now();
+                    sessionData.reconnectAttempts = 0; // Reset contador de tentativas
+                    sessionData.lastHealthCheck = Date.now();
                     console.log('✅ Status da sessão atualizado na memória');
+                    
+                    // 🏥 INICIAR HEALTH CHECK PERIÓDICO
+                    startHealthCheck(userId, sessionId, sock);
                 }
                 
                 // Salvar sessão no banco de dados APENAS NA PRIMEIRA CONEXÃO
@@ -2060,7 +2278,13 @@ io.on('connection', (socket) => {
                             // Verificar se está conectado
                             if (sock.user && sock.user.id) {
                                 console.log('✅ WhatsApp conectado, carregando grupos...');
-                                const groups = await sock.groupFetchAllParticipating();
+                                const groups = await safeSocketOperation(
+                                    sock,
+                                    async (sock) => await sock.groupFetchAllParticipating(),
+                                    'Buscar Grupos',
+                                    3,
+                                    2000
+                                );
                                 const groupsList = Object.values(groups)
                                     .map(group => ({
                                         id: group.id,
@@ -2208,7 +2432,13 @@ io.on('connection', (socket) => {
                             // Verificar se está conectado
                             if (sock.user && sock.user.id) {
                                 console.log('✅ WhatsApp conectado, carregando grupos...');
-                                const groups = await sock.groupFetchAllParticipating();
+                                const groups = await safeSocketOperation(
+                                    sock,
+                                    async (sock) => await sock.groupFetchAllParticipating(),
+                                    'Buscar Grupos',
+                                    3,
+                                    2000
+                                );
                                 const groupsList = Object.values(groups)
                                     .map(group => ({
                                         id: group.id,
@@ -2389,80 +2619,19 @@ io.on('connection', (socket) => {
                     console.log('⚠️ Conexão instável detectada, mas tentando buscar grupos mesmo assim...');
                 }
                 
-                let groups;
-                try {
-                    // PRIMEIRA TENTATIVA: groupFetchAllParticipating (método normal)
-                    groups = await sock.groupFetchAllParticipating();
-                    console.log('✅ Grupos obtidos via groupFetchAllParticipating:', Object.keys(groups).length);
-                } catch (fetchError) {
-                    console.error('❌ Erro ao buscar grupos (tentativa 1):', fetchError.message);
-                    
-                    // ✅ VERIFICAR SE É UM ERRO RECUPERÁVEL
-                    if (fetchError.message.includes('Connection Closed') || 
-                        fetchError.message.includes('Timed Out') ||
-                        fetchError.message.includes('Connection lost')) {
-                        console.log('🔄 Erro de conexão detectado, aguardando mais tempo...');
-                        await new Promise(resolve => setTimeout(resolve, 5000));
-                    }
-                    
-                    // SEGUNDA TENTATIVA: Aguardar e tentar novamente
-                    try {
-                        console.log('🔄 Segunda tentativa com 5s de espera...');
-                        await new Promise(resolve => setTimeout(resolve, 5000));
-                        groups = await sock.groupFetchAllParticipating();
-                        console.log('✅ Grupos obtidos na segunda tentativa:', Object.keys(groups).length);
-                    } catch (retryError) {
-                        console.error('❌ Erro na segunda tentativa:', retryError.message);
-                        
-                        // ✅ TENTAR UMA TERCEIRA TENTATIVA COM MAIS TEMPO
-                        try {
-                            console.log('🔄 Terceira tentativa com 10s de espera...');
-                            await new Promise(resolve => setTimeout(resolve, 10000));
-                            groups = await sock.groupFetchAllParticipating();
-                            console.log('✅ Grupos obtidos na terceira tentativa:', Object.keys(groups).length);
-                        } catch (thirdError) {
-                            console.error('❌ Erro na terceira tentativa:', thirdError.message);
-                            
-                            // ✅ TENTAR UMA QUARTA TENTATIVA (ÚLTIMA CHANCE)
-                            try {
-                                console.log('🔄 Quarta tentativa (última chance) com 15s de espera...');
-                                await new Promise(resolve => setTimeout(resolve, 15000));
-                                groups = await sock.groupFetchAllParticipating();
-                                console.log('✅ Grupos obtidos na quarta tentativa:', Object.keys(groups).length);
-                            } catch (fourthError) {
-                                console.error('❌ Erro na quarta tentativa:', fourthError.message);
-                                
-                                // ✅ APENAS AGORA MARCAR COMO CORROMPIDA SE FALHAR 4 VEZES
-                                console.log('🚨 SESSÃO REALMENTE CORROMPIDA APÓS 4 TENTATIVAS! Limpando sessão...');
-                                
-                                // Limpar sessão corrompida da memória
-                                if (userSessions.has(userId) && userSessions.get(userId)[sessionId]) {
-                                    delete userSessions.get(userId)[sessionId];
-                                    console.log('🗑️ Sessão corrompida removida da memória');
-                                }
-                                
-                                // Marcar sessão como inativa no banco
-                                try {
-                                    await db.execute(
-                                        'UPDATE whatsapp_sessions SET is_active = 0 WHERE user_id = ? AND session_id = ?',
-                                        [userId, sessionId]
-                                    );
-                                    console.log('🗑️ Sessão marcada como inativa no banco');
-                                } catch (dbError) {
-                                    console.error('❌ Erro ao marcar sessão como inativa:', dbError);
-                                }
-                                
-                                // Emitir erro específico para sessão corrompida
-                                socket.emit('groups-loaded', { groups: [] });
-                                socket.emit('connection-status', {
-                                    connected: false,
-                                    message: 'Sessão corrompida detectada. Clique em Conectar para criar nova sessão.'
-                                });
-                                return;
-                            }
-                        }
-                    }
-                }
+                // 🔄 USAR SISTEMA DE RETRY INTELIGENTE PARA BUSCAR GRUPOS
+                const groups = await safeSocketOperation(
+                    sock,
+                    async (sock) => {
+                        console.log('🔍 Buscando grupos via groupFetchAllParticipating...');
+                const groups = await sock.groupFetchAllParticipating();
+                        console.log('✅ Grupos obtidos:', Object.keys(groups).length);
+                        return groups;
+                    },
+                    'Buscar Grupos',
+                    4, // 4 tentativas
+                    3000 // 3 segundos base delay
+                );
                 
                 if (!groups || Object.keys(groups).length === 0) {
                     console.log('⚠️ Nenhum grupo retornado, mas sem erro');
@@ -3158,10 +3327,19 @@ io.on('connection', (socket) => {
                     console.log(`⌨️ Iniciando simulação de digitação para: ${group.name || group}`);
                     await humanLikeAI.simulateTyping(sock, group.id, processedMessage, userId);
                     
-                    // Enviar mensagem para o grupo via WhatsApp
-                    await sock.sendMessage(group.id, { 
-                        text: processedMessage 
-                    });
+                    // Enviar mensagem para o grupo via WhatsApp com retry automático
+                    await safeSocketOperation(
+                        sock,
+                        async (sock) => {
+                            console.log(`📤 Enviando mensagem para: ${group.name || group.id}`);
+                            return await sock.sendMessage(group.id, { 
+                                text: processedMessage 
+                            });
+                        },
+                        `Enviar Mensagem para ${group.name || group.id}`,
+                        3,
+                        2000
+                    );
                     
                     // 🛡️ REGISTRAR ATIVIDADE PARA PROTEÇÃO
                     antiBanProtection.recordUserActivity(userId, 'message_sent', { groupId: group.id });
