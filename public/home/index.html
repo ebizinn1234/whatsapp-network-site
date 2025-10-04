@@ -4139,47 +4139,162 @@
         window.groupsLoaded = false;
         window.isConnecting = false;
         
-        // Detectar quando o PC suspende/retoma
+        // 🖥️ DETECÇÃO INTELIGENTE DE SUSPENSÃO DO PC
         let lastActivity = Date.now();
         let isPcSuspended = false;
+        let isTabVisible = true;
+        let lastTabVisibilityChange = Date.now();
         
-        // Monitorar atividade do usuário
+        // 📱 DETECTAR MUDANÇA DE VISIBILIDADE DA ABA (Page Visibility API)
+        document.addEventListener('visibilitychange', () => {
+            const now = Date.now();
+            
+            if (document.hidden) {
+                // Aba ficou oculta
+                isTabVisible = false;
+                lastTabVisibilityChange = now;
+                console.log('👁️ Aba ocultada - pausando detecção de suspensão');
+            } else {
+                // Aba ficou visível novamente
+                isTabVisible = true;
+                const timeHidden = now - lastTabVisibilityChange;
+                console.log(`👁️ Aba visível novamente após ${Math.round(timeHidden/1000)}s`);
+                
+                // Se estava "suspenso" mas era só a aba oculta, não fazer nada
+                if (isPcSuspended && timeHidden < 300000) { // Menos de 5 minutos
+                    console.log('🔄 Retomada de aba - verificando status do envio...');
+                    isPcSuspended = false;
+                    checkSendingStatus();
+                }
+            }
+        });
+        
+        // 🖱️ MONITORAR ATIVIDADE DO USUÁRIO (apenas quando aba está visível)
         document.addEventListener('mousemove', () => {
-            lastActivity = Date.now();
-            if (isPcSuspended) {
-                console.log('🔄 PC retomado - verificando status do envio...');
-                isPcSuspended = false;
-                checkSendingStatus();
+            if (isTabVisible) {
+                lastActivity = Date.now();
+                if (isPcSuspended) {
+                    console.log('🔄 PC retomado - verificando status do envio...');
+                    isPcSuspended = false;
+                    checkSendingStatus();
+                }
             }
         });
         
         document.addEventListener('keypress', () => {
-            lastActivity = Date.now();
-            if (isPcSuspended) {
-                console.log('🔄 PC retomado - verificando status do envio...');
-                isPcSuspended = false;
-                checkSendingStatus();
+            if (isTabVisible) {
+                lastActivity = Date.now();
+                if (isPcSuspended) {
+                    console.log('🔄 PC retomado - verificando status do envio...');
+                    isPcSuspended = false;
+                    checkSendingStatus();
+                }
             }
         });
         
-        // Verificar se o PC foi suspenso
+        // 🖱️ MONITORAR CLICKS (atividade mais confiável)
+        document.addEventListener('click', () => {
+            if (isTabVisible) {
+                lastActivity = Date.now();
+                if (isPcSuspended) {
+                    console.log('🔄 PC retomado - verificando status do envio...');
+                    isPcSuspended = false;
+                    checkSendingStatus();
+                }
+            }
+        });
+        
+        // 🖥️ DETECTAR SUSPENSÃO REAL DO SISTEMA
         setInterval(() => {
             const now = Date.now();
             const timeSinceLastActivity = now - lastActivity;
             
-            // Se passou mais de 2 minutos sem atividade, considerar suspenso
-            if (timeSinceLastActivity > 120000 && !isPcSuspended) {
-                console.log('💤 PC suspenso detectado');
+            // Só detectar suspensão se:
+            // 1. Aba está visível (não é só mudança de aba)
+            // 2. Passou mais de 5 minutos sem atividade (tempo maior para evitar falsos positivos)
+            // 3. Não está já marcado como suspenso
+            if (isTabVisible && timeSinceLastActivity > 300000 && !isPcSuspended) {
+                console.log('💤 PC suspenso detectado (5+ minutos sem atividade)');
                 isPcSuspended = true;
             }
-        }, 30000); // Verificar a cada 30 segundos
+        }, 60000); // Verificar a cada 1 minuto (menos frequente)
+        
+        // 🖥️ DETECTAR SUSPENSÃO VIA WINDOW FOCUS/BLUR (backup)
+        let windowBlurTime = null;
+        window.addEventListener('blur', () => {
+            windowBlurTime = Date.now();
+            console.log('🪟 Janela perdeu foco');
+        });
+        
+        window.addEventListener('focus', () => {
+            if (windowBlurTime) {
+                const timeBlurred = Date.now() - windowBlurTime;
+                console.log(`🪟 Janela recuperou foco após ${Math.round(timeBlurred/1000)}s`);
+                
+                // Se estava "suspenso" mas era só perda de foco da janela, não fazer nada
+                if (isPcSuspended && timeBlurred < 300000) { // Menos de 5 minutos
+                    console.log('🔄 Retomada de janela - verificando status do envio...');
+                    isPcSuspended = false;
+                    checkSendingStatus();
+                }
+                
+                windowBlurTime = null;
+            }
+        });
+        
+        // 🖥️ DETECTAR SUSPENSÃO REAL DO SISTEMA (Page Lifecycle API)
+        if ('document' in window && 'visibilityState' in document) {
+            // Detectar quando a página fica "frozen" (suspensão real)
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    // Página voltou a ser visível
+                    const timeSinceLastCheck = Date.now() - lastActivity;
+                    console.log(`🖥️ Página visível novamente (${Math.round(timeSinceLastCheck/1000)}s desde última atividade)`);
+                    
+                    // Se passou muito tempo, pode ter sido suspensão real
+                    if (timeSinceLastCheck > 600000) { // Mais de 10 minutos
+                        console.log('🖥️ Possível suspensão real do sistema detectada');
+                        if (isPcSuspended) {
+                            console.log('🔄 Retomada após suspensão real - verificando status do envio...');
+                            isPcSuspended = false;
+                            checkSendingStatus();
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 🖥️ DETECTAR SUSPENSÃO VIA BEFOREUNLOAD (quando possível)
+        window.addEventListener('beforeunload', () => {
+            console.log('🖥️ Página sendo descarregada - possível suspensão');
+        });
+        
+        // 🖥️ DETECTAR RETOMADA VIA PAGESHOW (quando possível)
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                console.log('🖥️ Página restaurada do cache - possível retomada após suspensão');
+                if (isPcSuspended) {
+                    console.log('🔄 Retomada detectada via pageshow - verificando status do envio...');
+                    isPcSuspended = false;
+                    checkSendingStatus();
+                }
+            }
+        });
         
         // Função para verificar status do envio
         function checkSendingStatus() {
             const userData = JSON.parse(localStorage.getItem('user') || '{}');
             if (userData.id && socket.connected) {
                 console.log('🔍 Verificando status do envio após retomada...');
+                console.log('📊 Estado atual:', {
+                    isPcSuspended,
+                    isTabVisible,
+                    timeSinceLastActivity: Math.round((Date.now() - lastActivity) / 1000) + 's',
+                    socketConnected: socket.connected
+                });
                 socket.emit('check-sending-status', { userId: userData.id });
+            } else {
+                console.log('⚠️ Não foi possível verificar status - socket desconectado ou usuário não logado');
             }
         }
         
