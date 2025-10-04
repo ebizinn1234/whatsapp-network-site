@@ -2540,6 +2540,10 @@
                             <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Delay Médio</div>
                         </div>
                         <div class="risk-stat" style="text-align: center; background: white; padding: 10px; border-radius: 8px;">
+                            <div class="risk-stat-value" id="typingSpeed" style="font-size: 18px; font-weight: 700; color: #2c3e50;">-</div>
+                            <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Velocidade Digitação</div>
+                        </div>
+                        <div class="risk-stat" style="text-align: center; background: white; padding: 10px; border-radius: 8px;">
                             <div class="risk-stat-value" id="currentPersonality" style="font-size: 18px; font-weight: 700; color: #2c3e50;">-</div>
                             <div class="risk-stat-label" style="font-size: 12px; color: #6c757d; margin-top: 4px;">Personalidade</div>
                         </div>
@@ -5221,6 +5225,7 @@
             const messagesSent = document.getElementById('messagesSent');
             const groupsContacted = document.getElementById('groupsContacted');
             const avgDelay = document.getElementById('avgDelay');
+            const typingSpeed = document.getElementById('typingSpeed');
             const currentPersonality = document.getElementById('currentPersonality');
             const recommendationsList = document.getElementById('recommendationsList');
 
@@ -5248,6 +5253,10 @@
             if (messagesSent) messagesSent.textContent = data.messagesSent || 0;
             if (groupsContacted) groupsContacted.textContent = data.groupsContacted || 0;
             if (avgDelay) avgDelay.textContent = data.avgDelay || '0s';
+            if (typingSpeed) {
+                const speed = data.lastTypingSpeed || '-';
+                typingSpeed.textContent = speed === '-' ? '-' : `${speed} chars/min`;
+            }
             if (currentPersonality) currentPersonality.textContent = data.personality || '-';
 
             // Atualizar recomendações
@@ -5263,9 +5272,11 @@
             if (score === 0) {
                 recommendations.push('Sistema inicializado - Aguardando atividade');
                 recommendations.push('Pronto para envios seguros');
+                recommendations.push('⌨️ Simulação de digitação ativa');
             } else if (score <= 1) {
                 recommendations.push('✅ Nível de risco baixo - Continue assim!');
                 recommendations.push('Delays adequados para segurança');
+                recommendations.push('⌨️ Digitação humana simulada');
             } else if (score <= 2) {
                 recommendations.push('⚠️ Risco moderado - Aumente delays entre mensagens');
                 recommendations.push('Considere pausas de 2-3 minutos');

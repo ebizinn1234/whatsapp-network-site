@@ -1286,6 +1286,107 @@ class HumanLikeAI {
         return result;
     }
 
+    // ⌨️ Simular digitação humana antes de enviar mensagem
+    async simulateTyping(sock, groupId, message, userId) {
+        try {
+            const profile = this.analyzeUserProfile(userId);
+            
+            // 1. Mostrar "digitando..." no WhatsApp
+            await sock.presenceSubscribe(groupId);
+            await sock.sendPresenceUpdate('composing', groupId);
+            
+            // 2. Calcular tempo de digitação baseado na mensagem e personalidade
+            const typingTime = this.calculateTypingTime(message, profile);
+            
+            // 3. Aguardar tempo de digitação com variações humanas
+            await this.humanTypingDelay(typingTime, profile);
+            
+            // 4. Parar "digitando..." antes de enviar
+            await sock.sendPresenceUpdate('paused', groupId);
+            
+                    console.log(`⌨️ Simulação de digitação concluída: ${Math.round(typingTime/1000)}s para ${message.length} caracteres`);
+                    
+                    // 📊 Enviar update do dashboard incluindo tempo de digitação
+                    const dashboardData = {
+                        score: antiBanProtection.userStats[userId]?.riskScore || 0,
+                        messagesSent: antiBanProtection.userStats[userId]?.messagesSent || 0,
+                        groupsContacted: antiBanProtection.userStats[userId]?.groupsContacted || 0,
+                        avgDelay: antiBanProtection.userStats[userId]?.avgDelay || 0,
+                        personality: profile.personality,
+                        riskLevel: antiBanProtection.userStats[userId]?.riskLevel || 'low',
+                        sessionDuration: Date.now() - (antiBanProtection.userStats[userId]?.sessionStart || Date.now()),
+                        consecutiveMessages: antiBanProtection.userStats[userId]?.consecutiveMessages || 0,
+                        typingTime: Math.round(typingTime/1000),
+                        lastTypingSpeed: Math.round((message.length / (typingTime/1000)) * 60) // chars/min
+                    };
+                    
+                    io.to(`user_${userId}`).emit('risk-update', dashboardData);
+            
+        } catch (error) {
+            console.error('❌ Erro na simulação de digitação:', error);
+            // Continuar mesmo com erro para não quebrar o envio
+        }
+    }
+    
+    // ⏱️ Calcular tempo de digitação baseado na mensagem e personalidade
+    calculateTypingTime(message, profile) {
+        const baseTimePerChar = 50; // 50ms por caractere (digitação média)
+        
+        // Ajustar velocidade baseada na personalidade
+        let speedMultiplier = 1;
+        switch (profile.personality) {
+            case 'cautious':
+                speedMultiplier = 1.5; // Digita mais devagar
+                break;
+            case 'balanced':
+                speedMultiplier = 1.2; // Digita moderadamente
+                break;
+            case 'active':
+                speedMultiplier = 0.8; // Digita mais rápido
+                break;
+            case 'professional':
+                speedMultiplier = 1.3; // Digita cuidadosamente
+                break;
+            case 'casual':
+                speedMultiplier = 0.9; // Digita naturalmente
+                break;
+        }
+        
+        // Tempo base baseado no tamanho da mensagem
+        const baseTime = message.length * baseTimePerChar * speedMultiplier;
+        
+        // Adicionar variação aleatória (±20%)
+        const variation = (Math.random() - 0.5) * 0.4; // -20% a +20%
+        const finalTime = baseTime * (1 + variation);
+        
+        // Tempo mínimo de 1 segundo e máximo de 30 segundos
+        return Math.max(1000, Math.min(30000, finalTime));
+    }
+    
+    // 🎭 Delay de digitação com variações humanas
+    async humanTypingDelay(totalTime, profile) {
+        const chunks = Math.floor(totalTime / 1000); // Dividir em segundos
+        
+        for (let i = 0; i < chunks; i++) {
+            // Variação de ±200ms por segundo para simular pausas naturais
+            const variation = (Math.random() - 0.5) * 400;
+            const chunkTime = 1000 + variation;
+            
+            await new Promise(resolve => setTimeout(resolve, chunkTime));
+            
+            // Pausas ocasionais para simular leitura/reflexão
+            if (Math.random() < 0.1 && profile.personality === 'cautious') {
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Pausa de 2s
+            }
+        }
+        
+        // Tempo restante
+        const remainingTime = totalTime - (chunks * 1000);
+        if (remainingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+    }
+
     // 🎲 Decidir estratégia de envio
     getSendingStrategy(userId, totalGroups) {
         const profile = this.analyzeUserProfile(userId);
@@ -3027,6 +3128,10 @@ io.on('connection', (socket) => {
                     processedMessage = humanLikeAI.humanizeMessage(processedMessage, userProfile);
                     
                     console.log(`🔄 Mensagem processada com IA:`, processedMessage.substring(0, 100) + '...');
+                    
+                    // ⌨️ SIMULAR DIGITAÇÃO HUMANA ANTES DE ENVIAR
+                    console.log(`⌨️ Iniciando simulação de digitação para: ${group.name || group}`);
+                    await humanLikeAI.simulateTyping(sock, group.id, processedMessage, userId);
                     
                     // Enviar mensagem para o grupo via WhatsApp
                     await sock.sendMessage(group.id, { 
