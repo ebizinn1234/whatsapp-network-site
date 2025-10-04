@@ -749,7 +749,7 @@ class AntiBanProtection {
         };
 
         // Enviar para o frontend
-        io.to(userId).emit('risk-update', dashboardData);
+        io.to(`user_${userId}`).emit('risk-update', dashboardData);
         console.log(`📊 Dashboard atualizado para usuário ${userId}:`, dashboardData);
     }
 
@@ -1024,17 +1024,17 @@ class HumanLikeAI {
         const now = new Date();
         const currentHour = now.getHours();
         
-        // Base delay por personalidade (AUMENTADOS para maior segurança)
-        let baseDelay = 120000; // 2 minutos base (muito mais seguro)
+        // Base delay por personalidade (OTIMIZADOS para praticidade)
+        let baseDelay = 60000; // 1 minuto base
         switch (profile.personality) {
             case 'cautious':
-                baseDelay = 300000; // 5 minutos - máximo cuidado
+                baseDelay = 120000; // 2 minutos - cuidado moderado
                 break;
             case 'balanced':
-                baseDelay = 180000; // 3 minutos - equilibrado
+                baseDelay = 90000; // 1.5 minutos - equilibrado
                 break;
             case 'active':
-                baseDelay = 120000; // 2 minutos - ativo mas seguro
+                baseDelay = 60000; // 1 minuto - ativo
                 break;
             case 'professional':
                 baseDelay = 240000; // 4 minutos - profissional
