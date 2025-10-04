@@ -745,7 +745,9 @@ class AntiBanProtection {
             personality: userProfile.personality || 'balanced',
             riskLevel: stats.riskLevel || 'low',
             sessionDuration: Math.round((Date.now() - stats.sessionStart) / 60000), // minutos
-            consecutiveMessages: stats.consecutiveMessages || 0
+            consecutiveMessages: stats.consecutiveMessages || 0,
+            lastTypingSpeed: stats.lastTypingSpeed || null,
+            typingTime: stats.typingTime || null
         };
 
         // Enviar para o frontend
@@ -1306,6 +1308,15 @@ class HumanLikeAI {
             
                     console.log(`⌨️ Simulação de digitação concluída: ${Math.round(typingTime/1000)}s para ${message.length} caracteres`);
                     
+                    // 💾 Salvar dados de digitação nas estatísticas do usuário
+                    const typingSpeed = Math.round((message.length / (typingTime/1000)) * 60); // chars/min
+                    const userStats = antiBanProtection.userStats.get(userId);
+                    if (userStats) {
+                        userStats.lastTypingSpeed = typingSpeed;
+                        userStats.typingTime = Math.round(typingTime/1000);
+                        console.log(`📊 Dados de digitação salvos: ${typingSpeed} chars/min, ${Math.round(typingTime/1000)}s`);
+                    }
+                    
                     // 📊 Enviar update do dashboard incluindo tempo de digitação
                     const dashboardData = {
                         score: antiBanProtection.userStats[userId]?.riskScore || 0,
@@ -1317,7 +1328,7 @@ class HumanLikeAI {
                         sessionDuration: Date.now() - (antiBanProtection.userStats[userId]?.sessionStart || Date.now()),
                         consecutiveMessages: antiBanProtection.userStats[userId]?.consecutiveMessages || 0,
                         typingTime: Math.round(typingTime/1000),
-                        lastTypingSpeed: Math.round((message.length / (typingTime/1000)) * 60) // chars/min
+                        lastTypingSpeed: typingSpeed
                     };
                     
                     io.to(`user_${userId}`).emit('risk-update', dashboardData);
