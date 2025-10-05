@@ -2705,21 +2705,39 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
         // 🍔 VERIFICAÇÃO IMEDIATA PARA MOBILE - EVITAR FLASH
+        console.log('🚀 INICIANDO VERIFICAÇÃO MOBILE - VERSÃO 2.1 - TIMESTAMP:', new Date().toISOString());
         const isMobile = window.innerWidth <= 768;
+        console.log('📱 Largura da tela:', window.innerWidth, 'É mobile:', isMobile);
+        console.log('🕐 Cache-busting timestamp:', Date.now());
+        
         if (isMobile) {
-            console.log('🍔 Mobile detectado - configurando interface mobile');
+            console.log('🍔 MOBILE DETECTADO - CONFIGURANDO INTERFACE MOBILE');
             
             // Esconder sidebar imediatamente em mobile
             const sidebar = document.getElementById('sidebar');
             if (sidebar) {
                 sidebar.style.display = 'none';
-                console.log('📱 Sidebar escondida em mobile');
+                sidebar.style.visibility = 'hidden';
+                sidebar.style.position = 'absolute';
+                sidebar.style.left = '-9999px';
+                console.log('📱 Sidebar escondida em mobile - display: none, visibility: hidden, position: absolute, left: -9999px');
+            } else {
+                console.error('❌ Sidebar não encontrada!');
             }
+            
+            // Esconder qualquer elemento que contenha dados do usuário
+            const userElements = document.querySelectorAll('[class*="user"], [id*="user"], [class*="User"], [id*="User"]');
+            userElements.forEach(el => {
+                if (el.textContent.includes('Usuário') || el.textContent.includes('+55')) {
+                    el.style.display = 'none';
+                    console.log('🚫 Elemento com dados do usuário escondido:', el.textContent.substring(0, 30));
+                }
+            });
             
             // Criar menu hambúrguer
             const headerActions = document.querySelector('.header-actions');
             if (headerActions) {
-                console.log('🍔 Criando menu hambúrguer imediatamente');
+                console.log('🍔 CRIANDO MENU HAMBÚRGUER IMEDIATAMENTE');
                 headerActions.innerHTML = `
                     <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
                         background: none;
@@ -2734,7 +2752,12 @@
                         <i class="fas fa-bars"></i>
                     </button>
                 `;
+                console.log('✅ Menu hambúrguer criado com sucesso');
+            } else {
+                console.error('❌ header-actions não encontrado!');
             }
+        } else {
+            console.log('🖥️ Desktop detectado - não configurando mobile');
         }
         
         // Socket.io connection
