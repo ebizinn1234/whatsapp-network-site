@@ -2052,6 +2052,79 @@
             .mobile-overlay.active {
                 display: block;
             }
+            
+            /* Melhorar sidebar mobile */
+            .sidebar {
+                width: 280px !important;
+                max-width: 85vw !important;
+            }
+            
+            .sidebar-nav {
+                padding: 20px 0 !important;
+                height: calc(100vh - 120px) !important;
+                overflow-y: auto !important;
+            }
+            
+            .nav-list {
+                padding: 0 10px !important;
+            }
+            
+            .nav-item {
+                margin-bottom: 8px !important;
+            }
+            
+            .nav-link {
+                padding: 15px 20px !important;
+                font-size: 16px !important;
+                border-radius: 8px !important;
+                margin: 0 10px !important;
+            }
+            
+            .sidebar-footer {
+                position: absolute !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                padding: 15px 20px !important;
+                background-color: #f8f9fa !important;
+                border-top: 1px solid #e9ecef !important;
+                z-index: 10 !important;
+            }
+            
+            .user-info {
+                display: flex !important;
+                align-items: center !important;
+                gap: 12px !important;
+            }
+            
+            .user-avatar {
+                width: 40px !important;
+                height: 40px !important;
+                background: #25d366 !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                color: white !important;
+            }
+            
+            .user-details {
+                flex: 1 !important;
+            }
+            
+            .user-name {
+                display: block !important;
+                font-weight: 600 !important;
+                color: #2c3e50 !important;
+                font-size: 14px !important;
+            }
+            
+            .user-status {
+                display: block !important;
+                font-size: 12px !important;
+                color: #6b7280 !important;
+                margin-top: 2px !important;
+            }
         }
 
         /* Dashboard de Score de Risco */
@@ -5778,10 +5851,33 @@
                 sidebar.style.height = '100vh';
                 sidebar.style.zIndex = '1000';
                 sidebar.style.backgroundColor = '#ffffff';
+                sidebar.style.overflowY = 'auto';
+                sidebar.style.boxShadow = '2px 0 10px rgba(0, 0, 0, 0.1)';
+                
+                // Melhorar layout da sidebar para mobile
+                const sidebarNav = sidebar.querySelector('.sidebar-nav');
+                const sidebarFooter = sidebar.querySelector('.sidebar-footer');
+                
+                if (sidebarNav) {
+                    sidebarNav.style.padding = '20px 0';
+                    sidebarNav.style.height = 'calc(100vh - 120px)';
+                    sidebarNav.style.overflowY = 'auto';
+                }
+                
+                if (sidebarFooter) {
+                    sidebarFooter.style.position = 'absolute';
+                    sidebarFooter.style.bottom = '0';
+                    sidebarFooter.style.left = '0';
+                    sidebarFooter.style.right = '0';
+                    sidebarFooter.style.padding = '15px 20px';
+                    sidebarFooter.style.backgroundColor = '#f8f9fa';
+                    sidebarFooter.style.borderTop = '1px solid #e9ecef';
+                }
+                
                 sidebar.classList.add('open');
                 mobileOverlay.classList.add('active');
                 mobileOverlay.style.display = 'block';
-                console.log('✅ Sidebar mobile aberta');
+                console.log('✅ Sidebar mobile aberta com layout otimizado');
             }
         }
         
