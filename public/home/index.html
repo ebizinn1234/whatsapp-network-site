@@ -1325,10 +1325,39 @@
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
                 z-index: 10000;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                height: calc(100vh - 60px);
+                width: 280px;
+                background: white;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             }
 
             .sidebar.open {
                 transform: translateX(0);
+            }
+            
+            /* Botão hambúrguer mobile */
+            .mobile-menu-btn {
+                display: block !important;
+                background: none !important;
+                border: none !important;
+                color: #24d366 !important;
+                font-size: 24px !important;
+                cursor: pointer !important;
+                padding: 8px !important;
+                border-radius: 8px !important;
+                transition: all 0.3s ease !important;
+            }
+            
+            .mobile-menu-btn:hover {
+                background: rgba(36, 211, 102, 0.1) !important;
+                transform: scale(1.05);
+            }
+            
+            .mobile-menu-btn:active {
+                transform: scale(0.95);
             }
 
             .main-content {
@@ -2829,6 +2858,40 @@
         
         // Executar restauração após um pequeno delay para garantir que o socket esteja conectado
         setTimeout(restoreSendingState, 2000);
+        
+        // 🍔 VERIFICAR E CRIAR MENU MOBILE SE NECESSÁRIO
+        function ensureMobileMenu() {
+            const isMobile = window.innerWidth <= 768;
+            const headerActions = document.querySelector('.header-actions');
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            
+            console.log('🍔 Verificando menu mobile:', {
+                isMobile,
+                headerActions: !!headerActions,
+                mobileBtn: !!mobileBtn
+            });
+            
+            if (isMobile && headerActions && !mobileBtn) {
+                console.log('🍔 Criando botão hambúrguer mobile...');
+                headerActions.innerHTML = `
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
+                        background: none;
+                        border: none;
+                        color: #24d366;
+                        font-size: 24px;
+                        cursor: pointer;
+                        padding: 8px;
+                        border-radius: 8px;
+                        transition: all 0.3s ease;
+                    ">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                `;
+            }
+        }
+        
+        // Verificar menu mobile na inicialização
+        setTimeout(ensureMobileMenu, 1000);
         const debugLog = PRODUCTION_MODE ? () => {} : console.log;
         
         // Função para configurar os botões
@@ -5415,13 +5478,78 @@
 
         // Função para toggle do menu mobile
         function toggleSidebar() {
-            console.log('toggleSidebar chamada');
+            console.log('🍔 toggleSidebar chamada');
             const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            console.log('🔍 Elementos encontrados:', {
+                sidebar: !!sidebar,
+                menuBtn: !!menuBtn,
+                isMobile: window.innerWidth <= 768
+            });
+            
             if (sidebar) {
+                const isOpen = sidebar.classList.contains('open');
                 sidebar.classList.toggle('open');
-                console.log('Sidebar toggle executado, classes:', sidebar.className);
+                
+                console.log('📱 Menu mobile:', {
+                    estavaAberto: isOpen,
+                    agoraAberto: sidebar.classList.contains('open'),
+                    classes: sidebar.className,
+                    transform: getComputedStyle(sidebar).transform
+                });
+                
+                // Adicionar overlay para mobile
+                if (sidebar.classList.contains('open')) {
+                    createMobileOverlay();
             } else {
-                console.error('Sidebar não encontrada');
+                    removeMobileOverlay();
+                }
+            } else {
+                console.error('❌ Sidebar não encontrada');
+            }
+        }
+        
+        // Criar overlay para mobile
+        function createMobileOverlay() {
+            if (document.getElementById('mobile-overlay')) return;
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'mobile-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 9999;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            
+            overlay.onclick = () => {
+                toggleSidebar();
+            };
+            
+            document.body.appendChild(overlay);
+            
+            // Fade in
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+            }, 10);
+        }
+        
+        // Remover overlay para mobile
+        function removeMobileOverlay() {
+            const overlay = document.getElementById('mobile-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    if (overlay.parentNode) {
+                        overlay.remove();
+                    }
+                }, 300);
             }
         }
 
@@ -5679,6 +5807,8 @@
         
         // 📱 Listener para redimensionamento da tela (mobile/desktop)
         window.addEventListener('resize', function() {
+            console.log('📱 Resize detectado, largura:', window.innerWidth);
+            
             // Verificar se há dados do WhatsApp para atualizar o header
             if (window.whatsappConnected && window.whatsappInfo) {
                 const headerActions = document.querySelector('.header-actions');
@@ -5722,6 +5852,9 @@
                         `;
                     }
                 }
+            } else {
+                // Se não está conectado, verificar se precisa criar menu mobile
+                ensureMobileMenu();
             }
         });
         
