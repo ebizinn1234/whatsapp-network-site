@@ -2053,11 +2053,11 @@
                 display: block;
             }
             
-            /* Sidebar totalmente responsiva */
+            /* Sidebar compacta para mobile */
             .sidebar {
-                width: min(320px, 90vw) !important;
-                max-width: 90vw !important;
-                min-width: 280px !important;
+                width: min(260px, 80vw) !important;
+                max-width: 80vw !important;
+                min-width: 240px !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow: hidden !important;
@@ -2066,7 +2066,7 @@
             }
             
             .sidebar-nav {
-                padding: 60px 0 10px 0 !important;
+                padding: 50px 0 8px 0 !important;
                 flex: 1 !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
@@ -2074,33 +2074,33 @@
             }
             
             .nav-list {
-                padding: 0 5px !important;
+                padding: 0 3px !important;
                 margin: 0 !important;
             }
             
             .nav-item {
-                margin-bottom: 5px !important;
+                margin-bottom: 3px !important;
             }
             
             .nav-link {
-                padding: 12px 15px !important;
-                font-size: clamp(14px, 4vw, 16px) !important;
-                border-radius: 8px !important;
-                margin: 0 5px !important;
-                min-height: 44px !important;
+                padding: 10px 12px !important;
+                font-size: clamp(13px, 3.5vw, 15px) !important;
+                border-radius: 6px !important;
+                margin: 0 3px !important;
+                min-height: 38px !important;
                 display: flex !important;
                 align-items: center !important;
-                gap: 10px !important;
+                gap: 8px !important;
             }
             
             .nav-link svg {
-                width: clamp(18px, 5vw, 20px) !important;
-                height: clamp(18px, 5vw, 20px) !important;
+                width: clamp(16px, 4vw, 18px) !important;
+                height: clamp(16px, 4vw, 18px) !important;
                 flex-shrink: 0 !important;
             }
             
             .nav-link span {
-                font-size: clamp(14px, 4vw, 16px) !important;
+                font-size: clamp(13px, 3.5vw, 15px) !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
@@ -2109,23 +2109,23 @@
             .sidebar-footer {
                 position: relative !important;
                 flex-shrink: 0 !important;
-                padding: 12px 15px !important;
+                padding: 10px 12px !important;
                 background-color: #f8f9fa !important;
                 border-top: 1px solid #e9ecef !important;
                 z-index: 10 !important;
-                min-height: 80px !important;
+                min-height: 65px !important;
                 width: 100% !important;
             }
             
             .user-info {
                 display: flex !important;
                 align-items: center !important;
-                gap: 10px !important;
+                gap: 8px !important;
             }
             
             .user-avatar {
-                width: clamp(35px, 10vw, 40px) !important;
-                height: clamp(35px, 10vw, 40px) !important;
+                width: clamp(30px, 8vw, 35px) !important;
+                height: clamp(30px, 8vw, 35px) !important;
                 background: #25d366 !important;
                 border-radius: 50% !important;
                 display: flex !important;
@@ -2136,8 +2136,8 @@
             }
             
             .user-avatar svg {
-                width: clamp(18px, 5vw, 20px) !important;
-                height: clamp(18px, 5vw, 20px) !important;
+                width: clamp(16px, 4vw, 18px) !important;
+                height: clamp(16px, 4vw, 18px) !important;
             }
             
             .user-details {
@@ -2149,7 +2149,7 @@
                 display: block !important;
                 font-weight: 600 !important;
                 color: #2c3e50 !important;
-                font-size: clamp(13px, 3.5vw, 14px) !important;
+                font-size: clamp(12px, 3vw, 13px) !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
@@ -2157,9 +2157,9 @@
             
             .user-status {
                 display: block !important;
-                font-size: clamp(11px, 3vw, 12px) !important;
+                font-size: clamp(10px, 2.5vw, 11px) !important;
                 color: #6b7280 !important;
-                margin-top: 2px !important;
+                margin-top: 1px !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
@@ -2169,43 +2169,43 @@
         /* Telas muito pequenas (menos de 320px) */
         @media (max-width: 320px) {
             .sidebar {
-                width: 95vw !important;
-                min-width: 95vw !important;
+                width: 90vw !important;
+                min-width: 90vw !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
             }
             
             .sidebar-nav {
-                padding: 50px 0 8px 0 !important;
+                padding: 45px 0 6px 0 !important;
             }
             
             .nav-link {
-                padding: 10px 12px !important;
-                font-size: 14px !important;
-                min-height: 40px !important;
+                padding: 8px 10px !important;
+                font-size: 13px !important;
+                min-height: 35px !important;
             }
             
             .nav-link svg {
-                width: 16px !important;
-                height: 16px !important;
+                width: 15px !important;
+                height: 15px !important;
             }
             
             .sidebar-footer {
-                padding: 10px 12px !important;
-                min-height: 70px !important;
+                padding: 8px 10px !important;
+                min-height: 60px !important;
             }
             
             .user-avatar {
-                width: 32px !important;
-                height: 32px !important;
+                width: 28px !important;
+                height: 28px !important;
             }
             
             .user-name {
-                font-size: 13px !important;
+                font-size: 12px !important;
             }
             
             .user-status {
-                font-size: 11px !important;
+                font-size: 10px !important;
             }
         }
 
@@ -5929,7 +5929,7 @@
                 sidebar.style.position = 'fixed';
                 sidebar.style.left = '0';
                 sidebar.style.top = '0';
-                sidebar.style.width = 'min(320px, 90vw)';
+                sidebar.style.width = 'min(260px, 80vw)';
                 sidebar.style.height = '100vh';
                 sidebar.style.maxHeight = '100vh';
                 sidebar.style.zIndex = '1000';
@@ -5939,12 +5939,12 @@
                 sidebar.style.flexDirection = 'column';
                 sidebar.style.boxShadow = '2px 0 10px rgba(0, 0, 0, 0.1)';
                 
-                // Melhorar layout da sidebar para mobile
+                // Layout compacto da sidebar para mobile
                 const sidebarNav = sidebar.querySelector('.sidebar-nav');
                 const sidebarFooter = sidebar.querySelector('.sidebar-footer');
                 
                 if (sidebarNav) {
-                    sidebarNav.style.padding = '60px 0 10px 0';
+                    sidebarNav.style.padding = '50px 0 8px 0';
                     sidebarNav.style.flex = '1';
                     sidebarNav.style.overflowY = 'auto';
                     sidebarNav.style.minHeight = '0';
@@ -5953,10 +5953,11 @@
                 if (sidebarFooter) {
                     sidebarFooter.style.position = 'relative';
                     sidebarFooter.style.flexShrink = '0';
-                    sidebarFooter.style.padding = '12px 15px';
+                    sidebarFooter.style.padding = '10px 12px';
                     sidebarFooter.style.backgroundColor = '#f8f9fa';
                     sidebarFooter.style.borderTop = '1px solid #e9ecef';
                     sidebarFooter.style.width = '100%';
+                    sidebarFooter.style.minHeight = '65px';
                 }
                 
                 sidebar.classList.add('open');
