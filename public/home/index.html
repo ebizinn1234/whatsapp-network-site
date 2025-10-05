@@ -1332,10 +1332,12 @@
                 width: 280px;
                 background: white;
                 box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+                display: none; /* Esconder por padrão em mobile */
             }
 
             .sidebar.open {
                 transform: translateX(0);
+                display: flex; /* Mostrar quando aberto */
             }
             
             /* Botão hambúrguer mobile */
@@ -2705,9 +2707,19 @@
         // 🍔 VERIFICAÇÃO IMEDIATA PARA MOBILE - EVITAR FLASH
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
+            console.log('🍔 Mobile detectado - configurando interface mobile');
+            
+            // Esconder sidebar imediatamente em mobile
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'none';
+                console.log('📱 Sidebar escondida em mobile');
+            }
+            
+            // Criar menu hambúrguer
             const headerActions = document.querySelector('.header-actions');
             if (headerActions) {
-                console.log('🍔 Mobile detectado - criando menu hambúrguer imediatamente');
+                console.log('🍔 Criando menu hambúrguer imediatamente');
                 headerActions.innerHTML = `
                     <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
                         background: none;
@@ -5532,38 +5544,53 @@
             console.log('🍔 toggleSidebar chamada');
             const sidebar = document.getElementById('sidebar');
             const menuBtn = document.querySelector('.mobile-menu-btn');
+            const isMobile = window.innerWidth <= 768;
             
             console.log('🔍 Elementos encontrados:', {
                 sidebar: !!sidebar,
                 menuBtn: !!menuBtn,
-                isMobile: window.innerWidth <= 768
+                isMobile: isMobile,
+                sidebarClasses: sidebar?.className
             });
             
-            if (sidebar) {
-                const isOpen = sidebar.classList.contains('open');
-                sidebar.classList.toggle('open');
-                
-                console.log('📱 Menu mobile:', {
-                    estavaAberto: isOpen,
-                    agoraAberto: sidebar.classList.contains('open'),
-                    classes: sidebar.className,
-                    transform: getComputedStyle(sidebar).transform
-                });
-                
-                // Adicionar overlay para mobile
-                if (sidebar.classList.contains('open')) {
-                    createMobileOverlay();
-            } else {
-                    removeMobileOverlay();
-                }
-            } else {
+            if (!sidebar) {
                 console.error('❌ Sidebar não encontrada');
+                return;
             }
+            
+            if (!isMobile) {
+                console.log('🖥️ Desktop detectado - não fazendo toggle');
+                return;
+            }
+            
+            const isOpen = sidebar.classList.contains('open');
+            console.log('📱 Estado atual:', { isOpen, classes: sidebar.className });
+            
+            if (isOpen) {
+                // Fechar menu
+                sidebar.classList.remove('open');
+                removeMobileOverlay();
+                console.log('📱 Menu fechado');
+            } else {
+                // Abrir menu
+                sidebar.classList.add('open');
+                createMobileOverlay();
+                console.log('📱 Menu aberto');
+            }
+            
+            console.log('📱 Estado final:', {
+                classes: sidebar.className,
+                isOpen: sidebar.classList.contains('open'),
+                display: getComputedStyle(sidebar).display,
+                transform: getComputedStyle(sidebar).transform
+            });
         }
         
         // Criar overlay para mobile
         function createMobileOverlay() {
             if (document.getElementById('mobile-overlay')) return;
+            
+            console.log('🌑 Criando overlay mobile');
             
             const overlay = document.createElement('div');
             overlay.id = 'mobile-overlay';
@@ -5574,12 +5601,13 @@
                 width: 100%;
                 height: 100%;
                 background: rgba(0, 0, 0, 0.5);
-                z-index: 9999;
+                z-index: 9998;
                 opacity: 0;
                 transition: opacity 0.3s ease;
             `;
             
             overlay.onclick = () => {
+                console.log('🌑 Overlay clicado - fechando menu');
                 toggleSidebar();
             };
             
@@ -5588,6 +5616,7 @@
             // Fade in
             setTimeout(() => {
                 overlay.style.opacity = '1';
+                console.log('🌑 Overlay criado e visível');
             }, 10);
         }
         
