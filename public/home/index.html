@@ -1280,6 +1280,25 @@
         }
 
         @media (max-width: 768px) {
+            /* Remover zoom no mobile */
+            * {
+                -webkit-tap-highlight-color: transparent !important;
+                -webkit-touch-callout: none !important;
+                -webkit-user-select: none !important;
+                -khtml-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+            }
+            
+            /* Permitir seleção de texto em inputs */
+            input, textarea {
+                -webkit-user-select: text !important;
+                -moz-user-select: text !important;
+                -ms-user-select: text !important;
+                user-select: text !important;
+            }
+            
             .mobile-header {
                 display: block;
             }
@@ -1355,11 +1374,15 @@
             
             .mobile-menu-btn:hover {
                 background: rgba(36, 211, 102, 0.1) !important;
-                transform: scale(1.05);
             }
             
             .mobile-menu-btn:active {
-                transform: scale(0.95);
+                background: rgba(36, 211, 102, 0.2) !important;
+            }
+            
+            .mobile-menu-btn:focus {
+                outline: none !important;
+                transform: none !important;
             }
             
             /* Esconder botões de login/cadastro em mobile */
@@ -2837,6 +2860,11 @@
                     border-radius: 8px;
                     transition: all 0.3s ease;
                     display: block !important;
+                    -webkit-tap-highlight-color: transparent;
+                    -webkit-touch-callout: none;
+                    -webkit-user-select: none;
+                    user-select: none;
+                    outline: none;
                 `;
                 mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
                 mobileBtn.onclick = toggleSidebar;
@@ -3047,6 +3075,11 @@
                         border-radius: 8px;
                         transition: all 0.3s ease;
                         display: block !important;
+                        -webkit-tap-highlight-color: transparent;
+                        -webkit-touch-callout: none;
+                        -webkit-user-select: none;
+                        user-select: none;
+                        outline: none;
                     `;
                     mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
                     mobileBtn.onclick = toggleSidebar;
@@ -5744,7 +5777,7 @@
                 sidebar.style.width = '280px';
                 sidebar.style.height = '100vh';
                 sidebar.style.zIndex = '1000';
-                sidebar.style.backgroundColor = '#1a1a1a';
+                sidebar.style.backgroundColor = '#ffffff';
                 sidebar.classList.add('open');
                 mobileOverlay.classList.add('active');
                 mobileOverlay.style.display = 'block';
@@ -5880,6 +5913,11 @@
                         border-radius: 8px;
                         transition: all 0.3s ease;
                         display: block !important;
+                        -webkit-tap-highlight-color: transparent;
+                        -webkit-touch-callout: none;
+                        -webkit-user-select: none;
+                        user-select: none;
+                        outline: none;
                     `;
                     mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
                     mobileBtn.onclick = toggleSidebar;
