@@ -5669,103 +5669,79 @@
         // Função para toggle do menu mobile
         function toggleSidebar() {
             console.log('🍔 toggleSidebar chamada - INÍCIO');
+            const sidebar = document.getElementById('sidebar');
             const isMobile = window.innerWidth <= 768;
             
             console.log('🔍 Verificando dispositivo:', {
                 isMobile: isMobile,
-                windowWidth: window.innerWidth
+                windowWidth: window.innerWidth,
+                sidebar: !!sidebar
             });
             
+            if (!sidebar) {
+                console.error('❌ Sidebar não encontrada');
+                return;
+            }
+            
             if (isMobile) {
-                console.log('📱 MOBILE - Toggle do menu mobile');
-                toggleMobileMenu();
+                console.log('📱 MOBILE - Toggle da sidebar existente');
+                toggleSidebarMobile(sidebar);
             } else {
                 console.log('🖥️ DESKTOP - Não fazendo nada');
             }
         }
         
-        // Função específica para menu mobile
-        function toggleMobileMenu() {
-            console.log('🍔 toggleMobileMenu chamada');
+        // Função para toggle da sidebar em mobile
+        function toggleSidebarMobile(sidebar) {
+            console.log('🍔 toggleSidebarMobile chamada');
             
-            // Verificar se já existe menu mobile
-            let mobileMenu = document.getElementById('mobile-menu');
+            // Verificar se já existe overlay
             let mobileOverlay = document.getElementById('mobile-overlay');
             
-            if (!mobileMenu) {
-                console.log('📱 Criando menu mobile...');
-                createMobileMenu();
-                mobileMenu = document.getElementById('mobile-menu');
+            if (!mobileOverlay) {
+                console.log('📱 Criando overlay mobile...');
+                createMobileOverlay();
                 mobileOverlay = document.getElementById('mobile-overlay');
             }
             
-            const isOpen = mobileMenu.classList.contains('open');
-            console.log('🔍 Estado atual do menu mobile:', isOpen ? 'ABERTO' : 'FECHADO');
+            const isOpen = sidebar.classList.contains('open');
+            console.log('🔍 Estado atual da sidebar:', isOpen ? 'ABERTA' : 'FECHADA');
             
             if (isOpen) {
-                // Fechar menu
-                console.log('📱 FECHANDO menu mobile...');
-                mobileMenu.classList.remove('open');
+                // Fechar sidebar
+                console.log('📱 FECHANDO sidebar mobile...');
+                sidebar.classList.remove('open');
                 mobileOverlay.classList.remove('active');
-                console.log('✅ Menu mobile fechado');
+                console.log('✅ Sidebar mobile fechada');
             } else {
-                // Abrir menu
-                console.log('📱 ABRINDO menu mobile...');
-                mobileMenu.classList.add('open');
+                // Abrir sidebar
+                console.log('📱 ABRINDO sidebar mobile...');
+                sidebar.classList.add('open');
                 mobileOverlay.classList.add('active');
-                console.log('✅ Menu mobile aberto');
+                console.log('✅ Sidebar mobile aberta');
             }
-        }
-        
-        // Criar menu mobile específico
-        function createMobileMenu() {
-            console.log('🍔 Criando menu mobile específico...');
-            
-            // Criar overlay
-            const overlay = document.createElement('div');
-            overlay.id = 'mobile-overlay';
-            overlay.className = 'mobile-overlay';
-            overlay.onclick = () => toggleMobileMenu();
-            document.body.appendChild(overlay);
-            
-            // Criar menu mobile
-            const mobileMenu = document.createElement('div');
-            mobileMenu.id = 'mobile-menu';
-            mobileMenu.className = 'mobile-menu';
-            mobileMenu.innerHTML = `
-                <div class="mobile-menu-header">
-                    <h3>Menu</h3>
-                    <button class="mobile-menu-close" onclick="toggleMobileMenu()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="mobile-menu-content">
-                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
-                        <i class="fas fa-home"></i>
-                        <span>Início</span>
-                    </div>
-                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
-                        <i class="fas fa-users"></i>
-                        <span>Grupos</span>
-                    </div>
-                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
-                        <i class="fas fa-cog"></i>
-                        <span>Configurações</span>
-                    </div>
-                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Sair</span>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(mobileMenu);
-            
-            console.log('✅ Menu mobile criado com sucesso');
         }
         
         // Criar overlay para mobile
         function createMobileOverlay() {
-            if (document.getElementById('mobile-overlay')) return;
+            console.log('🍔 Criando overlay mobile...');
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'mobile-overlay';
+            overlay.className = 'mobile-overlay';
+            overlay.onclick = () => {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            };
+            document.body.appendChild(overlay);
+            
+            console.log('✅ Overlay mobile criado com sucesso');
+        }
+        
+        // Remover função duplicada - já existe acima
             
             console.log('🌑 Criando overlay mobile');
             
