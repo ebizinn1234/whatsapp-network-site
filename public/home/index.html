@@ -2825,20 +2825,23 @@
             const headerActions = document.querySelector('.header-actions');
             if (headerActions) {
                 console.log('🍔 CRIANDO MENU HAMBÚRGUER IMEDIATAMENTE');
-                headerActions.innerHTML = `
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
-                        background: none;
-                        border: none;
-                        color: #24d366;
-                        font-size: 24px;
-                        cursor: pointer;
-                        padding: 8px;
-                        border-radius: 8px;
-                        transition: all 0.3s ease;
-                    ">
-                        <i class="fas fa-bars"></i>
-                    </button>
+                const mobileBtn = document.createElement('button');
+                mobileBtn.className = 'mobile-menu-btn';
+                mobileBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #24d366;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 8px;
+                    transition: all 0.3s ease;
                 `;
+                mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                mobileBtn.onclick = toggleSidebar;
+                
+                headerActions.innerHTML = '';
+                headerActions.appendChild(mobileBtn);
                 console.log('✅ Menu hambúrguer criado com sucesso');
             } else {
                 console.error('❌ header-actions não encontrado!');
@@ -3031,20 +3034,23 @@
                 // Se é mobile e não tem botão hambúrguer, criar imediatamente
                 if (!mobileBtn) {
                     console.log('🍔 Criando botão hambúrguer mobile imediatamente...');
-                    headerActions.innerHTML = `
-                        <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
-                            background: none;
-                            border: none;
-                            color: #24d366;
-                            font-size: 24px;
-                            cursor: pointer;
-                            padding: 8px;
-                            border-radius: 8px;
-                            transition: all 0.3s ease;
-                        ">
-                            <i class="fas fa-bars"></i>
-                        </button>
+                    const mobileBtn = document.createElement('button');
+                    mobileBtn.className = 'mobile-menu-btn';
+                    mobileBtn.style.cssText = `
+                        background: none;
+                        border: none;
+                        color: #24d366;
+                        font-size: 24px;
+                        cursor: pointer;
+                        padding: 8px;
+                        border-radius: 8px;
+                        transition: all 0.3s ease;
                     `;
+                    mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    mobileBtn.onclick = toggleSidebar;
+                    
+                    headerActions.innerHTML = '';
+                    headerActions.appendChild(mobileBtn);
                 }
             } else if (!isMobile && headerActions) {
                 // Se é desktop e tem botão hambúrguer, restaurar botões originais
@@ -3541,20 +3547,23 @@
                         
                         if (isMobile) {
                             // Mobile: Mostrar menu hambúrguer
-                            headerActions.innerHTML = `
-                                <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
-                                    background: none;
-                                    border: none;
-                                    color: #24d366;
-                                    font-size: 24px;
-                                    cursor: pointer;
-                                    padding: 8px;
-                                    border-radius: 8px;
-                                    transition: all 0.3s ease;
-                                ">
-                                    <i class="fas fa-bars"></i>
-                                </button>
+                            const mobileBtn = document.createElement('button');
+                            mobileBtn.className = 'mobile-menu-btn';
+                            mobileBtn.style.cssText = `
+                                background: none;
+                                border: none;
+                                color: #24d366;
+                                font-size: 24px;
+                                cursor: pointer;
+                                padding: 8px;
+                                border-radius: 8px;
+                                transition: all 0.3s ease;
                             `;
+                            mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                            mobileBtn.onclick = toggleSidebar;
+                            
+                            headerActions.innerHTML = '';
+                            headerActions.appendChild(mobileBtn);
                         } else {
                             // Desktop: Mostrar dados do usuário
                             headerActions.innerHTML = `
@@ -6069,20 +6078,23 @@
                     
                     if (isMobile) {
                         // Mobile: Mostrar menu hambúrguer
-                        headerActions.innerHTML = `
-                            <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
-                                background: none;
-                                border: none;
-                                color: #24d366;
-                                font-size: 24px;
-                                cursor: pointer;
-                                padding: 8px;
-                                border-radius: 8px;
-                                transition: all 0.3s ease;
-                            ">
-                                <i class="fas fa-bars"></i>
-                            </button>
+                        const mobileBtn = document.createElement('button');
+                        mobileBtn.className = 'mobile-menu-btn';
+                        mobileBtn.style.cssText = `
+                            background: none;
+                            border: none;
+                            color: #24d366;
+                            font-size: 24px;
+                            cursor: pointer;
+                            padding: 8px;
+                            border-radius: 8px;
+                            transition: all 0.3s ease;
                         `;
+                        mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                        mobileBtn.onclick = toggleSidebar;
+                        
+                        headerActions.innerHTML = '';
+                        headerActions.appendChild(mobileBtn);
                     } else {
                         // Desktop: Mostrar dados do usuário
                         const { name, number, profilePicture } = window.whatsappInfo;
