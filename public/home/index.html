@@ -1944,6 +1944,93 @@
             }
         }
 
+        /* Menu Mobile Específico */
+        @media (max-width: 768px) {
+            .mobile-menu {
+                position: fixed;
+                top: 0;
+                left: -300px;
+                width: 280px;
+                height: 100vh;
+                background: #1a1a1a;
+                z-index: 1001;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            }
+            
+            .mobile-menu.open {
+                left: 0;
+            }
+            
+            .mobile-menu-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px;
+                border-bottom: 1px solid #333;
+                background: #2a2a2a;
+            }
+            
+            .mobile-menu-header h3 {
+                color: #24d366;
+                margin: 0;
+                font-size: 1.2rem;
+            }
+            
+            .mobile-menu-close {
+                background: none;
+                border: none;
+                color: #24d366;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 5px;
+                border-radius: 4px;
+            }
+            
+            .mobile-menu-close:hover {
+                background: rgba(36, 211, 102, 0.1);
+            }
+            
+            .mobile-menu-content {
+                padding: 20px 0;
+            }
+            
+            .mobile-menu-item {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                color: #fff;
+                cursor: pointer;
+                transition: background 0.3s ease;
+                border-bottom: 1px solid #333;
+            }
+            
+            .mobile-menu-item:hover {
+                background: rgba(36, 211, 102, 0.1);
+            }
+            
+            .mobile-menu-item i {
+                margin-right: 15px;
+                width: 20px;
+                color: #24d366;
+            }
+            
+            .mobile-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                display: none;
+            }
+            
+            .mobile-overlay.active {
+                display: block;
+            }
+        }
+
         /* Dashboard de Score de Risco */
         .risk-dashboard {
             background: white;
@@ -5573,60 +5660,98 @@
         // Função para toggle do menu mobile
         function toggleSidebar() {
             console.log('🍔 toggleSidebar chamada - INÍCIO');
-            const sidebar = document.getElementById('sidebar');
-            const menuBtn = document.querySelector('.mobile-menu-btn');
             const isMobile = window.innerWidth <= 768;
             
-            console.log('🔍 Elementos encontrados:', {
-                sidebar: !!sidebar,
-                menuBtn: !!menuBtn,
+            console.log('🔍 Verificando dispositivo:', {
                 isMobile: isMobile,
-                sidebarClasses: sidebar?.className,
                 windowWidth: window.innerWidth
             });
             
-            if (!sidebar) {
-                console.error('❌ Sidebar não encontrada');
-                return;
+            if (isMobile) {
+                console.log('📱 MOBILE - Toggle do menu mobile');
+                toggleMobileMenu();
+            } else {
+                console.log('🖥️ DESKTOP - Não fazendo nada');
+            }
+        }
+        
+        // Função específica para menu mobile
+        function toggleMobileMenu() {
+            console.log('🍔 toggleMobileMenu chamada');
+            
+            // Verificar se já existe menu mobile
+            let mobileMenu = document.getElementById('mobile-menu');
+            let mobileOverlay = document.getElementById('mobile-overlay');
+            
+            if (!mobileMenu) {
+                console.log('📱 Criando menu mobile...');
+                createMobileMenu();
+                mobileMenu = document.getElementById('mobile-menu');
+                mobileOverlay = document.getElementById('mobile-overlay');
             }
             
-            if (!isMobile) {
-                console.log('🖥️ Desktop detectado - não fazendo toggle');
-                return;
-            }
-            
-            const isOpen = sidebar.classList.contains('open');
-            console.log('📱 Estado atual:', { 
-                isOpen, 
-                classes: sidebar.className,
-                display: getComputedStyle(sidebar).display,
-                transform: getComputedStyle(sidebar).transform
-            });
+            const isOpen = mobileMenu.classList.contains('open');
+            console.log('🔍 Estado atual do menu mobile:', isOpen ? 'ABERTO' : 'FECHADO');
             
             if (isOpen) {
                 // Fechar menu
-                console.log('📱 FECHANDO menu...');
-                sidebar.classList.remove('open');
-                removeMobileOverlay();
-                console.log('📱 Menu fechado');
+                console.log('📱 FECHANDO menu mobile...');
+                mobileMenu.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                console.log('✅ Menu mobile fechado');
             } else {
                 // Abrir menu
-                console.log('📱 ABRINDO menu...');
-                sidebar.classList.add('open');
-                createMobileOverlay();
-                console.log('📱 Menu aberto');
+                console.log('📱 ABRINDO menu mobile...');
+                mobileMenu.classList.add('open');
+                mobileOverlay.classList.add('active');
+                console.log('✅ Menu mobile aberto');
             }
+        }
+        
+        // Criar menu mobile específico
+        function createMobileMenu() {
+            console.log('🍔 Criando menu mobile específico...');
             
-            // Verificar estado após mudança
-            setTimeout(() => {
-                console.log('📱 Estado final (após 100ms):', {
-                    classes: sidebar.className,
-                    isOpen: sidebar.classList.contains('open'),
-                    display: getComputedStyle(sidebar).display,
-                    transform: getComputedStyle(sidebar).transform,
-                    visibility: getComputedStyle(sidebar).visibility
-                });
-            }, 100);
+            // Criar overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'mobile-overlay';
+            overlay.className = 'mobile-overlay';
+            overlay.onclick = () => toggleMobileMenu();
+            document.body.appendChild(overlay);
+            
+            // Criar menu mobile
+            const mobileMenu = document.createElement('div');
+            mobileMenu.id = 'mobile-menu';
+            mobileMenu.className = 'mobile-menu';
+            mobileMenu.innerHTML = `
+                <div class="mobile-menu-header">
+                    <h3>Menu</h3>
+                    <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mobile-menu-content">
+                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
+                        <i class="fas fa-home"></i>
+                        <span>Início</span>
+                    </div>
+                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
+                        <i class="fas fa-users"></i>
+                        <span>Grupos</span>
+                    </div>
+                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
+                        <i class="fas fa-cog"></i>
+                        <span>Configurações</span>
+                    </div>
+                    <div class="mobile-menu-item" onclick="toggleMobileMenu()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair</span>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(mobileMenu);
+            
+            console.log('✅ Menu mobile criado com sucesso');
         }
         
         // Criar overlay para mobile
