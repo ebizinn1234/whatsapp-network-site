@@ -2792,7 +2792,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
         // 🍔 VERIFICAÇÃO IMEDIATA PARA MOBILE - EVITAR FLASH
-        console.log('🚀 INICIANDO VERIFICAÇÃO MOBILE - VERSÃO 2.1 - TIMESTAMP:', new Date().toISOString());
+        console.log('🚀 INICIANDO VERIFICAÇÃO MOBILE - VERSÃO 2.2 - TIMESTAMP:', new Date().toISOString());
         const isMobile = window.innerWidth <= 768;
         console.log('📱 Largura da tela:', window.innerWidth, 'É mobile:', isMobile);
         console.log('🕐 Cache-busting timestamp:', Date.now());
@@ -2821,7 +2821,7 @@
                 }
             });
             
-            // Criar menu hambúrguer
+            // Criar menu hambúrguer IMEDIATAMENTE
             const headerActions = document.querySelector('.header-actions');
             if (headerActions) {
                 console.log('🍔 CRIANDO MENU HAMBÚRGUER IMEDIATAMENTE');
@@ -2836,6 +2836,7 @@
                     padding: 8px;
                     border-radius: 8px;
                     transition: all 0.3s ease;
+                    display: block !important;
                 `;
                 mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
                 mobileBtn.onclick = toggleSidebar;
@@ -3045,26 +3046,40 @@
                         padding: 8px;
                         border-radius: 8px;
                         transition: all 0.3s ease;
+                        display: block !important;
                     `;
                     mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
                     mobileBtn.onclick = toggleSidebar;
                     
                     headerActions.innerHTML = '';
                     headerActions.appendChild(mobileBtn);
+                    console.log('✅ Menu hambúrguer criado via ensureMobileMenu');
                 }
             } else if (!isMobile && headerActions) {
                 // Se é desktop e tem botão hambúrguer, restaurar botões originais
                 const mobileBtnExists = document.querySelector('.mobile-menu-btn');
                 if (mobileBtnExists) {
                     console.log('🖥️ Removendo menu mobile para desktop...');
-                    headerActions.innerHTML = `
-                        <button class="btn-header btn-login" onclick="showForm('login')">
-                            <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Entrar
-                        </button>
-                        <button class="btn-header btn-register" onclick="showForm('register')">
-                            <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Cadastrar
-                        </button>
-                    `;
+                    // Verificar se usuário está logado
+                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (userData && userData.id) {
+                        // Usuário logado - mostrar dados do usuário
+                        headerActions.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="color: #24d366; font-weight: 500;">Usuário ${userData.phone || ''}</span>
+                            </div>
+                        `;
+                    } else {
+                        // Usuário não logado - mostrar botões de login/cadastro
+                        headerActions.innerHTML = `
+                            <button class="btn-header btn-login" onclick="showForm('login')">
+                                <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Entrar
+                            </button>
+                            <button class="btn-header btn-register" onclick="showForm('register')">
+                                <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Cadastrar
+                            </button>
+                        `;
+                    }
                 }
             }
         }
@@ -5843,6 +5858,36 @@
             if (registerBtn) {
                 registerBtn.style.display = 'none';
                 console.log('✅ Botão Cadastrar escondido');
+            }
+            
+            // Verificar se é mobile e criar menu hambúrguer se necessário
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                const headerActions = document.querySelector('.header-actions');
+                const mobileBtn = document.querySelector('.mobile-menu-btn');
+                
+                if (headerActions && !mobileBtn) {
+                    console.log('🍔 Criando menu hambúrguer após login...');
+                    const mobileBtn = document.createElement('button');
+                    mobileBtn.className = 'mobile-menu-btn';
+                    mobileBtn.style.cssText = `
+                        background: none;
+                        border: none;
+                        color: #24d366;
+                        font-size: 24px;
+                        cursor: pointer;
+                        padding: 8px;
+                        border-radius: 8px;
+                        transition: all 0.3s ease;
+                        display: block !important;
+                    `;
+                    mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    mobileBtn.onclick = toggleSidebar;
+                    
+                    headerActions.innerHTML = '';
+                    headerActions.appendChild(mobileBtn);
+                    console.log('✅ Menu hambúrguer criado após login');
+                }
             }
             
             // ✅ BUSCAR INFORMAÇÕES DA CONTA WHATSAPP DO BANCO
