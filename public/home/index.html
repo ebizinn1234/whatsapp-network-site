@@ -3464,8 +3464,9 @@
                         }
                     }
                     
-                    // ✅ ATUALIZAR SIDEBAR COM NOME E FOTO DA CONTA WHATSAPP
-                    if (sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
+                    // ✅ ATUALIZAR SIDEBAR COM NOME E FOTO DA CONTA WHATSAPP (APENAS DESKTOP)
+                    const isMobile = window.innerWidth <= 768;
+                    if (!isMobile && sidebarUserName && sidebarUserStatus && sidebarUserAvatar) {
                         sidebarUserName.textContent = name || 'Usuário';
                         sidebarUserStatus.textContent = formattedNumber;
                         sidebarUserStatus.className = 'user-status connected';
@@ -5385,6 +5386,13 @@
         }
 
         function updateSidebarStatus(connected, whatsappInfo = null) {
+            // 📱 NÃO ATUALIZAR SIDEBAR EM MOBILE - EVITAR FLASH
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                console.log('📱 Mobile detectado - não atualizando sidebar para evitar flash');
+                return;
+            }
+            
             if (connected && whatsappInfo) {
                 // Mostrar nome do WhatsApp conectado
                 sidebarUserName.textContent = whatsappInfo.name || 'Usuário';
@@ -5541,7 +5549,7 @@
 
         // Função para toggle do menu mobile
         function toggleSidebar() {
-            console.log('🍔 toggleSidebar chamada');
+            console.log('🍔 toggleSidebar chamada - INÍCIO');
             const sidebar = document.getElementById('sidebar');
             const menuBtn = document.querySelector('.mobile-menu-btn');
             const isMobile = window.innerWidth <= 768;
@@ -5550,7 +5558,8 @@
                 sidebar: !!sidebar,
                 menuBtn: !!menuBtn,
                 isMobile: isMobile,
-                sidebarClasses: sidebar?.className
+                sidebarClasses: sidebar?.className,
+                windowWidth: window.innerWidth
             });
             
             if (!sidebar) {
@@ -5564,26 +5573,37 @@
             }
             
             const isOpen = sidebar.classList.contains('open');
-            console.log('📱 Estado atual:', { isOpen, classes: sidebar.className });
+            console.log('📱 Estado atual:', { 
+                isOpen, 
+                classes: sidebar.className,
+                display: getComputedStyle(sidebar).display,
+                transform: getComputedStyle(sidebar).transform
+            });
             
             if (isOpen) {
                 // Fechar menu
+                console.log('📱 FECHANDO menu...');
                 sidebar.classList.remove('open');
                 removeMobileOverlay();
                 console.log('📱 Menu fechado');
             } else {
                 // Abrir menu
+                console.log('📱 ABRINDO menu...');
                 sidebar.classList.add('open');
                 createMobileOverlay();
                 console.log('📱 Menu aberto');
             }
             
-            console.log('📱 Estado final:', {
-                classes: sidebar.className,
-                isOpen: sidebar.classList.contains('open'),
-                display: getComputedStyle(sidebar).display,
-                transform: getComputedStyle(sidebar).transform
-            });
+            // Verificar estado após mudança
+            setTimeout(() => {
+                console.log('📱 Estado final (após 100ms):', {
+                    classes: sidebar.className,
+                    isOpen: sidebar.classList.contains('open'),
+                    display: getComputedStyle(sidebar).display,
+                    transform: getComputedStyle(sidebar).transform,
+                    visibility: getComputedStyle(sidebar).visibility
+                });
+            }, 100);
         }
         
         // Criar overlay para mobile
@@ -5811,26 +5831,30 @@
                         return phone;
                     };
                     
-                    if (data.success && data.whatsappInfo) {
-                        // ✅ TEM CONTA WHATSAPP - Mostrar nome e foto
-                        const { name, number, profilePicture } = data.whatsappInfo;
-                        const displayName = name && name !== 'WhatsApp User' ? name : 'Usuário WhatsApp';
-                        
-                        sidebarUserName.textContent = displayName;
-                        sidebarUserStatus.textContent = formatPhone(number);
-                        sidebarUserStatus.className = 'user-status connected';
-                        
-                        if (profilePicture) {
-                            sidebarUserAvatar.innerHTML = `<img src="${profilePicture}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                    // 📱 NÃO ATUALIZAR SIDEBAR EM MOBILE
+                    const isMobile = window.innerWidth <= 768;
+                    if (!isMobile) {
+                        if (data.success && data.whatsappInfo) {
+                            // ✅ TEM CONTA WHATSAPP - Mostrar nome e foto
+                            const { name, number, profilePicture } = data.whatsappInfo;
+                            const displayName = name && name !== 'WhatsApp User' ? name : 'Usuário WhatsApp';
+                            
+                            sidebarUserName.textContent = displayName;
+                            sidebarUserStatus.textContent = formatPhone(number);
+                            sidebarUserStatus.className = 'user-status connected';
+                            
+                            if (profilePicture) {
+                                sidebarUserAvatar.innerHTML = `<img src="${profilePicture}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                            } else {
+                                sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                            }
                         } else {
+                            // ❌ SEM CONTA WHATSAPP - Mostrar "Usuário"
+                            sidebarUserName.textContent = 'Usuário';
+                            sidebarUserStatus.textContent = formatPhone(user.phone);
+                            sidebarUserStatus.className = 'user-status';
                             sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
                         }
-                    } else {
-                        // ❌ SEM CONTA WHATSAPP - Mostrar "Usuário"
-                        sidebarUserName.textContent = 'Usuário';
-                        sidebarUserStatus.textContent = formatPhone(user.phone);
-                        sidebarUserStatus.className = 'user-status';
-                        sidebarUserAvatar.innerHTML = '<i class="fas fa-user"></i>';
                     }
                 })
                 .catch(err => console.error('Erro ao atualizar sidebar:', err));
