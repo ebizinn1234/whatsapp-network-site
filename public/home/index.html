@@ -5756,37 +5756,6 @@
             console.log('✅ Overlay mobile criado com sucesso');
         }
         
-        // Remover função duplicada - já existe acima
-            
-            console.log('🌑 Criando overlay mobile');
-            
-            const overlay = document.createElement('div');
-            overlay.id = 'mobile-overlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 9998;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            `;
-            
-            overlay.onclick = () => {
-                console.log('🌑 Overlay clicado - fechando menu');
-                toggleSidebar();
-            };
-            
-            document.body.appendChild(overlay);
-            
-            // Fade in
-            setTimeout(() => {
-                overlay.style.opacity = '1';
-                console.log('🌑 Overlay criado e visível');
-            }, 10);
-        }
         
         // Remover overlay para mobile
         function removeMobileOverlay() {
