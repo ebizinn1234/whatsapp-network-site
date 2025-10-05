@@ -1359,6 +1359,16 @@
             .mobile-menu-btn:active {
                 transform: scale(0.95);
             }
+            
+            /* Esconder botões de login/cadastro em mobile */
+            .btn-header {
+                display: none !important;
+            }
+            
+            /* Mostrar menu hambúrguer por padrão em mobile */
+            .header-actions {
+                justify-content: flex-end;
+            }
 
             .main-content {
                 left: 0;            /* volta pro zero no mobile */
@@ -2692,6 +2702,29 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+        // 🍔 VERIFICAÇÃO IMEDIATA PARA MOBILE - EVITAR FLASH
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                console.log('🍔 Mobile detectado - criando menu hambúrguer imediatamente');
+                headerActions.innerHTML = `
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
+                        background: none;
+                        border: none;
+                        color: #24d366;
+                        font-size: 24px;
+                        cursor: pointer;
+                        padding: 8px;
+                        border-radius: 8px;
+                        transition: all 0.3s ease;
+                    ">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                `;
+            }
+        }
+        
         // Socket.io connection
         const socket = io();
         
@@ -2868,25 +2901,43 @@
             console.log('🍔 Verificando menu mobile:', {
                 isMobile,
                 headerActions: !!headerActions,
-                mobileBtn: !!mobileBtn
+                mobileBtn: !!mobileBtn,
+                currentContent: headerActions?.innerHTML?.substring(0, 50)
             });
             
-            if (isMobile && headerActions && !mobileBtn) {
-                console.log('🍔 Criando botão hambúrguer mobile...');
-                headerActions.innerHTML = `
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
-                        background: none;
-                        border: none;
-                        color: #24d366;
-                        font-size: 24px;
-                        cursor: pointer;
-                        padding: 8px;
-                        border-radius: 8px;
-                        transition: all 0.3s ease;
-                    ">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                `;
+            if (isMobile && headerActions) {
+                // Se é mobile e não tem botão hambúrguer, criar imediatamente
+                if (!mobileBtn) {
+                    console.log('🍔 Criando botão hambúrguer mobile imediatamente...');
+                    headerActions.innerHTML = `
+                        <button class="mobile-menu-btn" onclick="toggleSidebar()" style="
+                            background: none;
+                            border: none;
+                            color: #24d366;
+                            font-size: 24px;
+                            cursor: pointer;
+                            padding: 8px;
+                            border-radius: 8px;
+                            transition: all 0.3s ease;
+                        ">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    `;
+                }
+            } else if (!isMobile && headerActions) {
+                // Se é desktop e tem botão hambúrguer, restaurar botões originais
+                const mobileBtnExists = document.querySelector('.mobile-menu-btn');
+                if (mobileBtnExists) {
+                    console.log('🖥️ Removendo menu mobile para desktop...');
+                    headerActions.innerHTML = `
+                        <button class="btn-header btn-login" onclick="showForm('login')">
+                            <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Entrar
+                        </button>
+                        <button class="btn-header btn-register" onclick="showForm('register')">
+                            <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Cadastrar
+                        </button>
+                    `;
+                }
             }
         }
         
